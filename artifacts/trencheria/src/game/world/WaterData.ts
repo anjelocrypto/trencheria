@@ -18,10 +18,15 @@ export interface LakeDef {
 }
 
 export const RIVERS: RiverDef[] = [
-  // Original river near Ironhold
+  // Original river near Ironhold — Codex audit: trimmed northern endpoint
+  // from (25,80) to (25,65). Old endpoint sat directly under Line B's east
+  // bypass between Ironhold Central (-20,83) and (45,80), which produced an
+  // ~13u unbridged rail-water clip from x≈19 to x≈32. The river now fades
+  // into marshy ground 15u south of the rail line; rail bridge over
+  // river-great (length 40 at (2,82)) cleanly handles the actual crossing.
   {
     id: 'river-ironhold',
-    points: [[40, -0.75, -60], [35, -0.75, -20], [30, -0.75, 20], [25, -0.75, 80]],
+    points: [[40, -0.75, -60], [35, -0.75, -20], [30, -0.75, 20], [25, -0.75, 65]],
     width: 11,
   },
   // Great River — runs NW to SE through expanded world
@@ -34,12 +39,16 @@ export const RIVERS: RiverDef[] = [
     ],
     width: 16,
   },
-  // Rivermoor River — feeds into the river town
+  // Rivermoor River — feeds past the river town, then south. Codex audit:
+  // moved the apex east from (450,350) to (480,350) so Rivermoor settlement
+  // (anchored at (450,350)) is no longer literally inside the river. This
+  // also clears the Rivermoor→Darkhollow and northern-waypoint→Rivermoor
+  // roads which previously started/ended in the river endpoint.
   {
     id: 'river-rivermoor',
     points: [
-      [350, -0.4, 450], [400, -0.5, 400], [450, -0.6, 350],
-      [480, -0.5, 280], [500, -0.5, 200],
+      [380, -0.4, 450], [430, -0.5, 400], [480, -0.6, 350],
+      [500, -0.5, 280], [510, -0.5, 200],
     ],
     width: 14,
   },
@@ -53,10 +62,14 @@ export const RIVERS: RiverDef[] = [
     width: 8,
   },
   // ===== Railway bridge water crossings (v7) =====
-  // Small tributary south of Ironhold — crossed by Line B bridge
+  // Small tributary south of Ironhold — crossed by Line B bridge.
+  // Codex audit: shortened and centered under the rail-bridge-ironhold-south
+  // OBB (length-20 span at (-28,83), so deck covers x∈[-38,-18]). Stream now
+  // ends at x=-25 so Line B's Ironhold Central station at (-20,83) and the
+  // segment east of it stay clear of water without needing extra coverage.
   {
     id: 'stream-ironhold-south',
-    points: [[-45, -0.35, 88], [-25, -0.4, 90], [-5, -0.35, 92]],
+    points: [[-35, -0.35, 83], [-30, -0.4, 83], [-25, -0.35, 83]],
     width: 5,
   },
   // Rivermoor tributary — small stream crossed by Line A bridge
@@ -65,10 +78,16 @@ export const RIVERS: RiverDef[] = [
     points: [[340, -0.3, 245], [355, -0.35, 260], [370, -0.3, 275]],
     width: 5,
   },
-  // Darkhollow ford — small creek crossed by Line B bridge
+  // Darkhollow ford — small creek crossed by Line B bridge.
+  // Codex audit: shortened so it terminates inside the rail-bridge-darkhollow
+  // OBB. Line B's (390,-360)→(460,-420) seg runs nearly parallel to this
+  // stream's old (390,-360)→(405,-372) channel, so the track was clipping the
+  // stream for ~7u past the bridge end. New endpoint at (393,-363) keeps the
+  // ford fully under the deck (length-18 OBB at (390,-360) extends ±9 along
+  // bridge axis ≈ to x≈397).
   {
     id: 'stream-darkhollow-ford',
-    points: [[375, -0.2, -348], [390, -0.25, -360], [405, -0.2, -372]],
+    points: [[380, -0.2, -354], [387, -0.25, -358], [393, -0.2, -363]],
     width: 4,
   },
 ];

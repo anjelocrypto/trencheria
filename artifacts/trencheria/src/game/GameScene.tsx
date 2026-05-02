@@ -27,6 +27,9 @@ import { RailwayTrack } from './components/RailwayTrack';
 import { RailwayStations } from './components/RailwayStations';
 import { RailwayBridges } from './components/RailwayBridges';
 import { RailwayLamps } from './components/RailwayLamps';
+import { LevelCrossings } from './components/LevelCrossings';
+// DEV-only side-effect: world-map audit (rail/road/bridge consistency).
+import './systems/RailwayValidator';
 import { Train } from './components/Train';
 import { DebugCollision } from './components/DebugCollision';
 import { CameraController } from './systems/CameraController';
@@ -902,6 +905,7 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
           {/* RAILWAY — incremental re-enable. Static tracks only (no useFrame). */}
           {/* Terrain flattening grid is safe and active. */}
           <RailwayTrack />
+          <LevelCrossings />
           <RailwayLamps playerPositionRef={playerPositionRef} />
           {/* Railway structures */}
           <RailwayStations playerPositionRef={playerPositionRef} />

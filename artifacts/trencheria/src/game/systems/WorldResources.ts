@@ -3,7 +3,13 @@ import { WORLD_SIZE } from '../constants';
 import { REGIONS, SETTLEMENTS, SMALL_POIS, ROADS } from '../world/RegionData';
 import { RIVERS, LAKES } from '../world/WaterData';
 import { BRIDGES } from '../world/BridgeData';
+import { distToRailway } from '../world/RailwayData';
 import { LootPickup } from '../types';
+
+// Minimum clearance from any railway centerline (resources never spawn closer).
+const TREE_RAIL_CLEARANCE = 9;
+const ROCK_RAIL_CLEARANCE = 8;
+const SMALL_RES_RAIL_CLEARANCE = 6; // berries, crates, bushes
 
 // Wilderness building positions for tree exclusion — inline list matching WildernessStructures clusters
 // We can't import WILDERNESS_BUILDINGS directly due to circular deps, so we define cluster centers here
@@ -527,6 +533,9 @@ export function generateWorldResources(): WorldResource[] {
     
     // Skip near wilderness buildings (cottages, camps, etc.)
     if (isNearWildernessBuilding(x, z, 4)) continue;
+
+    // Skip too close to railway tracks — trees must not spawn on rails.
+    if (distToRailway(x, z, TREE_RAIL_CLEARANCE) !== null) continue;
     
     // Get local forest density
     const forest = getForestDensityAt(x, z);
@@ -582,7 +591,10 @@ export function generateWorldResources(): WorldResource[] {
     if (isNearSettlement(x, z, 55)) continue;
     if (isNearRoad(x, z, 4)) continue;
     if (isNearPOI(x, z, 5)) continue;
-    
+
+    // Skip too close to railway tracks — boulders must not block tracks.
+    if (distToRailway(x, z, ROCK_RAIL_CLEARANCE) !== null) continue;
+
     const rock = getRockDensityAt(x, z);
     
     // Base spawn chance
@@ -649,7 +661,8 @@ export function generateWorldResources(): WorldResource[] {
       if (y < -0.2) continue;
       if (isNearSettlement(x, z, 25)) continue;
       if (isNearRoad(x, z, 2)) continue;
-      
+      if (distToRailway(x, z, SMALL_RES_RAIL_CLEARANCE) !== null) continue;
+
       resources.push({
         id: `berry-${berryId++}`, type: 'berry_bush',
         position: [x, y, z], health: 2, maxHealth: 2,
@@ -691,7 +704,8 @@ export function generateWorldResources(): WorldResource[] {
       const y = getTerrainHeight(x, z);
       if (y < -0.3) continue;
       if (isNearSettlement(x, z, 20)) continue;
-      
+      if (distToRailway(x, z, SMALL_RES_RAIL_CLEARANCE) !== null) continue;
+
       resources.push({
         id: `crate-${crateId++}`, type: 'crate',
         position: [x, y, z], health: 2, maxHealth: 2,

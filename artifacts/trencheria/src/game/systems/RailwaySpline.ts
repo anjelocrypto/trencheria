@@ -4,7 +4,7 @@
  */
 import * as THREE from 'three';
 import { RailwayWaypoint } from '../world/RailwayData';
-import { getTerrainHeight } from '../components/Terrain';
+import { getRailGroundHeight } from './Grounding';
 
 // Must match rail top: TRACK_HEIGHT_OFFSET(0.35) + BALLAST_H(0.15) + SLEEPER_H(0.12) + RAIL_H(0.15) = 0.77
 const RAIL_HEIGHT_OFFSET = 0.77;
@@ -26,13 +26,13 @@ export function buildRailwayPath(
       const x = waypoints[i].x + (waypoints[i + 1].x - waypoints[i].x) * t;
       const z = waypoints[i].z + (waypoints[i + 1].z - waypoints[i].z) * t;
       pts[idx++] = x;
-      pts[idx++] = getTerrainHeight(x, z) + RAIL_HEIGHT_OFFSET;
+      pts[idx++] = getRailGroundHeight(x, z) + RAIL_HEIGHT_OFFSET;
       pts[idx++] = z;
     }
   }
   const last = waypoints[waypoints.length - 1];
   pts[idx++] = last.x;
-  pts[idx++] = getTerrainHeight(last.x, last.z) + RAIL_HEIGHT_OFFSET;
+  pts[idx++] = getRailGroundHeight(last.x, last.z) + RAIL_HEIGHT_OFFSET;
   pts[idx++] = last.z;
 
   // Compute total arc length

@@ -11,7 +11,7 @@ import { useRef, useMemo, memo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { getNightFactor } from '../systems/TimeOfDay';
-import { getTerrainHeight } from './Terrain';
+import { getRailGroundHeight } from '../systems/Grounding';
 import {
   LINE_A_WAYPOINTS,
   LINE_B_WAYPOINTS,
@@ -117,7 +117,7 @@ function generateLampsAlongLine(waypoints: RailwayWaypoint[]): RailLampDef[] {
 
       const lx = px + nx * TRACK_OFFSET;
       const lz = pz + nz * TRACK_OFFSET;
-      const ly = getTerrainHeight(lx, lz);
+      const ly = getRailGroundHeight(lx, lz);
 
       lamps.push({ x: lx, z: lz, y: ly });
     }

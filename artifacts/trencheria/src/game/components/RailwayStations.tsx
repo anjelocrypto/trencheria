@@ -7,7 +7,8 @@
 import { memo, useMemo } from 'react';
 import * as THREE from 'three';
 import { RAILWAY_STATIONS, RailwayStation, LINE_A_WAYPOINTS, LINE_B_WAYPOINTS } from '../world/RailwayData';
-import { getTerrainHeight } from './Terrain';
+import { getRailGroundHeight } from '../systems/Grounding';
+import { sampleFootprint } from '../systems/Grounding';
 import { GEO, MAT } from '../world/SettlementPieces';
 
 // ========== SHARED STATION MATERIALS ==========
@@ -228,7 +229,6 @@ function Platform({ w, l }: { w: number; l: number }) {
 const IronholdCentralStation = memo(function IronholdCentralStation({ station }: { station: RailwayStation }) {
   const layout = useMemo(() => {
     const [sx, sz] = station.position; // (-45, 89) — midpoint between Line A (z≈95) and Line B (z≈83) at x≈-40
-    const y = getTerrainHeight(sx, sz);
 
     // Both lines now run roughly east through the hub as parallel tracks.
     // Line A: (-40,95) → (-20,103) → (30,108) — northern track
@@ -238,6 +238,17 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
       (30 - (-40) + 45 - (-40)) / 2, // avg ΔX ≈ 77.5
       (108 - 95 + 80 - 83) / 2       // avg ΔZ ≈ 5
     ); // ≈ 1.51 rad (roughly east)
+
+    // Sample the entire 12×20 platform footprint and use the lowest point so
+    // platform stays clear of any high-side terrain. Warn if footprint is on
+    // water or wildly uneven (footprint is on a flattened settlement plateau,
+    // so this should always pass — the warn is for future regressions).
+    const fp = sampleFootprint(sx, sz, 6, 10, trackHeading);
+    if (import.meta.env.DEV) {
+      if (fp.hasWater) console.warn('[RailwayStations] Ironhold Central footprint touches water');
+      if (fp.heightDelta > 1.5) console.warn(`[RailwayStations] Ironhold Central footprint uneven (Δ=${fp.heightDelta.toFixed(2)}u)`);
+    }
+    const y = fp.minY;
 
     return {
       position: new THREE.Vector3(sx, y, sz),
@@ -353,7 +364,6 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
 const StationRenderer = memo(function StationRenderer({ station }: { station: RailwayStation }) {
   const { position, dims, rotation, sideDir } = useMemo(() => {
     const [sx, sz] = station.position;
-    const y = getTerrainHeight(sx, sz);
     const dims = STATION_DIMS[station.stationType] || STATION_DIMS.small;
     const rotation = getTrackDirectionAtStation(station);
 
@@ -363,9 +373,21 @@ const StationRenderer = memo(function StationRenderer({ station }: { station: Ra
     const offset = dims.platW / 2 + 2.5;
     const ox = Math.sin(sideAngle) * offset * sideDir;
     const oz = Math.cos(sideAngle) * offset * sideDir;
+    const px = sx + ox;
+    const pz = sz + oz;
+
+    // Sample the actual platform footprint at its final offset position.
+    // Use minY so the platform never floats above the lowest sample point,
+    // and warn in DEV if the footprint is in water or extremely uneven.
+    const fp = sampleFootprint(px, pz, dims.platW / 2, dims.platL / 2, rotation);
+    if (import.meta.env.DEV) {
+      if (fp.hasWater) console.warn(`[RailwayStations] ${station.id} footprint touches water at offset (${px.toFixed(1)},${pz.toFixed(1)})`);
+      if (fp.heightDelta > 1.6) console.warn(`[RailwayStations] ${station.id} footprint uneven (Δ=${fp.heightDelta.toFixed(2)}u)`);
+    }
+    const y = fp.minY;
 
     return {
-      position: new THREE.Vector3(sx + ox, y, sz + oz),
+      position: new THREE.Vector3(px, y, pz),
       dims,
       rotation,
       sideDir,

@@ -68,4 +68,19 @@ The "real" SQL source of truth lives **outside this repo**. `supabase/.migration
 - **Multiplayer broadcaster** — single reusable `NetworkPlayerState` object with mutated `position`/`horsePosition` tuples; the `useMultiplayer` send cadence (interval timers) still controls when state is actually sent over the wire.
 - **Town district collision** — `TOWN_PROPS` in `TownDistrict.tsx` registers stalls, carts, barrels, hay, troughs, lantern posts, and the shrine with `CollisionSystem` so the player no longer phases through visible props.
 
+## World-Map Coherence (Codex audit)
+
+A DEV-only validator (`src/game/systems/RailwayValidator.ts`) runs once at module load and warns about:
+- rail/road segments crossing rivers/lakes without a matching bridge OBB
+- rails passing within a settlement's required clearance
+- rail × road intersections missing a `LEVEL_CROSSING` entry
+
+The audit reshaped a number of map data sources to keep the railway/road network feeling planned:
+- `src/game/world/RailwayData.ts` — added explicit bridge waypoints + `RAILWAY_BRIDGES` entries on Lines A/B over river-great, the Ironhold tributaries, and the eastern fork; rebuilt `LEVEL_CROSSINGS` to cover all rail × road intersections.
+- `src/game/world/BridgeData.ts` — repositioned road bridges (Darkhollow marsh, Stonepeak crossing) onto actual road centerlines; added Old/Blackthorn/Ashwood/Stonepeak river bridges; deleted orphan dry-land bridges.
+- `src/game/world/WaterData.ts` — trimmed `stream-ironhold-south` and `stream-darkhollow-ford` to fit fully under their rail bridges; trimmed `river-ironhold` northern endpoint south of Line B; shifted `river-rivermoor` apex east so Rivermoor settlement isn't inside the river endpoint.
+- `src/game/world/RegionData.ts` — Stonepeak roads rebuilt as a perpendicular river crossing through `(-220, 230)` matching the new `bridge-stonepeak-river`.
+
+The validator scans the FULL length of each rail/road segment (not just first water sample) so "no violations" reflects every water sample being inside a bridge OBB.
+
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

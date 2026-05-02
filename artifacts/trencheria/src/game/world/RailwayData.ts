@@ -43,6 +43,15 @@ export interface RailwayBridge {
   length: number;
 }
 
+/** Rail × road grade crossings (planked deck + warning crosses). */
+export interface LevelCrossing {
+  id: string;
+  position: [number, number]; // [x, z] in world space
+  trackAngle: number;          // radians, atan2(dx, dz) along the track
+  size: number;                // half-length of the planked deck along the track
+  description: string;
+}
+
 // ========== LINE A: Thornwall → Ironhold → Rivermoor (v6 — strict intrusion pass) ==========
 export const LINE_A_WAYPOINTS: RailwayWaypoint[] = [
   // Thornwall perimeter bypass: keep route outside fortified city wall envelope.
@@ -64,7 +73,12 @@ export const LINE_A_WAYPOINTS: RailwayWaypoint[] = [
   { x: -72, z: -20, type: 'track' },
   { x: -60, z: 30, type: 'track' },
   { x: -55, z: 55, type: 'track' },
+  // Bridge waypoint where Line A clips the relocated stream-ironhold-south
+  // tributary — without this the (-55,55)→(-40,95) leg ran over open water.
+  { x: -43, z: 88, label: 'Ironhold Tributary Bridge', type: 'bridge' },
   { x: -40, z: 95, type: 'track' },
+  // Bridge waypoint at actual River Great crossing — fixes prior unbridged water cross.
+  { x: -26, z: 100.6, label: 'River Great Bridge', type: 'bridge' },
   { x: -20, z: 103, label: 'Ironhold Central', type: 'station' },
   { x: 30, z: 108, type: 'track' },
   { x: 90, z: 105, type: 'track' },
@@ -75,8 +89,10 @@ export const LINE_A_WAYPOINTS: RailwayWaypoint[] = [
   { x: 330, z: 200, type: 'track' },
   { x: 350, z: 250, type: 'track' },
   { x: 355, z: 260, label: 'Rivermoor River Bridge', type: 'bridge' },
-  // Rivermoor terminal shifted away from Reed Village house footprint cluster.
-  { x: 360, z: 270, label: 'Rivermoor Station', type: 'station' },
+  // Rivermoor terminal: shifted NE off the stream-rivermoor-crossing endpoint
+  // (at (370,275)) and away from the Reed Village house cluster. Sits on the
+  // dry rise between the stream and Lake Silvermere.
+  { x: 370, z: 285, label: 'Rivermoor Station', type: 'station' },
 ];
 
 // ========== LINE B: Goldenvale → Ironhold → Darkhollow (v7 — visual clarity pass) ==========
@@ -99,8 +115,17 @@ export const LINE_B_WAYPOINTS: RailwayWaypoint[] = [
   { x: -20, z: 83, label: 'Ironhold Central', type: 'station' },
   // East bypass around Ironhold exterior (clean through-route, no U-turn).
   // Stays ≥18u from east wall (x=38) and corner towers (r=3.2).
+  // Bridge waypoint repositioned from (25,81) to (2,82) — Codex audit found
+  // Line B between Ironhold Central (-20,83) and (45,80) crosses river-great
+  // for a 32u stretch x∈[-13.5, 19] (river center crosses z=82 at x=2). The
+  // rail-bridge-river-great-ironhold deck (length 40) now spans the whole
+  // crossing.
+  { x: 2, z: 82, label: 'River Great (Ironhold) Bridge', type: 'bridge' },
   { x: 45, z: 80, type: 'track' },
   { x: 58, z: 55, type: 'track' },
+  // Bridge waypoint over the eastern fork of River Great — Line B previously
+  // dipped into the 16u-wide channel between (58,55) and (65,15) at (60,43).
+  { x: 60, z: 43, label: 'River Great East Bridge', type: 'bridge' },
   { x: 65, z: 15, type: 'track' },
   { x: 60, z: -35, type: 'track' },
   { x: 45, z: -75, type: 'track' },
@@ -126,16 +151,153 @@ export const RAILWAY_STATIONS: RailwayStation[] = [
   { id: 'stn-ironhold', name: 'Ironhold Central', position: [-45, 89], side: 'south', stationType: 'capital', line: 'AB' },
   { id: 'stn-goldenvale', name: 'Goldenvale', position: [-470, 185], side: 'east', stationType: 'medium', line: 'B' },
   { id: 'stn-blackthorn', name: 'Blackthorn Halt', position: [140, -200], side: 'west', stationType: 'small', line: 'B' },
-  { id: 'stn-rivermoor', name: 'Rivermoor', position: [360, 270], side: 'west', stationType: 'medium', line: 'A' },
+  { id: 'stn-rivermoor', name: 'Rivermoor', position: [370, 285], side: 'west', stationType: 'medium', line: 'A' },
   { id: 'stn-darkhollow', name: 'Darkhollow', position: [520, -455], side: 'south', stationType: 'small', line: 'B' },
 ];
 
 // ========== RAILWAY BRIDGES (v7 — aligned to actual water crossings) ==========
 export const RAILWAY_BRIDGES: RailwayBridge[] = [
   { id: 'rail-bridge-ironhold-south', position: [-28, 0.5, 83], line: 'B', crosses: 'Ironhold Stream', length: 20 },
+  { id: 'rail-bridge-ironhold-east', position: [2, 0.3, 82], line: 'B', crosses: 'River Great (Ironhold reach)', length: 40 },
+  { id: 'rail-bridge-ironhold-tributary', position: [-43, 0.4, 88], line: 'A', crosses: 'Ironhold Tributary (Line A)', length: 14 },
+  { id: 'rail-bridge-river-great', position: [-26, 0.3, 100.6], line: 'A', crosses: 'River Great', length: 26 },
+  { id: 'rail-bridge-river-great-east', position: [60, 0.4, 43], line: 'B', crosses: 'River Great (eastern fork)', length: 26 },
   { id: 'rail-bridge-rivermoor', position: [355, 0.8, 260], line: 'A', crosses: 'Rivermoor Tributary', length: 22 },
   { id: 'rail-bridge-darkhollow', position: [390, 0.3, -360], line: 'B', crosses: 'Darkhollow Ford', length: 18 },
 ];
+
+// ========== LEVEL CROSSINGS (rail × road grade crossings) ==========
+// Coordinates and trackAngles computed from the validator's segment-intersect
+// output for the current LINE_A / LINE_B / ROADS data. If you change waypoints
+// or roads, re-run the dev validator and update this table.
+export const LEVEL_CROSSINGS: LevelCrossing[] = [
+  // ----- Ironhold radial corridor (Line A + Line B cross all six radial roads) -----
+  {
+    id: 'lc-ironhold-west-corridor',
+    position: [-74.2, -33.6],
+    trackAngle: Math.atan2(8, 50),       // Line A: (-80,-70)→(-72,-20)
+    size: 4,
+    description: 'Line A × Ironhold–Greenmeadow + Millbrook–Ironhold radials',
+  },
+  {
+    id: 'lc-blackthorn-radial',
+    position: [62.6, -9.3],
+    trackAngle: Math.atan2(-5, -50),     // Line B: (65,15)→(60,-35)
+    size: 4,
+    description: 'Line B × Ironhold–Blackthorn radial road',
+  },
+  {
+    id: 'lc-ashwood-radial-a',
+    position: [-47.3, 75.5],
+    trackAngle: Math.atan2(12, 33),      // Line A: (-55,55)→(-43,88)
+    size: 4,
+    description: 'Line A × Ironhold–Ashwood radial road',
+  },
+  {
+    id: 'lc-ashwood-radial-b',
+    position: [-66.8, 83.9],
+    trackAngle: Math.atan2(30, -1),      // Line B: (-70,84)→(-40,83)
+    size: 4,
+    description: 'Line B × Ironhold–Ashwood radial road',
+  },
+  {
+    id: 'lc-old-veyra-radial-a',
+    position: [101.4, 75.8],
+    trackAngle: Math.atan2(35, -90),     // Line A: (90,105)→(125,15)
+    size: 4,
+    description: 'Line A × Ironhold–Old Veyra radial road',
+  },
+  {
+    id: 'lc-old-veyra-radial-b',
+    position: [52.4, 65.8],
+    trackAngle: Math.atan2(13, -25),     // Line B: (45,80)→(58,55)
+    size: 4,
+    description: 'Line B × Ironhold–Old Veyra radial road',
+  },
+  {
+    id: 'lc-blackthorn-old-veyra',
+    position: [192.7, 36.4],
+    trackAngle: Math.atan2(95, 30),      // Line A: (125,15)→(220,45)
+    size: 4,
+    description: 'Line A × Blackthorn–Old Veyra road',
+  },
+  // ----- Outer-ring road crossings -----
+  {
+    id: 'lc-blackthorn-ravenwatch',
+    position: [134.4, -169.1],
+    trackAngle: Math.atan2(10, -55),     // Line B: (130,-145)→(140,-200)
+    size: 4,
+    description: 'Line B × Ravenwatch–Blackthorn road',
+  },
+  {
+    id: 'lc-greenmeadow-ravenwatch',
+    position: [-101.4, -151.8],
+    trackAngle: Math.atan2(30, 40),      // Line A: (-130,-190)→(-100,-150)
+    size: 4,
+    description: 'Line A × Greenmeadow–Ravenwatch road',
+  },
+  {
+    id: 'lc-ashwood-greenmeadow',
+    position: [-178.4, 78.2],
+    trackAngle: Math.atan2(90, 7),       // Line B: (-220,75)→(-130,82)
+    size: 4,
+    description: 'Line B × Ashwood–Greenmeadow road',
+  },
+  {
+    id: 'lc-goldenvale-trade',
+    position: [-409.0, 134.8],
+    trackAngle: Math.atan2(50, -60),     // Line B: (-430,160)→(-380,100)
+    size: 4,
+    description: 'Line B × Goldenvale trade road',
+  },
+];
+
+// Rail bridge deck width (matches RailwayBridges.tsx deckW)
+const RAIL_BRIDGE_DECK_W = 3.2;
+// Deck top above bridge.position[1] (matches deck mesh y=1.0 + 0.25 thickness/2 ≈ 1.0 surface)
+const RAIL_BRIDGE_DECK_OFFSET = 1.0;
+
+const _railBridgeAngles: number[] = [];
+let _railBridgeAnglesBuilt = false;
+
+function buildRailBridgeAngles() {
+  for (const b of RAILWAY_BRIDGES) {
+    const wps = b.line === 'A' ? LINE_A_WAYPOINTS : LINE_B_WAYPOINTS;
+    let bestIdx = 0, bestD = Infinity;
+    for (let i = 0; i < wps.length; i++) {
+      const dx = wps[i].x - b.position[0];
+      const dz = wps[i].z - b.position[2];
+      const d = dx * dx + dz * dz;
+      if (d < bestD) { bestD = d; bestIdx = i; }
+    }
+    const prev = wps[Math.max(0, bestIdx - 1)];
+    const next = wps[Math.min(wps.length - 1, bestIdx + 1)];
+    _railBridgeAngles.push(Math.atan2(next.x - prev.x, next.z - prev.z));
+  }
+  _railBridgeAnglesBuilt = true;
+}
+
+/**
+ * Returns the deck height at (x,z) if it lies on a railway bridge, else null.
+ * OBB check using each bridge's track-aligned rotation, length, and deck width.
+ */
+export function getRailBridgeHeight(x: number, z: number): number | null {
+  if (!_railBridgeAnglesBuilt) buildRailBridgeAngles();
+  for (let i = 0; i < RAILWAY_BRIDGES.length; i++) {
+    const b = RAILWAY_BRIDGES[i];
+    const angle = _railBridgeAngles[i];
+    const cos = Math.cos(-angle);
+    const sin = Math.sin(-angle);
+    const dx = x - b.position[0];
+    const dz = z - b.position[2];
+    const lx = cos * dx + sin * dz;
+    const lz = -sin * dx + cos * dz;
+    if (Math.abs(lx) <= RAIL_BRIDGE_DECK_W / 2 + 0.5 && Math.abs(lz) <= b.length / 2) {
+      return b.position[1] + RAIL_BRIDGE_DECK_OFFSET;
+    }
+  }
+  return null;
+}
 
 /**
  * Railway path segments for terrain flattening.

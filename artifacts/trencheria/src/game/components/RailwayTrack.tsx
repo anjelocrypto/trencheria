@@ -6,7 +6,7 @@
 import { useMemo, memo } from 'react';
 import * as THREE from 'three';
 import { LINE_A_WAYPOINTS, LINE_B_WAYPOINTS, RailwayWaypoint } from '../world/RailwayData';
-import { getTerrainHeight } from './Terrain';
+import { getRailGroundHeight } from '../systems/Grounding';
 
 const GAUGE = 1.2;
 const BALLAST_H = 0.15;
@@ -124,13 +124,13 @@ function buildSplinePoints(wps: RailwayWaypoint[]): Float32Array {
       const x = wps[i].x + (wps[i + 1].x - wps[i].x) * t;
       const z = wps[i].z + (wps[i + 1].z - wps[i].z) * t;
       arr[idx++] = x;
-      arr[idx++] = getTerrainHeight(x, z) + TRACK_HEIGHT_OFFSET;
+      arr[idx++] = getRailGroundHeight(x, z) + TRACK_HEIGHT_OFFSET;
       arr[idx++] = z;
     }
   }
   const last = wps[wps.length - 1];
   arr[idx++] = last.x;
-  arr[idx++] = getTerrainHeight(last.x, last.z) + TRACK_HEIGHT_OFFSET;
+  arr[idx++] = getRailGroundHeight(last.x, last.z) + TRACK_HEIGHT_OFFSET;
   arr[idx++] = last.z;
   return arr;
 }

@@ -12,11 +12,27 @@
 import { getTerrainHeight } from '../components/Terrain';
 import { getBridgeHeight } from '../world/BridgeData';
 import { getLakeHeight, getRiverHeight } from '../world/WaterData';
+import { getRailBridgeHeight } from '../world/RailwayData';
 
 /** Single source of truth for ground height at a world position. */
 export function getGroundHeight(x: number, z: number): number {
   const bridgeY = getBridgeHeight(x, z);
-  return bridgeY !== null ? bridgeY : getTerrainHeight(x, z);
+  if (bridgeY !== null) return bridgeY;
+  const railY = getRailBridgeHeight(x, z);
+  if (railY !== null) return railY;
+  return getTerrainHeight(x, z);
+}
+
+/**
+ * Railway-aware ground height: rail bridge deck wins, else terrain.
+ * Use this for laying tracks, sleepers, ballast, lamps, and station platforms
+ * along the railway centerline. Roads use plain terrain — they have their
+ * own bridge override via getBridgeHeight in getGroundHeight.
+ */
+export function getRailGroundHeight(x: number, z: number): number {
+  const railY = getRailBridgeHeight(x, z);
+  if (railY !== null) return railY;
+  return getTerrainHeight(x, z);
 }
 
 export interface FootprintSample {

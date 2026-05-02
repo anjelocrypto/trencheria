@@ -311,10 +311,18 @@ export const ROADS: RoadSegment[] = [
   { from: [340, -260], to: [500, -350], width: 2.5 },      // midpoint → Ashkeep
   { from: [500, -350], to: [550, -400], width: 3.0 },      // Ashkeep → Darkhollow
 
-  // Ironhold → Stonepeak (NW main road, via Ashwood)
-  { from: [-185, 135], to: [-280, 280], width: 2.5 },      // Ashwood → midpoint
-  { from: [-280, 280], to: [-350, 450], width: 2.5 },      // midpoint → High Watch
-  { from: [-350, 450], to: [-400, 500], width: 3.0 },      // High Watch → Stonepeak
+  // Ironhold → Stonepeak (NW main road, via Ashwood) — Codex audit re-route:
+  // the original diagonal crossed river-great at a 12° angle (would need a
+  // ~76u bridge) and the first switchback attempt then plowed straight
+  // through Lake Tarn. This routing crosses the river PERPENDICULAR at
+  // (-220, 230) (bridge-stonepeak-river) and hooks NE around Lake Tarn before
+  // turning west onto the Stonepeak gate, keeping every leg under ~10% grade.
+  { from: [-185, 135], to: [-220, 200], width: 2.5 },      // Ashwood → river approach
+  { from: [-220, 200], to: [-220, 285], width: 2.5 },      // North leg, BRIDGE over River Great
+  { from: [-220, 285], to: [-300, 380], width: 2.5 },      // NW climb past river
+  { from: [-300, 380], to: [-340, 460], width: 2.5 },      // mountain ascent
+  { from: [-340, 460], to: [-360, 510], width: 2.5 },      // around Lake Tarn east-north
+  { from: [-360, 510], to: [-400, 500], width: 3.0 },      // final approach to Stonepeak gate
 
   // ===== INTER-KINGDOM SECONDARY ROADS =====
   // Thornwall → Goldenvale (southern connector)
