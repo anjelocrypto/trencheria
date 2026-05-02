@@ -828,6 +828,7 @@ export type Database = {
           _community_name?: string
           _display_name?: string
           _faction_id?: string
+          _session_token?: string
           _wallet_address: string
         }
         Returns: Json

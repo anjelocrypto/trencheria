@@ -112,12 +112,16 @@ export function MenuOverlay({ onEnterWorld, isReconnecting }: Props) {
     const name = sanitizeDisplayName(playerName);
     const community = communityName.replace(/<[^>]*>/g, '').trim().slice(0, 30) || null;
 
-    // Call register_with_faction RPC
+    // Call register_with_faction RPC.
+    // T004: pass the verified wallet session token so the SQL function can
+    // reject calls from anyone who knows a wallet address but didn't actually
+    // sign in with that wallet.
     const { data, error: rpcError } = await supabase.rpc('register_with_faction' as any, {
       _wallet_address: pendingLoginAccount.address,
       _display_name: name || 'Knight',
       _community_name: community,
       _faction_id: faction.id,
+      _session_token: pendingSessionToken,
     });
 
     if (rpcError) {
@@ -161,11 +165,14 @@ export function MenuOverlay({ onEnterWorld, isReconnecting }: Props) {
     // - setting faction_id on player_accounts
     // - creating clan_members entry
     // - setting character_type to match faction
+    // T004: pass the verified wallet session token (same migration path as
+    // handleRegisterWithFaction above).
     const { data, error: rpcError } = await supabase.rpc('register_with_faction' as any, {
       _wallet_address: pendingLoginAccount.wallet_address,
       _display_name: pendingLoginAccount.display_name || 'Knight',
       _community_name: pendingLoginAccount.community_name || undefined,
       _faction_id: faction.id,
+      _session_token: pendingSessionToken,
     });
 
     if (rpcError) {

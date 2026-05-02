@@ -53,6 +53,9 @@ The game uses Supabase heavily as its backend:
 
 The "real" SQL source of truth lives **outside this repo**. `supabase/.migration-backup/` is a read-only mirror — never edit it. There is currently no active `supabase/migrations/` folder; do not invent one without checking with the user first.
 
+`supabase/pending/` holds standalone SQL files staged for the user to apply manually via their external Supabase tooling. Once applied, those files should be deleted. Currently pending:
+- `supabase/pending/20260502000000_register_with_faction_session_token.sql` — adds `_session_token` parameter to `register_with_faction` and validates it via `verify_wallet_session` (Codex audit fix #2).
+
 ## API Server CORS
 
 `artifacts/api-server` reads `ALLOWED_ORIGINS` (comma-separated list) at boot. In development, requests from `localhost`, `127.0.0.1`, or any `*.replit.dev` / `*.replit.app` host are auto-allowed; in production only origins in `ALLOWED_ORIGINS` pass. `credentials: true` is enabled, so wildcard `*` is intentionally not used.
