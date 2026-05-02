@@ -193,14 +193,18 @@ export function SurvivalHUD({
         </div>
       )}
 
-      {/* Minimap & Full Map */}
-      <Minimap
-        playerX={playerX} playerZ={playerZ} playerRotation={playerRotation}
-        horseX={horseX} horseZ={horseZ} isMounted={isMounted}
-        mapOpen={mapOpen} onCloseMap={onCloseMap}
-        territories={territories}
-        remotePlayersRef={remotePlayersRef}
-      />
+      {/* Full-map overlay (M key) — rendered separately so it covers the
+          whole screen. The small minimap is rendered embedded inside the
+          top-right column further down so it can't overlap the Tier panel. */}
+      {mapOpen && (
+        <Minimap
+          playerX={playerX} playerZ={playerZ} playerRotation={playerRotation}
+          horseX={horseX} horseZ={horseZ} isMounted={isMounted}
+          mapOpen={mapOpen} onCloseMap={onCloseMap}
+          territories={territories}
+          remotePlayersRef={remotePlayersRef}
+        />
+      )}
 
       {/* ═══ BOTTOM LEFT — Survival bars + Faction identity + War alerts ═══ */}
       <div className="absolute bottom-6 left-6 flex flex-col gap-2">
@@ -330,71 +334,112 @@ export function SurvivalHUD({
         </div>
       </div>
 
-      {/* ═══ TOP RIGHT — Progression panel ═══ */}
-      <div className="absolute top-4 right-4 rounded-lg overflow-hidden" style={{ ...panelStyle, maxWidth: 200 }}>
-        {/* Header */}
-        <div className="px-4 py-2.5" style={{
-          background: 'linear-gradient(90deg, hsla(35,60%,45%,0.2), transparent)',
-          borderBottom: '1px solid hsla(40,30%,45%,0.2)',
-        }}>
-          <div className="flex items-center gap-2">
-            <span className="text-base">⚔️</span>
-            <span style={{
-              fontSize: 13,
-              fontWeight: 800,
-              letterSpacing: '0.04em',
-              color: 'hsl(35,60%,65%)',
-            }}>
-              TIER {progression.tier}
-            </span>
-            <span style={{
-              fontSize: 10,
-              fontWeight: 600,
-              color: 'hsl(40,15%,50%)',
-              marginLeft: 2,
-            }}>
-              — {progression.tier >= 2 ? 'Advanced' : 'Basic'}
-            </span>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="px-4 py-3 flex flex-col gap-2">
-          {/* Kills */}
-          <div className="flex items-center justify-between">
-            <span style={{ fontSize: 11, color: 'hsl(40,15%,55%)', fontWeight: 600 }}>Kills</span>
-            <div className="flex items-center gap-1.5">
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'hsl(0,60%,60%)' }}>{progression.enemiesKilled}</span>
-              {progression.tier < 2 && (
-                <span style={{ fontSize: 10, color: 'hsl(40,15%,40%)' }}>/ {TIER2_KILLS_REQUIRED}</span>
-              )}
-            </div>
-          </div>
-          {/* Built */}
-          <div className="flex items-center justify-between">
-            <span style={{ fontSize: 11, color: 'hsl(40,15%,55%)', fontWeight: 600 }}>Built</span>
-            <div className="flex items-center gap-1.5">
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'hsl(35,60%,60%)' }}>{progression.structuresBuilt}</span>
-              {progression.tier < 2 && (
-                <span style={{ fontSize: 10, color: 'hsl(40,15%,40%)' }}>/ {TIER2_STRUCTURES_REQUIRED}</span>
-              )}
+      {/* ═══ TOP RIGHT COLUMN — Tier panel + Minimap stacked ═══
+          Single right-side column with a fixed width so the minimap can
+          never overlap the Tier/Kills/Built panel regardless of how many
+          Secured Regions accumulate. The Secured Regions list itself is
+          capped and scrolls so the panel height stays bounded. */}
+      <div
+        className="absolute top-4 right-4 flex flex-col items-end pointer-events-none"
+        style={{ width: 210, gap: 12 }}
+      >
+        {/* Tier / Kills / Built / Secured panel */}
+        <div className="w-full rounded-lg overflow-hidden" style={panelStyle}>
+          {/* Header */}
+          <div className="px-4 py-2.5" style={{
+            background: 'linear-gradient(90deg, hsla(35,60%,45%,0.2), transparent)',
+            borderBottom: '1px solid hsla(40,30%,45%,0.2)',
+          }}>
+            <div className="flex items-center gap-2">
+              <span className="text-base">⚔️</span>
+              <span style={{
+                fontSize: 13,
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                color: 'hsl(35,60%,65%)',
+              }}>
+                TIER {progression.tier}
+              </span>
+              <span style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: 'hsl(40,15%,50%)',
+                marginLeft: 2,
+              }}>
+                — {progression.tier >= 2 ? 'Advanced' : 'Basic'}
+              </span>
             </div>
           </div>
 
-          {/* Secured areas */}
-          {progression.areasSecured.length > 0 && (
-            <div style={{ borderTop: '1px solid hsla(40,30%,45%,0.2)', paddingTop: 8, marginTop: 4 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'hsl(40,15%,45%)', marginBottom: 6 }}>
-                Secured Regions
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {progression.areasSecured.map(a => (
-                  <SecuredPill key={a} name={a.charAt(0).toUpperCase() + a.slice(1)} />
-                ))}
+          {/* Stats — Kills and Built are ALWAYS visible (outside the
+              scrollable secured-regions area) so they never get pushed
+              off-screen by a long region list. */}
+          <div className="px-4 py-3 flex flex-col gap-2">
+            {/* Kills */}
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: 11, color: 'hsl(40,15%,55%)', fontWeight: 600 }}>Kills</span>
+              <div className="flex items-center gap-1.5">
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'hsl(0,60%,60%)' }}>{progression.enemiesKilled}</span>
+                {progression.tier < 2 && (
+                  <span style={{ fontSize: 10, color: 'hsl(40,15%,40%)' }}>/ {TIER2_KILLS_REQUIRED}</span>
+                )}
               </div>
             </div>
-          )}
+            {/* Built */}
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: 11, color: 'hsl(40,15%,55%)', fontWeight: 600 }}>Built</span>
+              <div className="flex items-center gap-1.5">
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'hsl(35,60%,60%)' }}>{progression.structuresBuilt}</span>
+                {progression.tier < 2 && (
+                  <span style={{ fontSize: 10, color: 'hsl(40,15%,40%)' }}>/ {TIER2_STRUCTURES_REQUIRED}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Secured regions — capped, scrollable. Long names wrap or
+                truncate cleanly; the list never spills outside the panel. */}
+            {progression.areasSecured.length > 0 && (
+              <div style={{ borderTop: '1px solid hsla(40,30%,45%,0.2)', paddingTop: 8, marginTop: 4 }}>
+                <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'hsl(40,15%,45%)' }}>
+                    Secured Regions
+                  </span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: 'hsl(40,15%,55%)' }}>
+                    {progression.areasSecured.length}
+                  </span>
+                </div>
+                <div
+                  className="flex flex-wrap gap-1.5 pointer-events-auto"
+                  style={{
+                    maxHeight: 160,
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    paddingRight: 2,
+                  }}
+                >
+                  {progression.areasSecured.map(a => (
+                    <SecuredPill key={a} name={a.charAt(0).toUpperCase() + a.slice(1)} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Minimap embedded directly under the Tier panel — guaranteed to
+            sit below it with a 12px gap, never overlapping. The full-map
+            overlay (M key) is rendered separately above so it still covers
+            the whole screen. */}
+        {!mapOpen && (
+          <Minimap
+            embedded
+            playerX={playerX} playerZ={playerZ} playerRotation={playerRotation}
+            horseX={horseX} horseZ={horseZ} isMounted={isMounted}
+            mapOpen={mapOpen} onCloseMap={onCloseMap}
+            territories={territories}
+            remotePlayersRef={remotePlayersRef}
+          />
+        )}
       </div>
 
       {/* ═══ TOP LEFT — Controls panel ═══ */}
@@ -429,9 +474,11 @@ export function SurvivalHUD({
         </ControlSection>
       </div>
 
-      {/* Build mode panel */}
+      {/* Build mode panel — positioned to the LEFT of the top-right
+          column (column = 16px right + 210px wide, so 240px clears it
+          with a small gap). Avoids overlapping the Tier panel/minimap. */}
       {buildMode && (
-        <div className="absolute top-24 right-4 p-4 rounded-lg min-w-56" style={panelStyle}>
+        <div className="absolute p-4 rounded-lg min-w-56" style={{ ...panelStyle, top: 16, right: 240 }}>
           <div className="flex items-center gap-2 mb-1 pb-2" style={{ borderBottom: '1px solid hsla(40,30%,45%,0.2)' }}>
             <span className="text-base">🔨</span>
             <span style={{ fontSize: 13, fontWeight: 800, color: 'hsl(35,60%,65%)', letterSpacing: '0.04em' }}>BUILD MODE</span>

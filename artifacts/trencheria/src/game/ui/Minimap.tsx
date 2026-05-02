@@ -25,6 +25,14 @@ interface MinimapProps {
   onCloseMap: () => void;
   territories?: TerritoryInfo[];
   remotePlayersRef?: React.RefObject<Map<string, InterpolatedPlayer>>;
+  /**
+   * When true the small minimap renders as a normal block element with no
+   * absolute positioning, so a parent can stack it inside a layout column
+   * (e.g. directly under the Tier/Kills/Built panel in SurvivalHUD). The
+   * full-screen map overlay (when mapOpen=true) remains absolutely
+   * positioned exactly as before.
+   */
+  embedded?: boolean;
 }
 
 const MAP_SIZE = 160;
@@ -474,6 +482,7 @@ function hexToRgba(hex: string, alpha: number): string {
 export function Minimap({
   playerX, playerZ, playerRotation,
   horseX, horseZ, isMounted, mapOpen, onCloseMap, territories, remotePlayersRef,
+  embedded = false,
 }: MinimapProps) {
   const miniRef = useRef<HTMLCanvasElement>(null);
   const fullRef = useRef<HTMLCanvasElement>(null);
@@ -595,10 +604,20 @@ export function Minimap({
   return (
     <>
       {!mapOpen && (
-        <div className="absolute right-4 pointer-events-none" style={{ width: MAP_SIZE, height: MAP_SIZE, top: 130, zIndex: 50 }}>
-          <canvas ref={miniRef} width={MAP_SIZE} height={MAP_SIZE}
-            style={{ width: MAP_SIZE, height: MAP_SIZE, borderRadius: '50%' }} />
-        </div>
+        embedded ? (
+          // Inline / column-layout mode — parent controls position so the
+          // minimap can stack cleanly under another panel without overlap.
+          <div className="pointer-events-none" style={{ width: MAP_SIZE, height: MAP_SIZE }}>
+            <canvas ref={miniRef} width={MAP_SIZE} height={MAP_SIZE}
+              style={{ width: MAP_SIZE, height: MAP_SIZE, borderRadius: '50%' }} />
+          </div>
+        ) : (
+          // Legacy absolute-positioned mode (kept for any direct callers).
+          <div className="absolute right-4 pointer-events-none" style={{ width: MAP_SIZE, height: MAP_SIZE, top: 130, zIndex: 50 }}>
+            <canvas ref={miniRef} width={MAP_SIZE} height={MAP_SIZE}
+              style={{ width: MAP_SIZE, height: MAP_SIZE, borderRadius: '50%' }} />
+          </div>
+        )
       )}
 
       {mapOpen && (

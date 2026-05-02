@@ -1,0 +1,53 @@
+Codex reviewed the HUD overlap issue from the screenshot.
+
+Problem:
+The right-side HUD is not layout-aware.
+- artifacts/trencheria/src/game/ui/SurvivalHUD.tsx renders the Tier/Kills/Built/Secured Regions panel at top-right.
+- artifacts/trencheria/src/game/ui/Minimap.tsx renders the minimap separately at right: 16px, top: 130px, zIndex: 50.
+- When Secured Regions grows, the Tier panel becomes taller than 130px, so the minimap overlaps the panel.
+- Because the minimap has zIndex 50, it appears on top of the Tier panel.
+
+Please fix the HUD layout properly, not with another magic top number.
+
+Tasks:
+1. Refactor the top-right HUD into one right-side column in SurvivalHUD.tsx:
+   - Tier/Kills/Built panel first
+   - Minimap below it
+   - gap between them, e.g. 12px
+   - same right margin
+   - no overlap possible
+
+2. Update Minimap.tsx so the small minimap can render inline/embedded instead of always using absolute positioning.
+   Suggested prop:
+   - embedded?: boolean
+   When embedded=true:
+   - do not render the absolute right/top wrapper
+   - render a normal block with width/height MAP_SIZE
+   - full-screen map overlay when mapOpen=true should still work exactly as before
+
+3. Cap the Secured Regions list height:
+   - Keep Kills and Built always visible.
+   - Put only the secured-region pill list inside a scrollable area.
+   - Example: maxHeight 150-180px, overflowY auto.
+   - Long region names should not overflow outside the panel.
+
+4. Make the top-right panel width stable:
+   - width around 200-220px
+   - secured pills should wrap or truncate cleanly
+   - no text should spill behind the minimap
+
+5. Responsive behavior:
+   - Test at 1422x900 like the screenshot
+   - Test at 1366x768
+   - Test mobile/narrow width
+   - If vertical space is tight, shrink minimap to ~120px or collapse secured regions behind a small “Secured X” row.
+
+6. Do not touch SQL, Supabase, auth, api-server, railway files, or .migration-backup.
+
+Acceptance:
+- Minimap never overlaps the Tier/Kills/Built panel.
+- Kills and Built counters are always readable.
+- Secured Regions list scrolls or collapses when long.
+- Full map opened with M still works.
+- Left controls, bottom HP/stamina, inventory, wallet, and multiplayer HUD do not overlap.
+- Verify with browser screenshot before reporting done.
