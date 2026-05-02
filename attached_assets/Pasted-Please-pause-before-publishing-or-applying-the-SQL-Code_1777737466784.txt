@@ -1,0 +1,30 @@
+Please pause before publishing or applying the SQL. Codex reviewed latest main and found T004 still needs a safe correction.
+
+Main blocker:
+supabase/pending/20260502000000_register_with_faction_session_token.sql adds a 5-argument register_with_faction function, but PostgreSQL will not replace the old 4-argument function. It will create an overloaded second function, leaving the old insecure function callable.
+
+Please update the pending SQL to:
+1. Wrap the change in a transaction.
+2. DROP the old function signature first:
+   DROP FUNCTION IF EXISTS public.register_with_faction(text, text, text, uuid);
+3. Then CREATE the new register_with_faction function with _session_token.
+4. Add explicit REVOKE/GRANT EXECUTE statements for the new function.
+
+Second blocker:
+New account registration may still break because verify-wallet currently gets a session token through create_wallet_session, and create_wallet_session rejects wallets that do not already have a player_accounts row. That means brand-new users may receive an empty session token, then MenuOverlay.tsx passes an empty _session_token, and secure register_with_faction rejects them.
+
+Please update the pending SQL or edge-function strategy so a wallet that has just signed with Phantom can receive a valid temporary wallet session before the account exists. The safest small SQL fix is to update create_wallet_session so it no longer requires an existing player_accounts row, since wallet_sessions only stores wallet_address/session_token and the signature was already verified by the edge function.
+
+Deployment safety:
+- Do not deploy the MenuOverlay.tsx _session_token change unless the Supabase SQL is applied at the same time.
+- If the frontend is deployed before the SQL, faction registration can fail.
+- Existing players with factions probably keep working, but new registration/faction migration is the risky path.
+
+Also, T011 is only half complete:
+ResourceSpatialGrid is used by Player.tsx for nearby interaction checks, but WorldObjects.tsx still maps over all resources during render. Please either finish that part or mark it as deferred honestly.
+
+After fixing the pending SQL, please run:
+- api-server typecheck
+- trencheria typecheck
+- build if possible
+- manual smoke test: new wallet registration, existing wallet login, faction migration, territory action, chat, resource gathering.
