@@ -181,9 +181,12 @@ $function$;
 
 -- ---------------------------------------------------------------------
 -- 3. Lock down execute privileges on the new function.
---    SECURITY DEFINER + REVOKE FROM PUBLIC + explicit GRANT is the
---    standard hardening pattern: only Supabase auth roles can call it,
---    and the function body itself runs with the function owner's rights.
+--    register_with_faction can be callable by anon/authenticated because
+--    it validates `_session_token` via verify_wallet_session() before
+--    doing anything sensitive. SECURITY DEFINER + REVOKE FROM PUBLIC +
+--    explicit GRANT is the standard hardening pattern: only Supabase
+--    auth roles can call it, and the function body runs with the
+--    function owner's rights.
 -- ---------------------------------------------------------------------
 REVOKE ALL ON FUNCTION public.register_with_faction(text, text, text, uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.register_with_faction(text, text, text, uuid, text) TO anon, authenticated, service_role;
@@ -224,7 +227,14 @@ BEGIN
 END;
 $$;
 
+-- create_wallet_session must be service_role ONLY. The verify-wallet edge
+-- function (running as service_role) is the only legitimate caller; it
+-- creates a session AFTER cryptographically verifying a Phantom signature.
+-- If anon/authenticated could call this directly, anyone could mint a
+-- session token for any wallet address without signing — the entire
+-- wallet-auth model would be bypassed.
 REVOKE ALL ON FUNCTION public.create_wallet_session(text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.create_wallet_session(text) TO anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.create_wallet_session(text) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_wallet_session(text) TO service_role;
 
 COMMIT;
