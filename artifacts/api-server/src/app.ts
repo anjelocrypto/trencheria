@@ -23,22 +23,39 @@ const devOriginPatterns: RegExp[] = [
   /^https?:\/\/[a-z0-9-]+\.(?:repl\.co|replit\.dev|replit\.app|picard\.replit\.dev|riker\.replit\.dev|kirk\.replit\.dev|janeway\.replit\.dev)$/i,
 ];
 
-const corsOptions: CorsOptions = {
-  origin(origin, cb) {
-    // Same-origin / curl / server-to-server requests have no Origin header — allow them.
-    if (!origin) return cb(null, true);
+// Per-request CORS so we can safely allow same-origin in production even when
+// `ALLOWED_ORIGINS` is unset (the api-server and the trencheria web artifact
+// share the same Replit-proxied origin under path-based routing).
+const corsMiddleware = cors((req, callback) => {
+  const headers = req.headers ?? {};
+  const originHeader = headers["origin"];
+  const hostHeader = headers["host"];
+  const origin = Array.isArray(originHeader) ? originHeader[0] : originHeader;
+  const host = Array.isArray(hostHeader) ? hostHeader[0] : hostHeader;
 
-    if (allowedFromEnv.includes(origin)) return cb(null, true);
+  const opts: CorsOptions = { credentials: true, origin: false };
 
-    if (!isProd && devOriginPatterns.some((re) => re.test(origin))) {
-      return cb(null, true);
-    }
-
+  if (!origin) {
+    // Same-origin GETs, curl, server-to-server: no Origin header — allow.
+    opts.origin = true;
+  } else if (allowedFromEnv.includes(origin)) {
+    opts.origin = true;
+  } else if (
+    host &&
+    (origin === `https://${host}` || origin === `http://${host}`)
+  ) {
+    // Same-origin fallback (Origin matches Host). Critical for production
+    // deployments where the frontend calls /api on the same domain — works
+    // even if ALLOWED_ORIGINS is misconfigured.
+    opts.origin = true;
+  } else if (!isProd && devOriginPatterns.some((re) => re.test(origin))) {
+    opts.origin = true;
+  } else {
     logger.warn({ origin }, "CORS rejected origin");
-    return cb(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-};
+  }
+
+  callback(null, opts);
+});
 
 app.use(
   pinoHttp({
@@ -59,7 +76,7 @@ app.use(
     },
   }),
 );
-app.use(cors(corsOptions));
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

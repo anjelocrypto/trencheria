@@ -58,7 +58,7 @@ The "real" SQL source of truth lives **outside this repo**. `supabase/.migration
 
 ## API Server CORS
 
-`artifacts/api-server` reads `ALLOWED_ORIGINS` (comma-separated list) at boot. In development, requests from `localhost`, `127.0.0.1`, or any `*.replit.dev` / `*.replit.app` host are auto-allowed; in production only origins in `ALLOWED_ORIGINS` pass. `credentials: true` is enabled, so wildcard `*` is intentionally not used.
+`artifacts/api-server` reads `ALLOWED_ORIGINS` (comma-separated list) at boot. In development, requests from `localhost`, `127.0.0.1`, or any `*.replit.dev` / `*.replit.app` host are auto-allowed. In production, allowed origins are: (1) anything in `ALLOWED_ORIGINS`, plus (2) **same-origin requests** (where `Origin` matches the request `Host`) — this is the safe default for Replit path-based routing where the trencheria web artifact and the api-server live under the same domain. Cross-origin production requests still require explicit allowlisting. `credentials: true` is enabled, so wildcard `*` is intentionally not used.
 
 ## Performance Notes (Trencheria game loop)
 
