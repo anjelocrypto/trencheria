@@ -24,6 +24,7 @@ import {
   RailwayBridge,
   RailwayStation,
   LEVEL_CROSSINGS,
+  STATION_DIMS,
   getRailwaySegments,
   distToRailway,
 } from '../world/RailwayData';
@@ -31,7 +32,6 @@ import { ROADS, SETTLEMENTS } from '../world/RegionData';
 import { BRIDGES } from '../world/BridgeData';
 import { getLakeHeight, getRiverHeight } from '../world/WaterData';
 import { sampleFootprint } from './Grounding';
-import { STATION_DIMS } from '../components/RailwayStations';
 import { WILDERNESS_BUILDINGS } from '../components/WildernessStructures';
 import { generateWorldResources } from './WorldResources';
 

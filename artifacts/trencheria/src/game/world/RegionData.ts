@@ -303,7 +303,13 @@ export const ROADS: RoadSegment[] = [
 
   // Ironhold → Rivermoor (NE main road, via Frostmere)
   { from: [155, 195], to: [280, 260], width: 2.5 },        // Frostmere → midpoint
-  { from: [280, 260], to: [400, 300], width: 2.5 },        // midpoint → Reed Village
+  // Codex audit: original (280,260)→(400,300) passed within 1.7u of the
+  // Rivermoor station platform centre at (365.3, 287.8). Dogleg via
+  // (360, 295) routes the road north-around the platform, keeping ≥7.7u
+  // clearance from platform centre (validator threshold = 6.75u). The new
+  // segments don't cross any rail or water body.
+  { from: [280, 260], to: [360, 295], width: 2.5 },        // midpoint → Rivermoor approach
+  { from: [360, 295], to: [400, 300], width: 2.5 },        // approach → Reed Village
   { from: [400, 300], to: [450, 350], width: 3.0 },        // Reed Village → Rivermoor
 
   // Ironhold → Darkhollow (SE main road, via Blackthorn)

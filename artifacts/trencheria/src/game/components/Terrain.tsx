@@ -83,9 +83,14 @@ export function getTerrainHeight(x: number, z: number): number {
   const regional = getRegionalHeight(x, z) * 1.25;
   const rawHeight = (baseHeight + regional) * (1 - settleFlatten) + regional * settleFlatten * 0.3;
 
-  // Railway corridor flattening — uses precomputed grid (fast lookup)
+  // Railway corridor flattening — uses precomputed grid (fast lookup).
+  // The grid also bakes in station-platform pads (see RailwayData.ts) so
+  // station footprints sit fully flat against this same target.
+  // Floor the target at 0 so rail/station flat zones never dip below water
+  // level when they pass through farmland lowlands or wetlands (regional<0).
+  // Real railways in such terrain run on embankments; this matches that.
   const railFlatten = getRailFlattenGrid().sample(x, z);
-  const railTarget = regional * 0.3;
+  const railTarget = Math.max(0, regional * 0.3);
   let height = rawHeight * (1 - railFlatten) + railTarget * railFlatten;
 
   // Conservative terrain stepping for voxel-inspired terracing

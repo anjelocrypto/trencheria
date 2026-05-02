@@ -67,9 +67,15 @@ export const RIVERS: RiverDef[] = [
   // OBB (length-20 span at (-28,83), so deck covers x∈[-38,-18]). Stream now
   // ends at x=-25 so Line B's Ironhold Central station at (-20,83) and the
   // segment east of it stay clear of water without needing extra coverage.
+  // Codex follow-up: west endpoint pulled back from x=-35 to x=-32 because
+  // the Ironhold Central platform's south-west footprint corner
+  // (~(-35.4, 82.4) when sampleFootprint rotates the 12×20 platform along
+  // the shared east-west corridor) was clipping into the stream's 5u-wide
+  // channel. Both rail segments through the stream remain fully covered by
+  // the rail-bridge-ironhold-south OBB.
   {
     id: 'stream-ironhold-south',
-    points: [[-35, -0.35, 83], [-30, -0.4, 83], [-25, -0.35, 83]],
+    points: [[-32, -0.35, 83], [-30, -0.4, 83], [-25, -0.35, 83]],
     width: 5,
   },
   // Rivermoor tributary — small stream crossed by Line A bridge

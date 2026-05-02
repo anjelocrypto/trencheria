@@ -6,10 +6,22 @@
  */
 import { memo, useMemo } from 'react';
 import * as THREE from 'three';
-import { RAILWAY_STATIONS, RailwayStation, LINE_A_WAYPOINTS, LINE_B_WAYPOINTS } from '../world/RailwayData';
+import {
+  RAILWAY_STATIONS,
+  RailwayStation,
+  LINE_A_WAYPOINTS,
+  LINE_B_WAYPOINTS,
+  STATION_DIMS,
+  StationDims,
+} from '../world/RailwayData';
 import { getRailGroundHeight } from '../systems/Grounding';
 import { sampleFootprint } from '../systems/Grounding';
 import { GEO, MAT } from '../world/SettlementPieces';
+
+// Re-export so existing local imports of STATION_DIMS / StationDims from
+// this module keep working while world/RailwayData.ts is the source of truth.
+export { STATION_DIMS };
+export type { StationDims };
 
 // ========== SHARED STATION MATERIALS ==========
 const platformMat = new THREE.MeshLambertMaterial({ color: '#7a7068' });
@@ -26,20 +38,7 @@ const bannerClothMat = new THREE.MeshLambertMaterial({ color: '#8b2020', side: T
 const bannerBlueMat = new THREE.MeshLambertMaterial({ color: '#2a3a8b', side: THREE.DoubleSide });
 const cobbleMat = new THREE.MeshLambertMaterial({ color: '#6a6a5a' });
 
-// ========== STATION DIMENSIONS ==========
-export interface StationDims {
-  platW: number; platL: number;
-  shelterW: number; shelterL: number;
-  shelterH: number;
-  numLamps: number;
-}
-
-export const STATION_DIMS: Record<string, StationDims> = {
-  capital: { platW: 10, platL: 18, shelterW: 5.5, shelterL: 10, shelterH: 3.5, numLamps: 6 },
-  large:   { platW: 7,  platL: 14, shelterW: 4.5, shelterL: 8,  shelterH: 3.2, numLamps: 4 },
-  medium:  { platW: 6,  platL: 11, shelterW: 3.8, shelterL: 6.5, shelterH: 3,  numLamps: 3 },
-  small:   { platW: 4,  platL: 8,  shelterW: 3,   shelterL: 5,  shelterH: 2.8, numLamps: 2 },
-};
+// STATION_DIMS now lives in world/RailwayData.ts and is re-exported above.
 
 // ========== TRACK DIRECTION ==========
 function getTrackDirectionAtStation(station: RailwayStation): number {

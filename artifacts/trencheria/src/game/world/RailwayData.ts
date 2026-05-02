@@ -35,6 +35,25 @@ export interface RailwayStation {
   line: 'A' | 'B' | 'AB';
 }
 
+/**
+ * Station platform dimensions, keyed by stationType.
+ * Owned here (world data layer) so terrain flatten, the validator, and the
+ * renderer all see one source of truth for footprint size.
+ */
+export interface StationDims {
+  platW: number; platL: number;
+  shelterW: number; shelterL: number;
+  shelterH: number;
+  numLamps: number;
+}
+
+export const STATION_DIMS: Record<string, StationDims> = {
+  capital: { platW: 10, platL: 18, shelterW: 5.5, shelterL: 10, shelterH: 3.5, numLamps: 6 },
+  large:   { platW: 7,  platL: 14, shelterW: 4.5, shelterL: 8,  shelterH: 3.2, numLamps: 4 },
+  medium:  { platW: 6,  platL: 11, shelterW: 3.8, shelterL: 6.5, shelterH: 3,  numLamps: 3 },
+  small:   { platW: 4,  platL: 8,  shelterW: 3,   shelterL: 5,  shelterH: 2.8, numLamps: 2 },
+};
+
 export interface RailwayBridge {
   id: string;
   position: [number, number, number];
@@ -398,6 +417,76 @@ interface RailFlattenGrid {
 
 let _flattenGrid: RailFlattenGrid | null = null;
 
+/**
+ * Station platform pads — extra circular flat zones merged into the rail
+ * flatten grid. Stations sit OFFSET (platW/2 + 2.5) from the rail centerline,
+ * which puts platform corners outside RAIL_HALF_WIDTH=7 where raw terrain
+ * noise pokes through. Each pad fully flattens (target = railTarget =
+ * regional * 0.3 in Terrain.tsx) over the rotated platform footprint plus a
+ * one-cell buffer so bilinear samples at footprint corners always read 1.0.
+ */
+interface StationPad {
+  cx: number;
+  cz: number;
+  innerR: number;
+  outerR: number;
+}
+
+let _stationPads: StationPad[] | null = null;
+
+function getStationPads(): StationPad[] {
+  if (_stationPads) return _stationPads;
+  const pads: StationPad[] = [];
+  for (const station of RAILWAY_STATIONS) {
+    const [sx, sz] = station.position;
+    const dims = STATION_DIMS[station.stationType] || STATION_DIMS.small;
+
+    let cx: number, cz: number;
+    let halfW: number, halfL: number;
+
+    if (station.line === 'AB') {
+      // Ironhold Central — custom 12×20 island platform centered on station
+      // position (matches IronholdCentralStation in RailwayStations.tsx).
+      cx = sx;
+      cz = sz;
+      halfW = 6;
+      halfL = 10;
+    } else {
+      // Generic side-platform: offset platW/2 + 2.5 from the rail centerline
+      // along the side normal at the station's nearest waypoint pair. Same
+      // formula used by the renderer (StationRenderer) and the validator.
+      const wps = station.line === 'B' ? LINE_B_WAYPOINTS : LINE_A_WAYPOINTS;
+      let bestIdx = 0, bestD = Infinity;
+      for (let i = 0; i < wps.length; i++) {
+        const dx = wps[i].x - sx;
+        const dz = wps[i].z - sz;
+        const d = dx * dx + dz * dz;
+        if (d < bestD) { bestD = d; bestIdx = i; }
+      }
+      const prev = wps[Math.max(0, bestIdx - 1)];
+      const next = wps[Math.min(wps.length - 1, bestIdx + 1)];
+      const trackAngle = Math.atan2(next.x - prev.x, next.z - prev.z);
+      const sideAngle = trackAngle + Math.PI / 2;
+      const sideDir = station.side === 'south' || station.side === 'west' ? -1 : 1;
+      const offset = dims.platW / 2 + 2.5;
+      cx = sx + Math.sin(sideAngle) * offset * sideDir;
+      cz = sz + Math.cos(sideAngle) * offset * sideDir;
+      halfW = dims.platW / 2;
+      halfL = dims.platL / 2;
+    }
+
+    // Inner radius covers the rotated footprint corners plus one grid cell
+    // so bilinear interpolation at any footprint sample reads 1.0 from four
+    // fully-flat neighbours. Outer adds a 4u cosine falloff.
+    const corner = Math.sqrt(halfW * halfW + halfL * halfL);
+    const innerR = corner + GRID_CELL + 1;
+    const outerR = innerR + 4;
+    pads.push({ cx, cz, innerR, outerR });
+  }
+  _stationPads = pads;
+  return pads;
+}
+
 export function getRailFlattenGrid(): RailFlattenGrid {
   if (_flattenGrid) return _flattenGrid;
 
@@ -413,6 +502,17 @@ export function getRailFlattenGrid(): RailFlattenGrid {
   // Pad by max influence distance
   const pad = GRID_MAX_DIST + GRID_CELL;
   minX -= pad; maxX += pad; minZ -= pad; maxZ += pad;
+
+  // Extend grid to fully cover any station pad that sticks out past the
+  // rail-centerline bounding box (offset platforms can reach ~20u sideways).
+  const stationPads = getStationPads();
+  for (const p of stationPads) {
+    const ext = p.outerR + GRID_CELL;
+    if (p.cx - ext < minX) minX = p.cx - ext;
+    if (p.cx + ext > maxX) maxX = p.cx + ext;
+    if (p.cz - ext < minZ) minZ = p.cz - ext;
+    if (p.cz + ext > maxZ) maxZ = p.cz + ext;
+  }
 
   const cols = Math.ceil((maxX - minX) / GRID_CELL) + 1;
   const rows = Math.ceil((maxZ - minZ) / GRID_CELL) + 1;
@@ -448,6 +548,27 @@ export function getRailFlattenGrid(): RailFlattenGrid {
         flatten = t < 0.6 ? 1.0 : 0.5 + 0.5 * Math.cos((t - 0.6) / 0.4 * Math.PI);
         flatten *= 0.85;
       }
+
+      // Station pad flatten — fully levels the platform footprint to the
+      // same target the rail uses (railTarget = regional*0.3 in Terrain).
+      // Inner zone f=1.0; falloff zone uses cosine to 0.
+      let stationFlatten = 0;
+      for (let p = 0; p < stationPads.length; p++) {
+        const pd = stationPads[p];
+        const dxp = gx - pd.cx, dzp = gz - pd.cz;
+        const distP = Math.sqrt(dxp * dxp + dzp * dzp);
+        if (distP >= pd.outerR) continue;
+        let f: number;
+        if (distP <= pd.innerR) {
+          f = 1.0;
+        } else {
+          const t = (distP - pd.innerR) / (pd.outerR - pd.innerR);
+          f = 0.5 + 0.5 * Math.cos(t * Math.PI);
+        }
+        if (f > stationFlatten) stationFlatten = f;
+      }
+
+      if (stationFlatten > flatten) flatten = stationFlatten;
       data[row * cols + col] = flatten;
     }
   }
