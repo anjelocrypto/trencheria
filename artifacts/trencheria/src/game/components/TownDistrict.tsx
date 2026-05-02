@@ -377,6 +377,72 @@ function generateTownBuildings(): TownBuildingDef[] {
 // Exported for collision system
 export const TOWN_BUILDINGS = generateTownBuildings();
 
+// ========== TOWN PROPS COLLISION ==========
+// Hand-authored collision data for the props rendered inside TownDistrict
+// (market stalls, carts, barrels, hay bales, troughs, lanterns, shrine, etc.).
+// These were previously rendered without any registered obstacles, so the player
+// could walk through them — visual/collision mismatch.
+export interface TownPropObstacle {
+  shape: 'circle' | 'box';
+  x: number;
+  z: number;
+  radius?: number; // when shape === 'circle'
+  halfW?: number;  // when shape === 'box'
+  halfD?: number;  // when shape === 'box'
+  rotation?: number; // when shape === 'box'
+}
+
+export const TOWN_PROPS: TownPropObstacle[] = [
+  // --- Market square stalls (~1.8w x 1.0d, ref: <MarketStall>) ---
+  { shape: 'box', x: 18, z: 52, halfW: 0.95, halfD: 0.55, rotation: 0.1 },
+  { shape: 'box', x: 22, z: 52, halfW: 0.95, halfD: 0.55, rotation: -0.1 },
+  { shape: 'box', x: 26, z: 52, halfW: 0.95, halfD: 0.55, rotation: 0.2 },
+  { shape: 'box', x: 20, z: 58, halfW: 0.95, halfD: 0.55, rotation: Math.PI },
+  { shape: 'box', x: 24, z: 58, halfW: 0.95, halfD: 0.55, rotation: Math.PI + 0.15 },
+  // --- Well & notice board ---
+  { shape: 'circle', x: 22, z: 55, radius: 0.7 },
+  { shape: 'circle', x: 17, z: 55, radius: 0.45 },
+  // --- Carts (~1.2w x 2.2d) ---
+  { shape: 'box', x: 28, z: 58, halfW: 0.65, halfD: 1.15, rotation: 0.3 },
+  { shape: 'box', x: 16, z: 58, halfW: 0.65, halfD: 1.15, rotation: -0.4 },
+  // --- Barrels around stalls ---
+  { shape: 'circle', x: 15, z: 53, radius: 0.28 },
+  { shape: 'circle', x: 15.4, z: 53.4, radius: 0.28 },
+  { shape: 'circle', x: 29, z: 53, radius: 0.28 },
+  { shape: 'circle', x: 29, z: 54, radius: 0.25 }, // small crate beside barrel
+  // --- Shrine near market ---
+  { shape: 'box', x: 30, z: 55, halfW: 0.95, halfD: 0.95 },
+  // --- Hay bales near stables ---
+  { shape: 'box', x: -25, z: 64, halfW: 0.55, halfD: 0.45, rotation: 0.2 },
+  { shape: 'box', x: -25.5, z: 65, halfW: 0.55, halfD: 0.45, rotation: -0.3 },
+  { shape: 'box', x: -24.5, z: 64.5, halfW: 0.55, halfD: 0.45, rotation: 0.1 },
+  // --- Wood piles ---
+  { shape: 'box', x: -20, z: 48, halfW: 0.5, halfD: 0.45 },
+  { shape: 'box', x: -28, z: 52, halfW: 0.5, halfD: 0.45 },
+  { shape: 'box', x: 34, z: 46, halfW: 0.5, halfD: 0.45 },
+  // --- Water troughs ---
+  { shape: 'box', x: -22, z: 68, halfW: 0.85, halfD: 0.3 },
+  { shape: 'box', x: 10, z: 50, halfW: 0.85, halfD: 0.3 },
+  // --- Barrels near residential buildings ---
+  { shape: 'circle', x: 12, z: 44, radius: 0.28 },
+  { shape: 'circle', x: -14, z: 46, radius: 0.28 },
+  { shape: 'circle', x: -14.4, z: 46.4, radius: 0.28 },
+  // --- Workshop corner crates ---
+  { shape: 'box', x: -22, z: 72, halfW: 0.4, halfD: 0.4 },
+  { shape: 'box', x: -22.5, z: 72.3, halfW: 0.35, halfD: 0.35 },
+  // --- Lantern posts along main road (z=44..68 east+west, x=±3) ---
+  { shape: 'circle', x: 3, z: 44, radius: 0.18 },
+  { shape: 'circle', x: -3, z: 44, radius: 0.18 },
+  { shape: 'circle', x: 3, z: 50, radius: 0.18 },
+  { shape: 'circle', x: -3, z: 50, radius: 0.18 },
+  { shape: 'circle', x: 3, z: 56, radius: 0.18 },
+  { shape: 'circle', x: -3, z: 56, radius: 0.18 },
+  { shape: 'circle', x: 3, z: 62, radius: 0.18 },
+  { shape: 'circle', x: -3, z: 62, radius: 0.18 },
+  { shape: 'circle', x: 3, z: 68, radius: 0.18 },
+  { shape: 'circle', x: -3, z: 68, radius: 0.18 },
+];
+
 // ========== MAIN COMPONENT ==========
 
 interface TownDistrictProps {

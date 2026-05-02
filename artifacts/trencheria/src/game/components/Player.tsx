@@ -33,6 +33,7 @@ import { PlacedStructure } from '../systems/BuildingData';
 import { HorseData, HORSE_SPEED, HORSE_RUN_SPEED, MOUNT_RANGE, DISMOUNT_OFFSET } from '../systems/HorseData';
 import { resolveCollision, rebuildObstacles } from '../systems/CollisionSystem';
 import { WorldResource, INTERACTION_RANGE, GATHER_COOLDOWN, TREE_WOOD_REWARD, ROCK_STONE_REWARD, BERRY_FOOD_REWARD, CRATE_REWARDS } from '../systems/WorldResources';
+import { buildResourceGrid, forEachNearbyResource } from '../world/ResourceSpatialGrid';
 import { HorseGLBModel } from './HorseGLBModel';
 
 export interface MountedDebugData {
@@ -146,6 +147,12 @@ export function Player({
   const hipSwayRef = useRef(0);
   const idleShiftRef = useRef(0);
   const collisionRebuildTimer = useRef(0);
+  // T012: track previous inputs so we can rebuild collision only when something actually changed.
+  const prevResourcesRef = useRef<WorldResource[]>(resources);
+  const prevStructuresRef = useRef<PlacedStructure[]>(structures);
+  const prevMountedRef = useRef(isMounted);
+  // T011: spatial grid over resources — rebuilt only when the resources array reference changes.
+  const resourceGrid = useMemo(() => buildResourceGrid(resources), [resources]);
   const horseRotRef = useRef(0); // horse's own facing for smooth turning
   const gatherCooldownRef = useRef(0);
   const jumpSquatRef = useRef(0);       // jump anticipation timer
@@ -166,8 +173,14 @@ export function Player({
       console.log('[Player] SPAWN SKIPPED — already spawned this session');
       return;
     }
-    
+
     if (groupRef.current) {
+      // CRITICAL: Build the obstacle list (static settlements/POIs/town/wilderness +
+      // any current resources/structures/horse) BEFORE running findSafeSpawn,
+      // otherwise the spawn validator runs against an empty obstacle set and can
+      // place the player inside a building.
+      rebuildObstacles(resources, structures, [horse], isMounted ? horse.id : null);
+
       // Check if playerPositionRef already has a valid position (reconnect case)
       const existingPos = playerPositionRef.current;
       if (existingPos && (existingPos.x !== 0 || existingPos.z !== 0)) {
@@ -180,7 +193,7 @@ export function Player({
         hasSpawnedRef.current = true;
         return;
       }
-      
+
       // Fresh spawn — use faction-based safe spawn system
       const spawnSession = loadWalletSession();
       const spawnFactionId = spawnSession?.faction_id || undefined;
@@ -191,6 +204,10 @@ export function Player({
       playerPositionRef.current.set(spawn.x, spawn.y, spawn.z);
       hasSpawnedRef.current = true;
     }
+    // Intentionally only re-run when playerPositionRef identity changes (i.e. never in practice
+    // — hasSpawnedRef gates against re-spawn). resources/structures/horse are intentionally NOT
+    // in deps so we don't re-spawn the player on world updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerPositionRef]);
 
   // === RESPAWN GUARD: Only run when health transitions to 0 ===
@@ -204,6 +221,8 @@ export function Player({
       if (isMounted) onDismountHorse();
       const timer = setTimeout(() => {
         if (groupRef.current) {
+          // Ensure obstacle list is current before searching for a respawn point.
+          rebuildObstacles(resources, structures, [horse], null);
           // Respawn at faction home kingdom
           const respawnSession = loadWalletSession();
           const respawnFactionId = respawnSession?.faction_id || undefined;
@@ -240,10 +259,19 @@ export function Player({
 
     if (comboWindowRef.current <= 0) comboRef.current = 0;
 
-    // Rebuild collision obstacles periodically
+    // Rebuild collision obstacles only when inputs change OR every 1.0s as a fallback
+    // for horse position drift. Previously this ran every 0.5s unconditionally, which
+    // re-cloned the static obstacle list (~200 entries) twice a second for no reason.
     collisionRebuildTimer.current += dt;
-    if (collisionRebuildTimer.current > 0.5) {
+    const inputsChanged =
+      resources !== prevResourcesRef.current ||
+      structures !== prevStructuresRef.current ||
+      isMounted !== prevMountedRef.current;
+    if (inputsChanged || collisionRebuildTimer.current > 1.0) {
       collisionRebuildTimer.current = 0;
+      prevResourcesRef.current = resources;
+      prevStructuresRef.current = structures;
+      prevMountedRef.current = isMounted;
       rebuildObstacles(resources, structures, [horse], isMounted ? horse.id : null);
     }
 
@@ -311,9 +339,10 @@ export function Player({
         let nearestType: string | null = null;
         let nearestId: string | null = null;
 
-        for (let i = 0; i < resources.length; i++) {
-          const res = resources[i];
-          if (res.depleted || !res.gatherable) continue;
+        // T011: only scan resources in cells overlapping the player's interaction window
+        // (was: full O(n) scan over every tree/rock in the world).
+        forEachNearbyResource(resourceGrid, pos.x, pos.z, INTERACTION_RANGE, (res) => {
+          if (res.depleted || !res.gatherable) return;
           const rdx = pos.x - res.position[0];
           const rdz = pos.z - res.position[2];
           const rDistSq = rdx * rdx + rdz * rdz;
@@ -323,7 +352,7 @@ export function Player({
             nearestType = res.type;
             nearestId = res.id;
           }
-        }
+        });
 
         for (const s of structures) {
           if (s.type !== 'workbench') continue;

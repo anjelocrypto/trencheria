@@ -10,7 +10,7 @@ import { PlacedStructure, BUILDABLES } from './BuildingData';
 import { HorseData } from './HorseData';
 import { SETTLEMENTS, SettlementDef, SMALL_POIS } from '../world/RegionData';
 import { seededRng } from '../world/SettlementPieces';
-import { TOWN_BUILDINGS } from '../components/TownDistrict';
+import { TOWN_BUILDINGS, TOWN_PROPS } from '../components/TownDistrict';
 import { WILDERNESS_BUILDINGS } from '../components/WildernessStructures';
 import {
   FORTIFIED_CITY_HOUSES,
@@ -59,7 +59,7 @@ function buildStaticObstacles() {
 
   addSettlementObstacles(staticCircles, staticBoxes);
   addPOIObstacles(staticCircles, staticBoxes);
-  addTownDistrictObstacles(staticBoxes);
+  addTownDistrictObstacles(staticCircles, staticBoxes);
   addWildernessObstacles(staticCircles, staticBoxes);
 
   staticBuilt = true;
@@ -351,7 +351,7 @@ function addPOIObstacles(circles: CircleObstacle[], boxes: BoxObstacle[]) {
 }
 
 // ========== TOWN DISTRICT OBSTACLES ==========
-function addTownDistrictObstacles(boxes: BoxObstacle[]) {
+function addTownDistrictObstacles(circles: CircleObstacle[], boxes: BoxObstacle[]) {
   for (const b of TOWN_BUILDINGS) {
     boxes.push({
       cx: b.x, cz: b.z,
@@ -359,6 +359,25 @@ function addTownDistrictObstacles(boxes: BoxObstacle[]) {
       rotation: b.rot,
       id: `town-${b.x}-${b.z}`,
     });
+  }
+  // Town props (stalls, carts, barrels, hay, troughs, lanterns, shrine) — see TownDistrict.tsx
+  for (let i = 0; i < TOWN_PROPS.length; i++) {
+    const p = TOWN_PROPS[i];
+    if (p.shape === 'circle') {
+      circles.push({
+        x: p.x, z: p.z,
+        radius: p.radius ?? 0.3,
+        id: `town-prop-${i}`,
+      });
+    } else {
+      boxes.push({
+        cx: p.x, cz: p.z,
+        halfW: p.halfW ?? 0.5,
+        halfD: p.halfD ?? 0.5,
+        rotation: p.rotation ?? 0,
+        id: `town-prop-${i}`,
+      });
+    }
   }
 }
 

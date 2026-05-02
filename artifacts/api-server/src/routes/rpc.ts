@@ -41,6 +41,11 @@ const ALLOWED_PROCEDURES = new Set([
   "validate_chat",
   "resolve_war",
   "check_admin_status",
+  // Territory actions — all require _session_token + _wallet_address in params
+  "claim_territory",
+  "release_territory",
+  "challenge_territory",
+  "cancel_challenge",
 ]);
 
 router.post("/rpc/:procedure", async (req, res) => {

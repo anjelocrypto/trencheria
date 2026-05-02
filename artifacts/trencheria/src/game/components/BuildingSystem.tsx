@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { getMovementInput } from '../systems/InputSystem';
 import { getTerrainHeight } from './Terrain';
+import { getLakeHeight, getRiverHeight } from '../world/WaterData';
 import { PlacedStructure, BuildableConfig, BuildableType, MIN_STRUCTURE_SPACING } from '../systems/BuildingData';
 import { ResourceInventory } from '../types';
 import { COLORS } from '../constants';
@@ -32,7 +33,10 @@ function isValidPlacement(pos: [number, number, number], playerPos: THREE.Vector
   const dist = Math.sqrt(dx * dx + dz * dz);
   if (dist < 2) return { valid: false, reason: 'Too close' };
   if (dist > 8) return { valid: false, reason: 'Too far' };
+  // Block placement on/over water — terrain dip OR lake/river surface
   if (pos[1] < -0.5) return { valid: false, reason: 'Water' };
+  if (getLakeHeight(pos[0], pos[2]) !== null) return { valid: false, reason: 'Water' };
+  if (getRiverHeight(pos[0], pos[2]) !== null) return { valid: false, reason: 'Water' };
   for (const s of structures) {
     const sdx = pos[0] - s.position[0], sdz = pos[2] - s.position[2];
     if (Math.sqrt(sdx * sdx + sdz * sdz) < MIN_STRUCTURE_SPACING) return { valid: false, reason: 'Too close to structure' };
@@ -54,9 +58,18 @@ export function BuildingSystem({
   const ghostPosRef = useRef<[number, number, number]>([0, 0, 0]);
   const validRef = useRef(false);
   const idCounterRef = useRef(0);
+  // PERF: Cache last feedback string so we only call the React setter when it actually changes,
+  // instead of every frame (which spams re-renders of the HUD).
+  const lastFeedbackRef = useRef<string | null>(null);
 
   useFrame(() => {
-    if (!buildMode) return;
+    if (!buildMode) {
+      if (lastFeedbackRef.current !== null) {
+        lastFeedbackRef.current = null;
+        onSetBuildFeedback(null);
+      }
+      return;
+    }
     const playerPos = playerPositionRef.current;
     if (!playerPos) return;
     const config = availableBuildables[selectedIndex];
@@ -71,9 +84,15 @@ export function BuildingSystem({
     const affordable = canAfford(config.cost, inventory);
     validRef.current = valid && affordable;
 
-    if (!affordable) onSetBuildFeedback(`❌ Need: ${config.description}`);
-    else if (!valid) onSetBuildFeedback(`❌ ${reason}`);
-    else onSetBuildFeedback(`✅ ${config.label} — Click to place`);
+    let nextFeedback: string;
+    if (!affordable) nextFeedback = `❌ Need: ${config.description}`;
+    else if (!valid) nextFeedback = `❌ ${reason}`;
+    else nextFeedback = `✅ ${config.label} — Click to place`;
+
+    if (nextFeedback !== lastFeedbackRef.current) {
+      lastFeedbackRef.current = nextFeedback;
+      onSetBuildFeedback(nextFeedback);
+    }
 
     const input = getMovementInput();
     if (input.buildPlace && validRef.current) {

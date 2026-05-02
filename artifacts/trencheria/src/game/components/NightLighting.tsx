@@ -20,6 +20,10 @@ const LIGHT_INTENSITY = 14;
 const LIGHT_DISTANCE = 35;
 const LIGHT_DECAY = 1;
 const LIGHT_COLOR = '#ff9930';
+// PERF: how often (in frames) to recompute the nearest-N lamps. Player can't move
+// further than ~5m in 30 frames at 60fps, so 0.5s lag is imperceptible and we cut
+// the sort cost in half compared to the previous 15-frame cadence.
+const LAMP_RESELECT_INTERVAL = 30;
 
 // ========== LAMP POSITION DATA ==========
 
@@ -174,17 +178,17 @@ export const NightLighting = memo(function NightLighting({ playerPositionRef }: 
   const wasNight = useRef(false);
   const groupRef = useRef<THREE.Group>(null);
   const glowCollected = useRef(false);
-  const auditLogged = useRef(false);
+  // PERF: scratch buffer for top-N lamp selection — reused each pass, no per-frame alloc.
+  const topNScratch = useRef<{ idx: number; dist2: number }[]>(
+    Array.from({ length: NUM_ACTIVE_LIGHTS }, () => ({ idx: -1, dist2: Infinity })),
+  );
 
   // Pre-compute terrain heights for all lamps
   const lampData = useMemo(() => {
-    const data = ALL_LAMPS.map(lamp => ({
+    return ALL_LAMPS.map(lamp => ({
       ...lamp,
       y: getTerrainHeight(lamp.x, lamp.z),
     }));
-    // One-time audit log
-    console.log(`[NightLamp] Total lamps generated: ${data.length}`);
-    return data;
   }, []);
 
   const setLightRef = (index: number) => (el: THREE.PointLight | null) => {
@@ -206,7 +210,6 @@ export const NightLighting = memo(function NightLighting({ playerPositionRef }: 
       if (meshes.length > 0) {
         glowMeshesRef.current = meshes;
         glowCollected.current = true;
-        console.log(`[NightLamp] Collected ${meshes.length} glow meshes`);
       }
     }
 
@@ -217,12 +220,11 @@ export const NightLighting = memo(function NightLighting({ playerPositionRef }: 
       for (const mesh of glowMeshesRef.current) {
         mesh.material = mat;
       }
-      console.log(`[NightLamp] Glow ${isNight ? 'ON' : 'OFF'}, nightFactor=${nightFactor.toFixed(3)}`);
     }
 
     // Update point lights
     const lights = lightRefs.current;
-    
+
     if (!isNight) {
       for (let i = 0; i < NUM_ACTIVE_LIGHTS; i++) {
         if (lights[i]) lights[i]!.intensity = 0;
@@ -230,44 +232,47 @@ export const NightLighting = memo(function NightLighting({ playerPositionRef }: 
       return;
     }
 
-    // Find nearest N lamps every 15 frames (~0.25s)
+    // Reselect nearest N lamps periodically. Replaces the previous full sort over all
+    // lamps with a single linear pass that maintains a small (NUM_ACTIVE_LIGHTS) heap-
+    // -lite of the closest entries — O(N * K) which is much faster than O(N log N)
+    // for K=3, and allocation-free since we reuse the scratch buffer.
     frameSkip.current++;
-    if (frameSkip.current % 15 === 0) {
+    if (frameSkip.current % LAMP_RESELECT_INTERVAL === 0) {
       const pp = playerPositionRef.current;
       if (pp) {
-        // Compute distances for all lamps
-        const scored = lampData.map(lamp => {
+        const top = topNScratch.current;
+        for (let i = 0; i < NUM_ACTIVE_LIGHTS; i++) {
+          top[i].idx = -1;
+          top[i].dist2 = Infinity;
+        }
+        for (let li = 0; li < lampData.length; li++) {
+          const lamp = lampData[li];
           const dx = pp.x - lamp.x;
           const dz = pp.z - lamp.z;
-          return { lamp, dist2: dx * dx + dz * dz };
-        });
-
-        // Partial sort: find top N nearest
-        scored.sort((a, b) => a.dist2 - b.dist2);
-
-        for (let i = 0; i < NUM_ACTIVE_LIGHTS; i++) {
-          const s = scored[i];
-          if (s) {
-            nearestLamps.current[i] = {
-              x: s.lamp.x + 0.4,
-              y: s.lamp.y + 2.55,
-              z: s.lamp.z,
-            };
-          }
-        }
-
-        // Rate-limited audit log
-        if (!auditLogged.current) {
-          auditLogged.current = true;
-          console.log(`[NightLamp] Player at [${pp.x.toFixed(1)}, ${pp.z.toFixed(1)}]`);
-          for (let i = 0; i < NUM_ACTIVE_LIGHTS; i++) {
-            const s = scored[i];
-            if (s) {
-              console.log(`[NightLamp] Light ${i}: lamp ${s.lamp.id} at [${s.lamp.x}, ${s.lamp.z}], dist=${Math.sqrt(s.dist2).toFixed(1)}`);
+          const d2 = dx * dx + dz * dz;
+          // Find the worst slot in `top` (highest dist2). If our candidate beats it, replace.
+          let worstSlot = 0;
+          let worstD2 = top[0].dist2;
+          for (let s = 1; s < NUM_ACTIVE_LIGHTS; s++) {
+            if (top[s].dist2 > worstD2) {
+              worstD2 = top[s].dist2;
+              worstSlot = s;
             }
           }
-          // Reset after 60s for next check
-          setTimeout(() => { auditLogged.current = false; }, 60000);
+          if (d2 < worstD2) {
+            top[worstSlot].idx = li;
+            top[worstSlot].dist2 = d2;
+          }
+        }
+        for (let i = 0; i < NUM_ACTIVE_LIGHTS; i++) {
+          const slot = top[i];
+          if (slot.idx >= 0) {
+            const lamp = lampData[slot.idx];
+            const target = nearestLamps.current[i];
+            target.x = lamp.x + 0.4;
+            target.y = lamp.y + 2.55;
+            target.z = lamp.z;
+          }
         }
       }
     }

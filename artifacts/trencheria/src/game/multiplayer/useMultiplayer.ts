@@ -686,18 +686,24 @@ export function useMultiplayer() {
     const sanitized = text.trim().replace(/<[^>]*>/g, '').slice(0, 200);
     if (!sanitized) return;
 
-    // Server-side rate limit check
+    // Server-side rate limit check — fail closed: if validation errors or denies, drop the message.
+    // This prevents bypassing the chat rate limit by triggering a network/RPC error.
     try {
       const session = loadWalletSession();
-      const { data } = await supabase.rpc('validate_chat', {
+      const { data, error } = await supabase.rpc('validate_chat', {
         _wallet_address: session?.wallet_address || '',
         _session_token: session?.session_token || '',
         _message_length: sanitized.length,
       } as any);
+      if (error) {
+        console.warn('[Chat] validate_chat RPC error, dropping message:', error.message);
+        return;
+      }
       const result = data as unknown as { allowed: boolean; reason?: string };
       if (!result?.allowed) return; // Silently drop rate-limited messages
-    } catch {
-      // If validation fails, still allow (graceful degradation)
+    } catch (err) {
+      console.warn('[Chat] validate_chat threw, dropping message:', err);
+      return; // fail closed
     }
 
     const msg: ChatMessage = {
