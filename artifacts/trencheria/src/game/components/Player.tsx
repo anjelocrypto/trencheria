@@ -333,8 +333,11 @@ export function Player({
           rebuildObstacles(resources, structures, [horse], horse.id);
         }
       } else if (!buildMode) {
-        // Resource / workbench interaction
-        let nearestRes: WorldResource | null = null;
+        // Resource / workbench interaction.
+        // T011: holder object so TypeScript narrows correctly across the closure
+        // assignment in `forEachNearbyResource` — `let nearestRes = null` mutated
+        // inside a callback gets narrowed to `never` after `if (nearestRes)`.
+        const found: { res: WorldResource | null } = { res: null };
         let nearestDist = INTERACTION_RANGE;
         let nearestType: string | null = null;
         let nearestId: string | null = null;
@@ -348,7 +351,7 @@ export function Player({
           const rDistSq = rdx * rdx + rdz * rdz;
           if (rDistSq < nearestDist * nearestDist) {
             nearestDist = Math.sqrt(rDistSq);
-            nearestRes = res;
+            found.res = res;
             nearestType = res.type;
             nearestId = res.id;
           }
@@ -363,12 +366,13 @@ export function Player({
             const wDist = Math.sqrt(wDistSq);
             if (wDist < nearestDist) {
               nearestDist = wDist;
-              nearestRes = null;
+              found.res = null;
               nearestType = 'workbench';
               nearestId = 'workbench-' + s.id;
             }
           }
         }
+        const nearestRes = found.res;
 
         highlightedResourceRef.current = nearestId;
 

@@ -51,4 +51,18 @@ The game uses Supabase heavily as its backend:
 - **Realtime channels** for multiplayer sync (presence + broadcast)
 - **Edge Functions** for Phantom wallet signature verification (`verify-wallet`)
 
+The "real" SQL source of truth lives **outside this repo**. `supabase/.migration-backup/` is a read-only mirror — never edit it. There is currently no active `supabase/migrations/` folder; do not invent one without checking with the user first.
+
+## API Server CORS
+
+`artifacts/api-server` reads `ALLOWED_ORIGINS` (comma-separated list) at boot. In development, requests from `localhost`, `127.0.0.1`, or any `*.replit.dev` / `*.replit.app` host are auto-allowed; in production only origins in `ALLOWED_ORIGINS` pass. `credentials: true` is enabled, so wildcard `*` is intentionally not used.
+
+## Performance Notes (Trencheria game loop)
+
+- **Resource interaction scan** — Player.tsx uses `ResourceSpatialGrid` (cell-bucketed lookup, cell size 8) to scan only the 1–2 grid cells around the player each frame instead of the full resource list.
+- **Collision rebuild** — only fires when `resources` / `structures` / `isMounted` references change, with a 1.0 s fallback for horse position drift (was unconditional 0.5 s).
+- **Night lighting** — top-N (N=3) lamp selection uses an O(N·K) linear pass over a reusable scratch buffer; recompute cadence is every 30 frames (~0.5 s). All production console.log instrumentation has been removed.
+- **Multiplayer broadcaster** — single reusable `NetworkPlayerState` object with mutated `position`/`horsePosition` tuples; the `useMultiplayer` send cadence (interval timers) still controls when state is actually sent over the wire.
+- **Town district collision** — `TOWN_PROPS` in `TownDistrict.tsx` registers stalls, carts, barrels, hay, troughs, lantern posts, and the shrine with `CollisionSystem` so the player no longer phases through visible props.
+
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
