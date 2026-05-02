@@ -1,0 +1,140 @@
+Codex audit follow-up: clan wars, battle logic, territory winning, and map visibility.
+
+Goal:
+Make Trencheria’s clan-war system feel like a clear multiplayer territory-war system, closer to San Andreas Multiplayer: clan members should always understand where wars are, who owns what, who is winning, when battles start/end, and what happens after the battle.
+
+Do not touch railway/map-geometry work in this task. Do not apply SQL directly. If SQL is needed, create a pending SQL file and ask me before applying.
+
+Read these files first:
+- artifacts/trencheria/src/game/hooks/useClanSystem.ts
+- artifacts/trencheria/src/game/ui/FactionPanel.tsx
+- artifacts/trencheria/src/game/ui/Minimap.tsx
+- artifacts/trencheria/src/game/ui/SurvivalHUD.tsx
+- artifacts/trencheria/src/game/ui/WarScoreboard.tsx
+- artifacts/trencheria/src/game/ui/WarNotifications.tsx
+- artifacts/trencheria/src/game/components/TerritoryBoundaries.tsx
+- artifacts/trencheria/src/game/components/TerritoryMarkers.tsx
+- artifacts/trencheria/src/game/components/TerritoryGateBanners.tsx
+- artifacts/trencheria/src/game/GameScene.tsx
+- artifacts/api-server/src/routes/rpc.ts
+- supabase/pending/20260502000001_war_rpcs_allow_faction_members.sql
+
+Tasks:
+
+1. Confirm war SQL status
+Check whether the live DB already has the behavior from:
+supabase/pending/20260502000001_war_rpcs_allow_faction_members.sql
+
+If not applied, report clearly. Do not apply it without my approval.
+Important: fixed-faction members must be able to challenge/cancel wars, not only leaders.
+
+2. Audit current war lifecycle
+Document exactly how this currently works:
+- challenge_territory
+- cancel_challenge
+- transition_war_states
+- report_pvp_death
+- resolve_war
+- territory ownership changes
+- war cooldown
+- territory_history logging
+
+Flag any missing or weak logic.
+
+3. Replace admin-only winner flow with automatic territory result
+Right now the UI says “Admin resolves winner.” That is not good enough for gameplay.
+
+Design and implement automatic resolution:
+- War starts after pending countdown.
+- War lasts the configured battle duration.
+- Kills during the active war count toward attacker/defender score.
+- When the war ends:
+  - attacker wins if attacker_kills > defender_kills
+  - defender holds if defender_kills >= attacker_kills
+  - territory owner updates automatically on attacker win
+  - territory enters cooldown
+  - territory_history records the result
+  - challenge status becomes completed/resolved
+- Keep AdminWorldMap manual resolve as an override, not the main gameplay path.
+
+If this requires DB function changes, create a new `supabase/pending/...sql` file only. Do not apply.
+
+4. Make map visibility clan-war quality
+Improve the player-facing map/minimap so clan members can clearly see war state.
+
+Required:
+- Full map shows all 7 territories colored by owning faction.
+- Pending wars flash orange with “Starts in …”
+- Active wars flash red with “Ends in …”
+- Pending resolution / cooldown states are visually distinct.
+- Each territory hover/click shows:
+  - owner clan
+  - attacker clan if challenged
+  - defender clan
+  - war state
+  - countdown
+  - attacker kills
+  - defender kills
+  - challenge/cancel eligibility reason
+- Add a “My Clan Wars” panel/list visible from HUD or full map:
+  - active/pending wars involving my faction
+  - distance/direction to war zone
+  - time remaining
+  - score
+  - status
+
+5. Improve battle HUD
+WarScoreboard should not only be useful when standing inside the exact zone.
+
+Required:
+- Compact HUD alert for any active/pending war involving my faction.
+- Larger scoreboard when inside the contested territory.
+- Show attacker vs defender score, timer, territory name, and current phase.
+- Show recent war kills globally for my faction, not only inside the territory.
+- Add clear messages:
+  - “War declared”
+  - “War starts in 5 minutes”
+  - “War started”
+  - “Territory captured”
+  - “Defender held”
+  - “Cooldown active”
+
+6. Improve realtime reliability
+Current client-side transition polling is risky. Wars should not depend only on players having the tab open.
+
+Implement one of:
+- server-side scheduled transition runner, or
+- safe idempotent transition call before every war fetch, plus client fallback.
+
+Also make sure notifications still work if a resolved challenge disappears from `get_active_challenges`; use territory_history or recent war events if needed.
+
+7. Security / anti-cheat audit
+Check backend RPCs, especially report_pvp_death:
+- validate active war exists
+- validate attacker/defender factions
+- validate territory
+- prevent duplicate death reports
+- prevent reporting kills outside active war
+- prevent same-faction kills counting
+- prevent fake attacker/victim data where possible
+
+If function bodies are not in the repo, report what cannot be verified and create a pending SQL audit task.
+
+8. Verification
+Run:
+- pnpm typecheck where possible
+- pnpm build / artifact build
+- browser smoke test
+
+Manual smoke test plan:
+- Wallet A joins faction 1.
+- Wallet B joins faction 2.
+- A challenges B territory.
+- Map shows pending war for both faction members.
+- Countdown switches pending → active.
+- PvP damage only works inside the contested territory.
+- Kills update scoreboard and map panel.
+- War ends automatically.
+- Winner/defender result updates territory owner/cooldown/history.
+- Map reflects new ownership immediately.
+- No unrelated SQL/Supabase/auth/railway files touched unless required and approved.
