@@ -9,7 +9,7 @@
  * This replaces the fake timer approach — the loading screen stays
  * visible until the game world has actually rendered.
  */
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 
 interface Props {
@@ -19,6 +19,15 @@ interface Props {
 /** Minimum stable frames AND minimum wall-clock time before declaring ready */
 const MIN_STABLE_FRAMES = 30;
 const MIN_ELAPSED_MS = 3000; // at least 3 seconds to let assets load
+/**
+ * Hard wall-clock fallback. Codex follow-up #3 found the loading overlay can
+ * stick at ~84% indefinitely if a Suspense boundary deep in the scene never
+ * resolves (heavy GLBs / mid-load network stall). useFrame will then never
+ * fire and the overlay never lifts. After this many ms we force-ready so the
+ * player at least sees what HAS loaded, instead of being trapped on the
+ * loading screen forever. Also unblocks dev-tool / screenshot capture flows.
+ */
+const HARD_FAILSAFE_MS = 12000;
 
 export function StartupReadiness({ onReady }: Props) {
   const frameCount = useRef(0);
@@ -40,6 +49,19 @@ export function StartupReadiness({ onReady }: Props) {
       onReady();
     }
   });
+
+  // Hard wall-clock fallback running outside the R3F render loop, so it fires
+  // even if useFrame never ticks (Suspense fallback parented above the
+  // <Canvas>, all-suspended scene, etc.).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (fired.current) return;
+      fired.current = true;
+      console.warn(`[Startup] Force-ready after ${HARD_FAILSAFE_MS}ms (useFrame frames=${frameCount.current}); scene may still be hydrating.`);
+      onReady();
+    }, HARD_FAILSAFE_MS);
+    return () => clearTimeout(t);
+  }, [onReady]);
 
   return null;
 }

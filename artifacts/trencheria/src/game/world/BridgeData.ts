@@ -132,6 +132,10 @@ export interface FordDef {
   id: string;
   position: [number, number]; // (x, z) center on the road
   radius: number;             // suppression radius in world units
+  /** Y-rotation in radians of the road heading at the ford, used by the
+   *  visible mesh so plank decks/posts align with the actual road direction
+   *  rather than world axes. atan2(dx, dz) along the road segment. */
+  heading: number;
   note: string;
 }
 
@@ -145,6 +149,8 @@ export const INTENTIONAL_FORDS: FordDef[] = [
     id: 'ford-rivermoor-quay',
     position: [432, 332],
     radius: 14,
+    // Road heads NE on a 45° diagonal: atan2(450-400, 350-300) = π/4.
+    heading: Math.PI / 4,
     note: 'shallow shoreline approach to Rivermoor (lake-silvermere NE quay)',
   },
 ];

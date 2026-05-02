@@ -541,14 +541,18 @@ function MarketSquare() {
       <MarketStall pos={[18, y, 52]} rot={0.1} goods="food" />
       <MarketStall pos={[22, y, 52]} rot={-0.1} goods="cloth" />
       <MarketStall pos={[26, y, 52]} rot={0.2} goods="tools" />
-      <MarketStall pos={[20, y, 58]} rot={Math.PI} goods="crates" />
-      <MarketStall pos={[24, y, 58]} rot={Math.PI + 0.15} goods="food" />
+      {/* South stall row + east cart pulled from z=58 → z=48 to keep both
+          collision data (TOWN_PROPS) and the visible scene clear of the
+          bridge-old-veyra-river OBB. Single source of truth: positions here
+          must match TOWN_PROPS entries. */}
+      <MarketStall pos={[20, y, 48]} rot={Math.PI} goods="crates" />
+      <MarketStall pos={[24, y, 48]} rot={Math.PI + 0.15} goods="food" />
       {/* Well in center of market */}
       <Well pos={[22, y, 55]} />
       {/* Notice board */}
       <NoticeBoard pos={[17, y, 55]} rot={Math.PI / 2} />
-      {/* Carts */}
-      <Cart pos={[28, y, 58]} rot={0.3} />
+      {/* Carts — east cart pulled south to clear bridge OBB */}
+      <Cart pos={[28, y, 48]} rot={0.3} />
       <Cart pos={[16, y, 58]} rot={-0.4} />
       {/* Barrels and crates around stalls */}
       <Barrel pos={[15, y, 53]} />

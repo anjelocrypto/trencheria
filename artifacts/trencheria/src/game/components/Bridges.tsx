@@ -3,8 +3,9 @@
  * Bridges are walkable via getBridgeHeight in Player movement.
  */
 import * as THREE from 'three';
-import { BRIDGES, BridgeDef } from '../world/BridgeData';
+import { BRIDGES, BridgeDef, INTENTIONAL_FORDS, FordDef } from '../world/BridgeData';
 import { GEO, MAT } from '../world/SettlementPieces';
+import { getTerrainHeight } from './Terrain';
 
 function BridgeRenderer({ bridge, playerPos }: { bridge: BridgeDef; playerPos: THREE.Vector3 | null }) {
   if (playerPos) {
@@ -63,12 +64,53 @@ interface Props {
   playerPositionRef: React.RefObject<THREE.Vector3>;
 }
 
+/**
+ * Codex follow-up #3: render a visible shallow ford / quay / causeway at every
+ * INTENTIONAL_FORDS entry so the validator's "this is intentional" suppression
+ * is actually backed by a thing the player can see. The ford is a low pebble
+ * causeway slab + a couple of plank-deck strips spanning the road direction,
+ * sitting just above local terrain so the road visibly continues across the
+ * shoreline instead of vanishing into the water.
+ */
+function FordRenderer({ ford, playerPos }: { ford: FordDef; playerPos: THREE.Vector3 | null }) {
+  if (playerPos) {
+    const dx = playerPos.x - ford.position[0];
+    const dz = playerPos.z - ford.position[1];
+    if (dx * dx + dz * dz > 200 * 200) return null;
+  }
+  const [fx, fz] = ford.position;
+  // Shoreline is sloped; sample center and lift slightly above water.
+  const baseY = Math.max(getTerrainHeight(fx, fz), 0) + 0.05;
+  const slabSize = ford.radius * 1.6;     // gravel/cobble approach apron
+  const plankLen = ford.radius * 1.8;     // plank causeway along approach
+  return (
+    <group position={[fx, baseY, fz]} rotation={[0, ford.heading, 0]}>
+      {/* Pebble / cobble apron — wide flat slab just above water level */}
+      <mesh position={[0, 0.02, 0]} geometry={GEO.box}
+        scale={[slabSize, 0.08, slabSize * 0.7]} material={MAT.cobble} receiveShadow />
+      {/* Plank causeway strip (two narrow decks side-by-side) */}
+      <mesh position={[-0.45, 0.12, 0]} geometry={GEO.box}
+        scale={[0.85, 0.08, plankLen]} material={MAT.woodWeathered} receiveShadow castShadow />
+      <mesh position={[ 0.45, 0.12, 0]} geometry={GEO.box}
+        scale={[0.85, 0.08, plankLen]} material={MAT.woodWeathered} receiveShadow castShadow />
+      {/* Two short mooring posts at the shore end (suggests quay) */}
+      <mesh position={[-1.2, 0.5, plankLen * 0.45]} geometry={GEO.box}
+        scale={[0.18, 1.0, 0.18]} material={MAT.timber} castShadow />
+      <mesh position={[ 1.2, 0.5, plankLen * 0.45]} geometry={GEO.box}
+        scale={[0.18, 1.0, 0.18]} material={MAT.timber} castShadow />
+    </group>
+  );
+}
+
 export function Bridges({ playerPositionRef }: Props) {
   const playerPos = playerPositionRef.current;
   return (
     <group>
       {BRIDGES.map(bridge => (
         <BridgeRenderer key={bridge.id} bridge={bridge} playerPos={playerPos} />
+      ))}
+      {INTENTIONAL_FORDS.map(ford => (
+        <FordRenderer key={ford.id} ford={ford} playerPos={playerPos} />
       ))}
     </group>
   );
