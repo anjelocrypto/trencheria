@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Trencheria"
+version = "1.0.0"
+id = "artifacts/trencheria"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24952
+
+[services.development]
+run = "pnpm --filter @workspace/trencheria run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/trencheria", "run", "build" ]
+publicDir = "artifacts/trencheria/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24952"
+BASE_PATH = "/"

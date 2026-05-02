@@ -1,0 +1,102 @@
+name: AI Code Review
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed files
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
+          else
+            git diff --name-only HEAD~1 HEAD > changed_files.txt
+          fi
+          echo "Changed files:"
+          cat changed_files.txt
+
+      - name: Get diff
+        id: diff
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff origin/${{ github.base_ref }}...HEAD -- \
+              '*.ts' '*.tsx' '*.js' '*.jsx' '*.json' > code_diff.txt
+          else
+            git diff HEAD~1 HEAD -- \
+              '*.ts' '*.tsx' '*.js' '*.jsx' '*.json' > code_diff.txt
+          fi
+          # Truncate to 12000 chars to stay within token limits
+          head -c 12000 code_diff.txt > code_diff_trimmed.txt
+          echo "Diff size: $(wc -c < code_diff.txt) bytes"
+
+      - name: AI Code Review
+        id: ai_review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          DIFF=$(cat code_diff_trimmed.txt)
+          if [ -z "$DIFF" ]; then
+            echo "No code changes to review."
+            echo "review=No code changes detected in this push." >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d "$(jq -n \
+              --arg diff "$DIFF" \
+              '{
+                model: "gpt-4o",
+                max_tokens: 1500,
+                messages: [
+                  {
+                    role: "system",
+                    content: "You are a senior code reviewer for Trencheria, a 3D multiplayer browser game built with React, Three.js, and an Express api-server that proxies Supabase. Review the git diff below. Be concise and specific. Focus on: bugs, security issues, performance problems, and code quality. Format your review with sections: **Summary**, **Issues** (if any), **Suggestions**. Keep it under 400 words."
+                  },
+                  {
+                    role: "user",
+                    content: ("Review this code change:\n\n" + $diff)
+                  }
+                ]
+              }')")
+
+          REVIEW=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "Review unavailable."')
+          echo "review<<EOF" >> $GITHUB_OUTPUT
+          echo "$REVIEW" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post review as PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const review = `${{ steps.ai_review.outputs.review }}`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## AI Code Review\n\n${review}\n\n---\n*Reviewed by GPT-4o via GitHub Actions*`
+            });
+
+      - name: Print review to log (on push to main)
+        if: github.event_name == 'push'
+        run: |
+          echo "========== AI CODE REVIEW =========="
+          echo "${{ steps.ai_review.outputs.review }}"
+          echo "===================================="
