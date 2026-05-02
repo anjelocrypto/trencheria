@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { supabase } from '@/integrations/supabase/client';
 import { Terrain, getTerrainHeight } from './components/Terrain';
+import { getGroundHeight } from './systems/Grounding';
 import { Water } from './components/Water';
 import { Player, MountedDebugData } from './components/Player';
 import { FACTIONS, getFactionById } from './systems/FactionData';
@@ -263,10 +264,12 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
     if (isMounted) {
       mountedSyncRef.current = true;
     } else if (mountedSyncRef.current) {
-      // Just dismounted — commit final horse position to state once
+      // Just dismounted — commit final horse position to state once.
+      // Use getGroundHeight so the horse sits on the BRIDGE deck if dismounted
+      // on a bridge (bridge override wins), not on the terrain below.
       mountedSyncRef.current = false;
       const pos = playerPositionRef.current;
-      const horseY = getTerrainHeight(pos.x, pos.z);
+      const horseY = getGroundHeight(pos.x, pos.z);
       updateHorse({
         position: [pos.x, horseY, pos.z],
         rotation: playerRotationRef.current,

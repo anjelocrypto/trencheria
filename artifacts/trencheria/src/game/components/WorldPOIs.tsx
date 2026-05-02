@@ -5,7 +5,6 @@
 import * as THREE from 'three';
 import { SMALL_POIS, SmallPOIDef } from '../world/RegionData';
 import { GEO, MAT } from '../world/SettlementPieces';
-import { getTerrainHeight } from './Terrain';
 import { sampleCircleFootprint } from '../systems/Grounding';
 
 interface Props {

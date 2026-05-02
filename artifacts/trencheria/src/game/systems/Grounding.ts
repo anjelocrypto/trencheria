@@ -11,6 +11,7 @@
 
 import { getTerrainHeight } from '../components/Terrain';
 import { getBridgeHeight } from '../world/BridgeData';
+import { getLakeHeight, getRiverHeight } from '../world/WaterData';
 
 /** Single source of truth for ground height at a world position. */
 export function getGroundHeight(x: number, z: number): number {
@@ -74,7 +75,16 @@ export function sampleFootprint(
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
     sumY += y;
-    if (y < WATER_LEVEL_Y) hasWater = true;
+    // Water detection at this sample: terrain dip OR lake/river surface here.
+    // BuildingSystem also checks the center against WaterData, but that misses
+    // large buildings whose CORNERS straddle a lake/river.
+    if (
+      y < WATER_LEVEL_Y ||
+      getLakeHeight(wx, wz) !== null ||
+      getRiverHeight(wx, wz) !== null
+    ) {
+      hasWater = true;
+    }
   }
 
   const avgY = sumY / samples.length;
@@ -114,7 +124,13 @@ export function sampleCircleFootprint(
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
     sumY += y;
-    if (y < WATER_LEVEL_Y) hasWater = true;
+    if (
+      y < WATER_LEVEL_Y ||
+      getLakeHeight(wx, wz) !== null ||
+      getRiverHeight(wx, wz) !== null
+    ) {
+      hasWater = true;
+    }
   }
 
   const avgY = sumY / samples.length;

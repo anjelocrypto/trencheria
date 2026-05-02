@@ -6,7 +6,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { GEO, MAT } from '../world/SettlementPieces';
-import { getTerrainHeight } from './Terrain';
 import { SETTLEMENTS, ROADS, SMALL_POIS } from '../world/RegionData';
 import { distToRailway } from '../world/RailwayData';
 import { isBuildableGround, sampleFootprint } from '../systems/Grounding';
