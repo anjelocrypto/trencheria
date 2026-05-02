@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { SMALL_POIS, SmallPOIDef } from '../world/RegionData';
 import { GEO, MAT } from '../world/SettlementPieces';
 import { getTerrainHeight } from './Terrain';
+import { sampleCircleFootprint } from '../systems/Grounding';
 
 interface Props {
   playerPositionRef: React.RefObject<THREE.Vector3>;
@@ -19,7 +20,9 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
   }
 
   const [px, pz] = poi.position;
-  const y = getTerrainHeight(px, pz);
+  // Anchor to LOWEST sample within a 3u radius so towers/shrines on slopes
+  // don't have one corner floating above the ground.
+  const y = sampleCircleFootprint(px, pz, 3).minY;
 
   switch (poi.type) {
     case 'shrine':

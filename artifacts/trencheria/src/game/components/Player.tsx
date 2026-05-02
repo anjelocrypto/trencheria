@@ -31,6 +31,7 @@ import { loadWalletSession } from '../hooks/usePlayerAccount';
 
 import { PlacedStructure } from '../systems/BuildingData';
 import { HorseData, HORSE_SPEED, HORSE_RUN_SPEED, MOUNT_RANGE, DISMOUNT_OFFSET } from '../systems/HorseData';
+import { getGroundHeight } from '../systems/Grounding';
 import { resolveCollision, rebuildObstacles } from '../systems/CollisionSystem';
 import { WorldResource, INTERACTION_RANGE, GATHER_COOLDOWN, TREE_WOOD_REWARD, ROCK_STONE_REWARD, BERRY_FOOD_REWARD, CRATE_REWARDS } from '../systems/WorldResources';
 import { buildResourceGrid, forEachNearbyResource } from '../world/ResourceSpatialGrid';
@@ -298,15 +299,38 @@ export function Player({
       if (input.interact) {
         onDismountHorse();
         const angle = horseRotRef.current;
-        let dmX = pos.x + Math.cos(angle + Math.PI * 0.5) * DISMOUNT_OFFSET;
-        let dmZ = pos.z - Math.sin(angle + Math.PI * 0.5) * DISMOUNT_OFFSET;
-        // Safety: resolve collision at dismount position
-        const dmResolved = resolveCollision(dmX, dmZ, PLAYER_RADIUS);
-        dmX = dmResolved.x;
-        dmZ = dmResolved.z;
+        // Yaw convention here: forward = (sin a, cos a). Therefore:
+        //   left  = (-cos a,  sin a)
+        //   right = ( cos a, -sin a)
+        //   back  = (-sin a, -cos a)
+        //   front = ( sin a,  cos a)
+        // Try left, right, back, front in order; pick the first candidate that
+        // isn't pushed by collision and isn't in deep water.
+        const sa = Math.sin(angle);
+        const ca = Math.cos(angle);
+        const candidates: Array<[number, number]> = [
+          [-ca,  sa], // left
+          [ ca, -sa], // right
+          [-sa, -ca], // back
+          [ sa,  ca], // front
+        ];
+        let dmX = pos.x;
+        let dmZ = pos.z;
+        for (const [dx, dz] of candidates) {
+          const cx = pos.x + dx * DISMOUNT_OFFSET;
+          const cz = pos.z + dz * DISMOUNT_OFFSET;
+          const r = resolveCollision(cx, cz, PLAYER_RADIUS);
+          const pushed = Math.hypot(r.x - cx, r.z - cz);
+          const groundY = getGroundHeight(r.x, r.z);
+          if (pushed < 0.2 && groundY > -0.4) {
+            dmX = r.x;
+            dmZ = r.z;
+            break;
+          }
+        }
         pos.x = dmX;
         pos.z = dmZ;
-        pos.y = getTerrainHeight(pos.x, pos.z) + PLAYER_HEIGHT / 2;
+        pos.y = getGroundHeight(pos.x, pos.z) + PLAYER_HEIGHT / 2;
         // Clear mounted physics
         vel.set(0, 0, 0);
         currentSpeedRef.current = 0;
@@ -679,6 +703,33 @@ export function Player({
       // Apply push — this lets the player slide out of enemy clusters
       pos.x += pushAwayX;
       pos.z += pushAwayZ;
+    }
+
+    // === STEP/SLOPE GUARD — no flying up cliffs (foot or horse) ===
+    // If the candidate position would require climbing more than the gait allows,
+    // try sliding along one axis; if both axes are too steep, stop horizontal motion.
+    if (isMounted || isGroundedRef.current) {
+      const baseStep = isMounted ? 0.85 : 0.55;
+      const allowedStep = baseStep * (canRun ? 1.4 : 1.0);
+      const curGround = getGroundHeight(pos.x, pos.z);
+      const fullX = pos.x + vel.x * dt;
+      const fullZ = pos.z + vel.z * dt;
+      const fullDelta = getGroundHeight(fullX, fullZ) - curGround;
+      if (fullDelta > allowedStep) {
+        const onlyXDelta = getGroundHeight(fullX, pos.z) - curGround;
+        const onlyZDelta = getGroundHeight(pos.x, fullZ) - curGround;
+        if (onlyXDelta <= allowedStep && onlyXDelta < onlyZDelta) {
+          // X-axis is OK, Z is the cliff — kill Z motion
+          vel.z = 0;
+        } else if (onlyZDelta <= allowedStep) {
+          vel.x = 0;
+        } else {
+          // Both axes blocked
+          vel.x = 0;
+          vel.z = 0;
+          currentSpeedRef.current *= 0.3;
+        }
+      }
     }
 
     // Apply horizontal movement

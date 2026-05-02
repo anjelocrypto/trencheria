@@ -2,12 +2,12 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { getMovementInput } from '../systems/InputSystem';
-import { getTerrainHeight } from './Terrain';
 import { getLakeHeight, getRiverHeight } from '../world/WaterData';
 import { PlacedStructure, BuildableConfig, BuildableType, MIN_STRUCTURE_SPACING } from '../systems/BuildingData';
 import { ResourceInventory } from '../types';
 import { COLORS } from '../constants';
 import { isPlacementBlocked } from '../systems/CollisionSystem';
+import { isBuildableGround, sampleFootprint } from '../systems/Grounding';
 
 interface Props {
   buildMode: boolean;
@@ -28,7 +28,13 @@ function canAfford(cost: Partial<ResourceInventory>, inv: ResourceInventory): bo
   return true;
 }
 
-function isValidPlacement(pos: [number, number, number], playerPos: THREE.Vector3, structures: PlacedStructure[], buildSize: [number, number, number]): { valid: boolean; reason?: string } {
+function isValidPlacement(
+  pos: [number, number, number],
+  playerPos: THREE.Vector3,
+  structures: PlacedStructure[],
+  buildSize: [number, number, number],
+  rotation: number,
+): { valid: boolean; reason?: string } {
   const dx = pos[0] - playerPos.x, dz = pos[2] - playerPos.z;
   const dist = Math.sqrt(dx * dx + dz * dz);
   if (dist < 2) return { valid: false, reason: 'Too close' };
@@ -37,6 +43,24 @@ function isValidPlacement(pos: [number, number, number], playerPos: THREE.Vector
   if (pos[1] < -0.5) return { valid: false, reason: 'Water' };
   if (getLakeHeight(pos[0], pos[2]) !== null) return { valid: false, reason: 'Water' };
   if (getRiverHeight(pos[0], pos[2]) !== null) return { valid: false, reason: 'Water' };
+
+  // Footprint validation — reject if any corner is in water OR ground is too uneven/steep
+  const halfW = Math.max(0.5, buildSize[0] / 2);
+  const halfD = Math.max(0.5, buildSize[2] / 2);
+  const maxArea = Math.max(buildSize[0], buildSize[2]);
+  // Tighter limit on small props, more permissive on large structures
+  const maxDelta = maxArea < 1.5 ? 0.6 : maxArea < 4 ? 1.2 : 1.8;
+  const ground = isBuildableGround(pos[0], pos[2], halfW, halfD, rotation, {
+    maxHeightDelta: maxDelta,
+    maxSlopeRad: 0.6, // ~34°
+    allowWater: false,
+  });
+  if (!ground.valid) {
+    if (ground.reason === 'water') return { valid: false, reason: 'Water' };
+    if (ground.reason === 'uneven') return { valid: false, reason: 'Uneven ground' };
+    if (ground.reason === 'steep') return { valid: false, reason: 'Too steep' };
+  }
+
   for (const s of structures) {
     const sdx = pos[0] - s.position[0], sdz = pos[2] - s.position[2];
     if (Math.sqrt(sdx * sdx + sdz * sdz) < MIN_STRUCTURE_SPACING) return { valid: false, reason: 'Too close to structure' };
@@ -78,9 +102,14 @@ export function BuildingSystem({
     const rot = playerRotationRef.current || 0;
     const placeX = playerPos.x + Math.sin(rot) * 5;
     const placeZ = playerPos.z + Math.cos(rot) * 5;
-    ghostPosRef.current = [placeX, getTerrainHeight(placeX, placeZ), placeZ];
+    // Anchor preview Y to the LOWEST corner of the footprint so the building never
+    // floats above the terrain at any corner (center-only sampling missed slopes).
+    const halfW = Math.max(0.5, config.size[0] / 2);
+    const halfD = Math.max(0.5, config.size[2] / 2);
+    const fp = sampleFootprint(placeX, placeZ, halfW, halfD, rot);
+    ghostPosRef.current = [placeX, fp.minY, placeZ];
 
-    const { valid, reason } = isValidPlacement(ghostPosRef.current, playerPos, structures, config.size);
+    const { valid, reason } = isValidPlacement(ghostPosRef.current, playerPos, structures, config.size, rot);
     const affordable = canAfford(config.cost, inventory);
     validRef.current = valid && affordable;
 

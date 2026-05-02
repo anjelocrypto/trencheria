@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { SettlementDef } from '../world/RegionData';
 import { GEO, MAT } from '../world/SettlementPieces';
 import { getTerrainHeight } from './Terrain';
+import { sampleFootprint } from '../systems/Grounding';
 import {
   FORTIFIED_CITY_HOUSES,
   RIVER_TOWN_HOUSES,
@@ -93,7 +94,9 @@ function renderHouses(houses: KingdomHouseDef[], wallMats: readonly THREE.Materi
 // ========== FORTIFIED CITY (Thornwall) ==========
 export function FortifiedCity({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  // Anchor to lowest corner of the ±45 wall ring so the city base never floats.
+  const fp = sampleFootprint(cx, cz, 45, 45, 0);
+  const y = fp.minY;
 
   return (
     <group position={[cx, y, cz]}>
@@ -159,7 +162,9 @@ export function FortifiedCity({ def }: { def: SettlementDef }) {
 // ========== RIVER TOWN (Rivermoor) ==========
 export function RiverTown({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  // Anchor to lowest corner of the ±25 wall ring so the town deck never floats.
+  const fp = sampleFootprint(cx, cz, 25, 25, 0);
+  const y = fp.minY;
 
   return (
     <group position={[cx, y, cz]}>
@@ -222,7 +227,10 @@ export function RiverTown({ def }: { def: SettlementDef }) {
 // ========== MOUNTAIN HOLD (Stonepeak) ==========
 export function MountainHold({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  // Anchor to the LOWEST corner of the outer wall footprint so the 50×50 stone
+  // platform never floats over noise residue inside the plateau zone.
+  const fp = sampleFootprint(cx, cz, 25, 25, 0);
+  const y = fp.minY;
 
   return (
     <group position={[cx, y, cz]}>
@@ -341,7 +349,9 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
 // ========== TRADE CITY (Goldenvale) ==========
 export function TradeCity({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  // Anchor to lowest corner of the wall ring so the trade-city base never floats.
+  const fp = sampleFootprint(cx, cz, 40, 35, 0);
+  const y = fp.minY;
 
   return (
     <group position={[cx, y, cz]}>

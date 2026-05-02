@@ -15,6 +15,7 @@ import { getTerrainHeight } from './Terrain';
 import { getBridgeHeight } from '../world/BridgeData';
 import { resolveCollision } from '../systems/CollisionSystem';
 import { HorseGLBModel } from './HorseGLBModel';
+import { getGroundHeight, getSlopeFactor } from '../systems/Grounding';
 
 const HORSE_MODEL_LOAD_DIST = 30; // Only load full GLB model within this distance
 
@@ -101,11 +102,29 @@ export function Horse({ horse, playerPositionRef, onUpdateHorse, isMounted }: Pr
           targetSpeed = HORSE_APPROACH_SPEED * 0.5 * t * t;
         }
 
+        // Slope-aware speed: AI horses can't yo-yo into cliffs. Sample 1.4u ahead
+        // and reduce target speed proportionally to the upcoming grade.
+        const aheadX = hx + Math.sin(rotRef.current) * 1.4;
+        const aheadZ = hz + Math.cos(rotRef.current) * 1.4;
+        const aheadDy = getGroundHeight(aheadX, aheadZ) - getGroundHeight(hx, hz);
+        const aheadSlope = Math.atan2(aheadDy, 1.4);
+        const slopeFactor = getSlopeFactor(aheadSlope, 0.35, 0.7); // ramp 20°→40°
+        targetSpeed *= slopeFactor;
+
         moveSpeedRef.current += (targetSpeed - moveSpeedRef.current) * (1 - Math.exp(-5 * dt));
 
         const spd = moveSpeedRef.current;
         let nx = hx + Math.sin(rotRef.current) * spd * dt;
         let nz = hz + Math.cos(rotRef.current) * spd * dt;
+
+        // Step-up clamp: don't let AI horses warp up cliffs.
+        const curGroundY = getGroundHeight(hx, hz);
+        const nextGroundY = getGroundHeight(nx, nz);
+        if (nextGroundY - curGroundY > 0.85) {
+          nx = hx;
+          nz = hz;
+          moveSpeedRef.current *= 0.5;
+        }
 
         const resolved = resolveCollision(nx, nz, 0.8);
         nx = resolved.x;

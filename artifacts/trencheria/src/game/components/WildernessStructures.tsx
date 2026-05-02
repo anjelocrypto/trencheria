@@ -9,6 +9,7 @@ import { GEO, MAT } from '../world/SettlementPieces';
 import { getTerrainHeight } from './Terrain';
 import { SETTLEMENTS, ROADS, SMALL_POIS } from '../world/RegionData';
 import { distToRailway } from '../world/RailwayData';
+import { isBuildableGround, sampleFootprint } from '../systems/Grounding';
 
 export interface WildernessBuilding {
   x: number; z: number; rot: number;
@@ -142,9 +143,7 @@ function generateWildernessBuildings(): WildernessBuilding[] {
       const r = 3 + rand() * cluster.spread;
       const x = cluster.cx + Math.cos(angle) * r;
       const z = cluster.cz + Math.sin(angle) * r;
-      const y = getTerrainHeight(x, z);
 
-      if (y < -0.3) continue;
       if (isNearSettlement(x, z, 60)) continue;
       if (isNearRoad(x, z, 4)) continue;
       if (isNearPOI(x, z, 8)) continue;
@@ -158,6 +157,15 @@ function generateWildernessBuildings(): WildernessBuilding[] {
       if (type === 'shed') { w = 2; d = 2.5; }
       if (type === 'camp') { w = 2; d = 2; }
       if (type === 'shrine_hut') { w = 2; d = 2; }
+
+      // Footprint validation — reject water, uneven, or steep ground for the WHOLE building
+      const ground = isBuildableGround(x, z, w / 2, d / 2, rot, {
+        maxHeightDelta: 1.4,
+        maxSlopeRad: 0.55,
+        allowWater: false,
+      });
+      if (!ground.valid) continue;
+      const y = ground.minY;
 
       buildings.push({ x, z, rot, type, w, d });
     }
@@ -279,7 +287,9 @@ export function WildernessStructures({ playerPositionRef }: Props) {
           const dz = playerPos.z - b.z;
           if (dx * dx + dz * dz > 160 * 160) return null;
         }
-        const y = getTerrainHeight(b.x, b.z);
+        // Anchor each building to the LOWEST corner of its footprint (matches placement).
+        const fp = sampleFootprint(b.x, b.z, b.w / 2, b.d / 2, b.rot);
+        const y = fp.minY;
         const pos: [number, number, number] = [b.x, y, b.z];
 
         switch (b.type) {

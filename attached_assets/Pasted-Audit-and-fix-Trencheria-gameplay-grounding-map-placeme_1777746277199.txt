@@ -1,0 +1,142 @@
+Audit and fix Trencheria gameplay grounding, map placement, building placement, collision, mountain walking, and horse riding.
+
+Repo:
+https://github.com/anjelocrypto/trencheria
+
+Important rules:
+- Work only in the active Replit/GitHub repo, not the old Lovable historical repo.
+- Do not touch .migration-backup/.
+- Do not apply SQL or modify Supabase/database data.
+- Do not touch supabase/pending SQL files unless explicitly asked.
+- Keep the current monorepo + Supabase architecture.
+- Focus on gameplay/map/building/horse/collision fixes only.
+
+Main problem found by Codex:
+Many systems use only the center terrain height. Large buildings, kingdom props, platforms, horses, and player movement do not sample the full ground footprint/slope. This causes buildings to float or clip into mountains, bad mountain walking, horse riding issues, and collision mismatches.
+
+Files to inspect/fix:
+- artifacts/trencheria/src/game/components/BuildingSystem.tsx
+- artifacts/trencheria/src/game/systems/BuildingData.ts
+- artifacts/trencheria/src/game/components/Terrain.tsx
+- artifacts/trencheria/src/game/systems/CollisionSystem.ts
+- artifacts/trencheria/src/game/components/Player.tsx
+- artifacts/trencheria/src/game/components/Horses.tsx
+- artifacts/trencheria/src/game/systems/HorseData.ts
+- artifacts/trencheria/src/game/components/Settlements.tsx
+- artifacts/trencheria/src/game/components/NewKingdomRenderers.tsx
+- artifacts/trencheria/src/game/components/WildernessStructures.tsx
+- artifacts/trencheria/src/game/components/WorldPOIs.tsx
+- artifacts/trencheria/src/game/world/KingdomBuildingData.ts
+- artifacts/trencheria/src/game/world/RegionData.ts
+
+Tasks:
+
+T001 — Create shared ground/placement helper
+Create a reusable helper, for example:
+artifacts/trencheria/src/game/systems/Grounding.ts
+
+It should provide:
+- getGroundHeight(x, z): uses bridge height when applicable, otherwise terrain height.
+- sampleGroundFootprint(x, z, width, depth, rotation): samples center, corners, and edge midpoints.
+- getTerrainNormal / getSlopeAt.
+- isBuildableGround: returns valid/invalid, average height, min/max height, slope, and reason.
+
+Acceptance:
+All gameplay systems stop duplicating one-off ground checks where practical.
+
+T002 — Fix player building placement on mountains
+In BuildingSystem.tsx:
+- Stop placing buildings using only center height.
+- For every buildable, sample its full footprint based on size and rotation.
+- Reject placement if terrain height delta across the footprint is too high.
+- Reject placement if slope is too steep.
+- Reject placement on water/rivers/lakes unless explicitly allowed.
+- Snap the ghost/building to the chosen base height.
+- Update build feedback messages, e.g. “Ground too steep”, “Uneven terrain”, “Too close to water”.
+
+Acceptance:
+Large structures no longer float in the air or clip badly into mountain slopes. Big buildings require flatter ground. Small objects may allow slightly more slope if safe.
+
+T003 — Fix kingdom/settlement floating buildings
+In NewKingdomRenderers.tsx, Settlements.tsx, Terrain.tsx:
+- Audit all kingdom renderers, especially MountainHold / Stonepeak.
+- Large platforms, walls, towers, houses, and props must either:
+  A) sit on a properly flattened/terraced terrain plateau, or
+  B) use local ground sampling per object/segment.
+- Do not place a whole city/platform at one center height if the footprint is large and mountainous.
+- For Stonepeak/MountainHold, make the mountain kingdom intentionally terraced instead of accidentally floating.
+
+Acceptance:
+All 7 kingdom areas look grounded. Mountain kingdom buildings do not hover. Walls/platforms match the terrain visually.
+
+T004 — Improve walking on mountains
+In Player.tsx:
+- Add max walkable slope / max step height.
+- Prevent players from walking straight up cliffs.
+- Add uphill slowdown and/or slide-back behavior on too-steep slopes.
+- Use getGroundHeight so bridges and terrain are handled consistently.
+- Reduce jitter from hard snapping when terrain height changes sharply.
+
+Acceptance:
+Walking on hills feels smooth, but steep mountains are not freely climbable like flat ground.
+
+T005 — Improve horse riding
+In Player.tsx, Horses.tsx, HorseData.ts:
+- Add horse max slope rules. Horses should slow down uphill and should not gallop up cliffs.
+- Smooth horse vertical movement and visual pitch/roll using terrain normal.
+- Handle side slopes better.
+- Improve dismount safety: test several nearby offsets, reject water/steep/colliding spots, then choose the safest location.
+- Called horses should avoid obviously invalid terrain/water/steep slopes when approaching the player.
+
+Acceptance:
+Horse riding feels stable. Horse does not jitter badly, float, sink, or sprint up impossible mountain slopes. Dismount does not place the player inside buildings, water, or bad terrain.
+
+T006 — Improve collision accuracy
+In CollisionSystem.ts and related setup:
+- Audit visual-vs-collision mismatch for buildings, walls, gates, towers, settlements, and kingdom props.
+- Use box footprints for rectangular buildings instead of rough circles where possible.
+- Make player-built structure collision match BUILDABLES size/rotation.
+- Make static kingdom/settlement collisions match visual positions after grounding fixes.
+- Keep the system performant.
+
+Acceptance:
+Players and horses collide with buildings where the visual object actually is. No invisible walls far away from objects. No walking through obvious solid structures.
+
+T007 — Audit wilderness structures and POIs
+In WildernessStructures.tsx and WorldPOIs.tsx:
+- Any large structure/POI should use footprint slope validation before placement.
+- Reject or move POIs that spawn on steep/uneven ground.
+- Align big objects to local ground or flatten their footprint intentionally.
+
+Acceptance:
+Wilderness buildings, ruins, camps, caves, and POIs do not visibly float or clip badly.
+
+T008 — Add developer debug/audit tool
+Add a temporary or toggleable debug helper that can report:
+- buildings/props whose footprint height delta is too high
+- objects floating more than a threshold above terrain
+- objects clipping below terrain
+- collision footprint vs visual footprint mismatch
+
+Acceptance:
+There is an easy way to inspect bad placements during development without guessing.
+
+T009 — Verify
+Run:
+- pnpm typecheck
+- pnpm build
+
+Manual smoke tests:
+- Try building small and large buildings on flat ground, mild slope, steep mountain, near water, near bridges.
+- Inspect all 7 kingdoms, especially Stonepeak/MountainHold.
+- Walk uphill/downhill/sidehill.
+- Ride horse uphill/downhill/sidehill.
+- Dismount near buildings, slopes, water, and bridges.
+- Check collisions around walls, gates, towers, shelters, storage, settlements, and kingdom props.
+
+Do not mark complete until:
+- No new typecheck/build errors are introduced.
+- Buildings no longer float on mountain slopes.
+- Steep mountain walking is controlled.
+- Horse riding/dismounting is safer and smoother.
+- Collision feels aligned with visuals.
