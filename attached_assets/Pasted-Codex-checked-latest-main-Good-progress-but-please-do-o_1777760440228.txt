@@ -1,0 +1,50 @@
+Codex checked latest main. Good progress, but please do one final cleanup pass before calling this finished.
+
+Confirmed good:
+- RailwayValidator now checks TOWN_BUILDINGS, TOWN_PROPS, and kingdom house arrays.
+- RailwayTrack was slimmed down.
+- RailwayBridges were slimmed down.
+- The town/market bridge overlaps and Rivermoor house overlaps were mostly fixed.
+
+Remaining problems to fix:
+
+1. Do not leave the Rivermoor residual warning as “known residual.”
+Current BridgeData.ts says there is still a road-water-no-bridge warning near approx (426,326). Please resolve it properly:
+- either move/reroute the Rivermoor road so it reaches the kingdom on dry land,
+- or move the waterfront houses/shoreline enough to fit a full bridge,
+- or render a clear shallow ford/quay/causeway and add it to validator as an intentional valid crossing.
+Acceptance: RailwayValidator should have zero unexplained warnings.
+
+2. Make RailwayValidator building checks rotation-aware.
+Current checkBuilding samples axis-aligned corners and ignores each building’s rotation. That can miss real overlaps.
+Please update it to use true rotated OBB footprint checks for:
+- TOWN_BUILDINGS using b.rot
+- TOWN_PROPS using rotation when shape='box'
+- kingdom houses using their rotation if available
+Then check OBB-vs-OBB against rail bridges, road bridges, station footprints, and level crossings.
+
+3. Town props need full bridge/station/crossing checks.
+Right now town props are mostly checked against rail distance and rail bridge center. Please also check prop footprints against:
+- road bridges
+- station platforms
+- level crossings
+- railway bridge OBBs using full footprint, not just center point
+
+4. Visual proof required.
+Please take fresh screenshots from the exact main kingdom/Ironhold angle I sent:
+- front gate
+- bridge/rail cluster
+- market/town buildings
+- railway bridge area
+If the rail/bridge still looks crossed or boxy, reroute/simplify Ironhold rail layout rather than only slimming mesh sizes.
+
+5. If RailwayTrack still looks like rectangular boxes in preview, replace the ballast strip with a better low-profile gravel/ground strip or sleeper-only look. Slim boxes are better, but the visual acceptance is the screenshot, not just code.
+
+Do not touch SQL, Supabase, auth, api-server, migrations, or .migration-backup.
+
+Acceptance:
+- RailwayValidator: zero unexplained violations.
+- No rail/bridge/road bridge intersects buildings, props, stations, or level crossings.
+- Rivermoor residual is fixed or intentionally rendered + validator-recognized.
+- Fresh screenshots prove Ironhold/main kingdom bridge mess is gone.
+- Build passes.

@@ -29,7 +29,7 @@ import {
   distToRailway,
 } from '../world/RailwayData';
 import { ROADS, SETTLEMENTS } from '../world/RegionData';
-import { BRIDGES } from '../world/BridgeData';
+import { BRIDGES, INTENTIONAL_FORDS, inIntentionalFord } from '../world/BridgeData';
 import { getLakeHeight, getRiverHeight } from '../world/WaterData';
 import { sampleFootprint } from './Grounding';
 import { WILDERNESS_BUILDINGS } from '../components/WildernessStructures';
@@ -241,10 +241,16 @@ export function runRailwayWorldAudit(): void {
       }
     }
     if (firstUnbridged) {
-      issues.push({
-        category: 'road-water-no-bridge',
-        detail: `road [${road.from[0]},${road.from[1]}]→[${road.to[0]},${road.to[1]}] crosses ${firstUnbridged.kind} at (${fmt(firstUnbridged.x)},${fmt(firstUnbridged.z)})`,
-      });
+      // Codex follow-up #2: an INTENTIONAL_FORDS entry can mark a stretch of
+      // road that legitimately wades through water (causeway/quay). Skip the
+      // warning if the unbridged sample falls inside any ford radius.
+      const ford = inIntentionalFord(firstUnbridged.x, firstUnbridged.z);
+      if (!ford) {
+        issues.push({
+          category: 'road-water-no-bridge',
+          detail: `road [${road.from[0]},${road.from[1]}]→[${road.to[0]},${road.to[1]}] crosses ${firstUnbridged.kind} at (${fmt(firstUnbridged.x)},${fmt(firstUnbridged.z)})`,
+        });
+      }
     }
   }
 
@@ -471,69 +477,153 @@ export function runRailwayWorldAudit(): void {
     return null;
   }
 
-  function checkBuilding(
-    label: string, x: number, z: number, w: number, d: number,
-  ): void {
-    const r = Math.max(w, d) / 2;
-    const need = r + TOWN_BUILDING_RAIL_CLEARANCE;
-    const dRail = distToRailway(x, z, need);
-    if (dRail !== null && dRail < r + 2) {
-      issues.push({
-        category: 'town-building-on-rail',
-        detail: `${label} at (${fmt(x)},${fmt(z)}) ${fmt(dRail)}u from rail (need ≥${fmt(r + 2)}u, half=${fmt(r)})`,
-      });
-    }
-    // Sample footprint corners for bridge / station / crossing OBB hits.
-    const corners: Array<[number, number]> = [
-      [x - w / 2, z - d / 2], [x + w / 2, z - d / 2],
-      [x + w / 2, z + d / 2], [x - w / 2, z + d / 2],
-      [x, z],
+  // Codex follow-up #2: rotation-aware OBB-vs-OBB checks via 2D SAT. Each
+  // building/prop is a rotated rectangle (cx,cz, halfW, halfL, rot). Each
+  // bridge / station footprint / level-crossing is also expressed as an OBB
+  // (level crossings use rot=0 with halfW=halfL=size+pad). We then test for
+  // overlap by projecting both rectangles onto the 4 candidate separating
+  // axes (each OBB contributes 2 axes — its local x and local z in world
+  // space). If any axis fully separates them, no overlap.
+  interface Obb {
+    cx: number; cz: number; halfW: number; halfL: number; rot: number;
+  }
+  function obbCorners(o: Obb): Array<[number, number]> {
+    const c = Math.cos(o.rot), s = Math.sin(o.rot);
+    // local +x → world (cosθ, -sinθ); local +z → world (sinθ, cosθ).
+    const exX =  c * o.halfW, exZ = -s * o.halfW;
+    const ezX =  s * o.halfL, ezZ =  c * o.halfL;
+    return [
+      [o.cx - exX - ezX, o.cz - exZ - ezZ],
+      [o.cx + exX - ezX, o.cz + exZ - ezZ],
+      [o.cx + exX + ezX, o.cz + exZ + ezZ],
+      [o.cx - exX + ezX, o.cz - exZ + ezZ],
     ];
-    for (const [cx, cz] of corners) {
-      const rb = inRailBridgeOBB(cx, cz);
-      if (rb) {
-        issues.push({
-          category: 'town-building-on-rail-bridge',
-          detail: `${label} at (${fmt(x)},${fmt(z)}) corner (${fmt(cx)},${fmt(cz)}) overlaps ${rb.id}`,
-        });
-        return;
+  }
+  function obbOverlap(a: Obb, b: Obb): boolean {
+    const ca = Math.cos(a.rot), sa = Math.sin(a.rot);
+    const cb = Math.cos(b.rot), sb = Math.sin(b.rot);
+    const axes: Array<[number, number]> = [
+      [ca, -sa], [sa, ca],
+      [cb, -sb], [sb, cb],
+    ];
+    const cornersA = obbCorners(a);
+    const cornersB = obbCorners(b);
+    for (const [ax, az] of axes) {
+      let minA = Infinity, maxA = -Infinity, minB = Infinity, maxB = -Infinity;
+      for (const [x, z] of cornersA) {
+        const p = x * ax + z * az;
+        if (p < minA) minA = p; if (p > maxA) maxA = p;
       }
-      const rdb = inRoadBridgeOBB(cx, cz);
-      if (rdb) {
-        issues.push({
-          category: 'town-building-on-road-bridge',
-          detail: `${label} at (${fmt(x)},${fmt(z)}) corner (${fmt(cx)},${fmt(cz)}) overlaps road bridge ${rdb.id}`,
-        });
-        return;
+      for (const [x, z] of cornersB) {
+        const p = x * ax + z * az;
+        if (p < minB) minB = p; if (p > maxB) maxB = p;
       }
-      const stn = inStationFootprint(cx, cz);
-      if (stn) {
-        issues.push({
-          category: 'town-building-on-station',
-          detail: `${label} at (${fmt(x)},${fmt(z)}) corner (${fmt(cx)},${fmt(cz)}) overlaps station ${stn.id}`,
-        });
-        return;
-      }
-      const lc = inLevelCrossing(cx, cz);
-      if (lc) {
-        issues.push({
-          category: 'town-building-on-level-crossing',
-          detail: `${label} at (${fmt(x)},${fmt(z)}) corner (${fmt(cx)},${fmt(cz)}) overlaps ${lc.id}`,
-        });
-        return;
-      }
+      if (maxA < minB || maxB < minA) return false;
     }
+    return true;
   }
 
-  let townHits = 0;
+  // Cached infrastructure OBBs.
+  const railBridgeObbs: Array<{ b: RailwayBridge; obb: Obb }> = RAILWAY_BRIDGES.map(b => ({
+    b,
+    obb: {
+      cx: b.position[0], cz: b.position[2],
+      halfW: RAIL_BRIDGE_HALF_W,
+      halfL: b.length / 2,
+      rot: getRailBridgeAngle(b),
+    },
+  }));
+  const roadBridgeObbs: Array<{ b: typeof BRIDGES[number]; obb: Obb }> = BRIDGES.map(b => ({
+    b,
+    obb: {
+      cx: b.position[0], cz: b.position[2],
+      halfW: b.width / 2 + 1,
+      halfL: b.length / 2 + 2,
+      rot: b.rotation,
+    },
+  }));
+  const stationObbs: Array<{ s: RailwayStation; obb: Obb }> = stationFootprints.map((fp, i) => ({
+    s: RAILWAY_STATIONS[i],
+    obb: {
+      cx: fp.cx, cz: fp.cz,
+      halfW: fp.halfW + 0.5, halfL: fp.halfL + 0.5,
+      rot: fp.rotation,
+    },
+  }));
+  const levelCrossingObbs: Array<{ lc: typeof LEVEL_CROSSINGS[number]; obb: Obb }> = LEVEL_CROSSINGS.map(lc => ({
+    lc,
+    obb: {
+      cx: lc.position[0], cz: lc.position[1],
+      halfW: lc.size + 1.5, halfL: lc.size + 1.5,
+      rot: 0,
+    },
+  }));
+
+  /**
+   * Rotation-aware footprint check. Returns true when an issue was logged.
+   * `kind` controls the issue category prefix (e.g. 'town-building',
+   * 'town-prop', 'kingdom-house').
+   */
+  function checkObb(
+    label: string,
+    obb: Obb,
+    kind: 'town-building' | 'town-prop' | 'kingdom-house',
+    railClearance: number,
+  ): boolean {
+    // Rail centerline distance: sample center + 4 rotated corners.
+    const corners = obbCorners(obb);
+    const r = Math.max(obb.halfW, obb.halfL);
+    const need = r + railClearance;
+    const samples: Array<[number, number]> = [[obb.cx, obb.cz], ...corners];
+    let worst: { x: number; z: number; d: number } | null = null;
+    for (const [sx, sz] of samples) {
+      const d = distToRailway(sx, sz, need);
+      if (d !== null && (!worst || d < worst.d)) worst = { x: sx, z: sz, d };
+    }
+    if (worst && worst.d < r + (kind === 'town-prop' ? 0.5 : 2)) {
+      issues.push({
+        category: `${kind}-on-rail`,
+        detail: `${label} @(${fmt(obb.cx)},${fmt(obb.cz)}) is ${fmt(worst.d)}u from rail (sample (${fmt(worst.x)},${fmt(worst.z)}), need ≥${fmt(r + 2)}u)`,
+      });
+      return true;
+    }
+    for (const { b, obb: bObb } of railBridgeObbs) {
+      if (obbOverlap(obb, bObb)) {
+        issues.push({ category: `${kind}-on-rail-bridge`, detail: `${label} @(${fmt(obb.cx)},${fmt(obb.cz)}) overlaps rail bridge ${b.id}` });
+        return true;
+      }
+    }
+    for (const { b, obb: bObb } of roadBridgeObbs) {
+      if (obbOverlap(obb, bObb)) {
+        issues.push({ category: `${kind}-on-road-bridge`, detail: `${label} @(${fmt(obb.cx)},${fmt(obb.cz)}) overlaps road bridge ${b.id}` });
+        return true;
+      }
+    }
+    for (const { s, obb: sObb } of stationObbs) {
+      if (obbOverlap(obb, sObb)) {
+        issues.push({ category: `${kind}-on-station`, detail: `${label} @(${fmt(obb.cx)},${fmt(obb.cz)}) overlaps station ${s.id}` });
+        return true;
+      }
+    }
+    for (const { lc, obb: lcObb } of levelCrossingObbs) {
+      if (obbOverlap(obb, lcObb)) {
+        issues.push({ category: `${kind}-on-level-crossing`, detail: `${label} @(${fmt(obb.cx)},${fmt(obb.cz)}) overlaps ${lc.id}` });
+        return true;
+      }
+    }
+    return false;
+  }
+
   const townPrev = issues.length;
   for (let i = 0; i < TOWN_BUILDINGS.length; i++) {
     const b = TOWN_BUILDINGS[i];
-    const before = issues.length;
-    checkBuilding(`town#${i}${b.label ? `(${b.label})` : ''}`, b.x, b.z, b.w, b.d);
-    if (issues.length > before) townHits++;
+    checkObb(
+      `town#${i}${b.label ? `(${b.label})` : ''}`,
+      { cx: b.x, cz: b.z, halfW: b.w / 2, halfL: b.d / 2, rot: b.rot },
+      'town-building',
+      TOWN_BUILDING_RAIL_CLEARANCE,
+    );
   }
-  // Suppress noise: keep first 5 town-building issues, summarize the rest.
   if (issues.length - townPrev > 5) {
     const removed = issues.splice(townPrev + 5, issues.length - townPrev - 5).length;
     issues.push({
@@ -542,33 +632,26 @@ export function runRailwayWorldAudit(): void {
     });
   }
 
-  let propHits = 0;
-  for (const p of TOWN_PROPS) {
-    const r = p.shape === 'circle'
-      ? (p.radius ?? 0.3)
-      : Math.max(p.halfW ?? 0.4, p.halfD ?? 0.4);
-    const need = r + TOWN_PROP_RAIL_CLEARANCE;
-    const dRail = distToRailway(p.x, p.z, need);
-    if (dRail !== null && dRail < r + 0.5) {
-      propHits++;
-      if (propHits <= 3) {
-        issues.push({
-          category: 'town-prop-on-rail',
-          detail: `prop @(${fmt(p.x)},${fmt(p.z)}) r=${fmt(r)} is ${fmt(dRail)}u from rail`,
-        });
-      }
-    }
-    if (inRailBridgeOBB(p.x, p.z)) {
-      issues.push({
-        category: 'town-prop-on-rail-bridge',
-        detail: `prop @(${fmt(p.x)},${fmt(p.z)}) overlaps rail bridge`,
-      });
-    }
+  // Town props — same OBB pipeline; circles become axis-aligned squares of
+  // side 2*radius, boxes use their own rotation.
+  const propPrev = issues.length;
+  for (let i = 0; i < TOWN_PROPS.length; i++) {
+    const p = TOWN_PROPS[i];
+    const halfW = p.shape === 'circle' ? (p.radius ?? 0.3) : (p.halfW ?? 0.4);
+    const halfD = p.shape === 'circle' ? (p.radius ?? 0.3) : (p.halfD ?? 0.4);
+    const rot = p.shape === 'box' ? (p.rotation ?? 0) : 0;
+    checkObb(
+      `prop#${i}`,
+      { cx: p.x, cz: p.z, halfW, halfL: halfD, rot },
+      'town-prop',
+      TOWN_PROP_RAIL_CLEARANCE,
+    );
   }
-  if (propHits > 3) {
+  if (issues.length - propPrev > 5) {
+    const removed = issues.splice(propPrev + 5, issues.length - propPrev - 5).length;
     issues.push({
       category: 'town-prop-on-rail',
-      detail: `… ${propHits - 3} more prop violation(s) suppressed`,
+      detail: `… ${removed} more town-prop violation(s) suppressed`,
     });
   }
 
@@ -585,7 +668,6 @@ export function runRailwayWorldAudit(): void {
     { id: 'darkhollow', type: 'frontier_camp', houses: FRONTIER_CAMP_HOUSES },
     { id: 'goldenvale', type: 'trade_city', houses: TRADE_CITY_HOUSES },
   ];
-  let kingdomHits = 0;
   const kingdomPrev = issues.length;
   for (const km of kingdomMap) {
     const def = SETTLEMENTS.find(s => s.type === km.type);
@@ -593,9 +675,14 @@ export function runRailwayWorldAudit(): void {
     const [cx, cz] = def.position;
     for (let i = 0; i < km.houses.length; i++) {
       const h = km.houses[i];
-      const before = issues.length;
-      checkBuilding(`${km.id}#${i}`, cx + h.x, cz + h.z, h.w, h.d);
-      if (issues.length > before) kingdomHits++;
+      // Houses are stored in LOCAL coords with their own rot (axis-aligned in
+      // local space). The settlement group has no rotation, so world rot == local rot.
+      checkObb(
+        `${km.id}#${i}`,
+        { cx: cx + h.x, cz: cz + h.z, halfW: h.w / 2, halfL: h.d / 2, rot: h.rot ?? 0 },
+        'kingdom-house',
+        TOWN_BUILDING_RAIL_CLEARANCE,
+      );
     }
   }
   if (issues.length - kingdomPrev > 5) {

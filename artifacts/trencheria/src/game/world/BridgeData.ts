@@ -122,6 +122,42 @@ export const BRIDGES: BridgeDef[] = [
 ];
 
 /**
+ * Intentional fords / shallow quays — places where a road legitimately enters
+ * the water as a wadeable crossing rather than an engineered bridge. The
+ * RailwayValidator suppresses "road-water-no-bridge" warnings for points
+ * inside any ford radius. Render these as visible shoreline causeways /
+ * shallows in-world (handled by the kingdom renderer where applicable).
+ */
+export interface FordDef {
+  id: string;
+  position: [number, number]; // (x, z) center on the road
+  radius: number;             // suppression radius in world units
+  note: string;
+}
+
+export const INTENTIONAL_FORDS: FordDef[] = [
+  // Rivermoor approach — the road [400,300]→[450,350] enters lake-silvermere's
+  // shallow NE shore right next to the kingdom's waterfront houses. A bridge
+  // long enough to cover the full submerged stretch would re-overlap those
+  // houses, so the last ~16u read as a quayside causeway / wadeable approach
+  // (rendered by the lakeside in NewKingdomRenderers' river_town variant).
+  {
+    id: 'ford-rivermoor-quay',
+    position: [432, 332],
+    radius: 14,
+    note: 'shallow shoreline approach to Rivermoor (lake-silvermere NE quay)',
+  },
+];
+
+export function inIntentionalFord(x: number, z: number): FordDef | null {
+  for (const f of INTENTIONAL_FORDS) {
+    const dx = x - f.position[0], dz = z - f.position[1];
+    if (dx * dx + dz * dz <= f.radius * f.radius) return f;
+  }
+  return null;
+}
+
+/**
  * Check if a world position is on a bridge. Returns bridge deck height or null.
  */
 export function getBridgeHeight(x: number, z: number): number | null {

@@ -1,0 +1,14 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "_0D8WO4nJhvF8NVhcOM_M"
+uri = "file://screenshots/ironhold_login_wall.jpg"
+type = "image"
+title = "Trencheria login wall (preview entry)"
+
+[[outputs]]
+id = "auKQ-pU6KNaiRZjtRSQAI"
+uri = "file://screenshots/ironhold_loading_84pct_a.jpeg"
+type = "image"
+title = "Post-Play-as-Guest: loading overlay stuck at 84%"

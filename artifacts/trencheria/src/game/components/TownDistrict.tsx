@@ -402,13 +402,15 @@ export const TOWN_PROPS: TownPropObstacle[] = [
   { shape: 'box', x: 18, z: 52, halfW: 0.95, halfD: 0.55, rotation: 0.1 },
   { shape: 'box', x: 22, z: 52, halfW: 0.95, halfD: 0.55, rotation: -0.1 },
   { shape: 'box', x: 26, z: 52, halfW: 0.95, halfD: 0.55, rotation: 0.2 },
-  { shape: 'box', x: 20, z: 58, halfW: 0.95, halfD: 0.55, rotation: Math.PI },
-  { shape: 'box', x: 24, z: 58, halfW: 0.95, halfD: 0.55, rotation: Math.PI + 0.15 },
+  // South stall row pulled from z=58 → z=48 to clear bridge-old-veyra-river
+  // OBB (centered (32.5,61.7), rot 1.367, deck reaches ~z=58 at this x range).
+  { shape: 'box', x: 20, z: 48, halfW: 0.95, halfD: 0.55, rotation: Math.PI },
+  { shape: 'box', x: 24, z: 48, halfW: 0.95, halfD: 0.55, rotation: Math.PI + 0.15 },
   // --- Well & notice board ---
   { shape: 'circle', x: 22, z: 55, radius: 0.7 },
   { shape: 'circle', x: 17, z: 55, radius: 0.45 },
-  // --- Carts (~1.2w x 2.2d) ---
-  { shape: 'box', x: 28, z: 58, halfW: 0.65, halfD: 1.15, rotation: 0.3 },
+  // --- Carts (~1.2w x 2.2d) — east cart pulled south to clear bridge OBB ---
+  { shape: 'box', x: 28, z: 48, halfW: 0.65, halfD: 1.15, rotation: 0.3 },
   { shape: 'box', x: 16, z: 58, halfW: 0.65, halfD: 1.15, rotation: -0.4 },
   // --- Barrels around stalls ---
   { shape: 'circle', x: 15, z: 53, radius: 0.28 },
