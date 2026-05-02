@@ -238,3 +238,37 @@ REVOKE ALL ON FUNCTION public.create_wallet_session(text) FROM anon, authenticat
 GRANT EXECUTE ON FUNCTION public.create_wallet_session(text) TO service_role;
 
 COMMIT;
+
+-- =====================================================================
+-- POST-APPLY VERIFICATION (run separately after the transaction commits)
+--
+-- Confirms there is exactly ONE register_with_faction (the 5-arg
+-- version) and that create_wallet_session is service_role-only.
+--
+--   SELECT
+--     p.proname,
+--     pg_get_function_identity_arguments(p.oid) AS args
+--   FROM pg_proc p
+--   JOIN pg_namespace n ON n.oid = p.pronamespace
+--   WHERE n.nspname = 'public'
+--     AND p.proname IN ('register_with_faction', 'create_wallet_session');
+--
+-- Expected:
+--   register_with_faction | _wallet_address text, _display_name text,
+--                          _community_name text, _faction_id uuid,
+--                          _session_token text
+--   create_wallet_session | _wallet_address text
+--
+-- (No 4-arg register_with_faction row should appear.)
+--
+-- Then check execute privileges on create_wallet_session:
+--
+--   SELECT grantee, privilege_type
+--   FROM information_schema.routine_privileges
+--   WHERE routine_schema = 'public'
+--     AND routine_name = 'create_wallet_session';
+--
+-- Expected: grantee = 'service_role', privilege_type = 'EXECUTE'
+-- (No rows for anon or authenticated.)
+-- =====================================================================
+
