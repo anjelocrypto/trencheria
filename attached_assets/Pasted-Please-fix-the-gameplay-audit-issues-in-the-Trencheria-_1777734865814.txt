@@ -1,0 +1,141 @@
+Please fix the gameplay audit issues in the Trencheria repo on main.
+
+Important context:
+- Keep the pnpm monorepo structure.
+- Keep Supabase as the backend.
+- The main game is in artifacts/trencheria.
+- The frontend Supabase shim routes RPC/functions/realtime through artifacts/api-server, so api-server is runtime-critical.
+- Do not flatten the repo or replace the architecture.
+
+Fix these issues:
+
+1. Fix blocked territory gameplay RPCs
+File: artifacts/api-server/src/routes/rpc.ts
+Problem: frontend calls claim_territory, release_territory, challenge_territory, cancel_challenge from artifacts/trencheria/src/game/hooks/useClanSystem.ts, but the API allowlist blocks them.
+Task:
+- Add these territory mutation RPC names to the allowlist.
+- Keep the allowlist strict.
+- Confirm the frontend territory buttons/actions no longer receive 403 from /api/rpc.
+
+2. Secure faction registration
+Files:
+- artifacts/trencheria/src/game/menu/MenuOverlay.tsx
+- artifacts/trencheria/src/integrations/supabase/types.ts
+- Supabase SQL/migration files, if present
+Problem: register_with_faction currently accepts wallet address + faction data without requiring a verified wallet session token.
+Task:
+- Update register_with_faction so it requires _session_token.
+- Validate that _wallet_address + _session_token match a valid wallet session before assigning faction or creating clan_members.
+- Update frontend calls in MenuOverlay.tsx to pass the pending wallet session token.
+- Update generated/manual Supabase types so register_with_faction includes _session_token.
+- Do not edit historical migrations if they are only backup/reference; create a new migration or SQL patch in the proper active location.
+
+3. Tighten API CORS safely
+Files:
+- artifacts/api-server/src/app.ts
+- artifacts/api-server/src/lib/supabase.ts
+Problem: app.use(cors()) is wide open while the server may use SUPABASE_SERVICE_ROLE_KEY.
+Task:
+- Restrict CORS to safe origins for Replit/dev/production.
+- Support localhost/Replit preview during development.
+- Prefer an environment variable like ALLOWED_ORIGINS for production.
+- Do not break same-origin /api calls from the game frontend.
+
+4. Speed up build mode
+File: artifacts/trencheria/src/game/components/BuildingSystem.tsx
+Problem: useFrame calls onSetBuildFeedback every frame.
+Task:
+- Store the previous feedback string in a ref.
+- Only call onSetBuildFeedback when the message actually changes.
+- Keep the ghost preview responsive.
+- Avoid unnecessary React rerenders during build mode.
+
+5. Fix building placement water mismatch
+File: artifacts/trencheria/src/game/components/BuildingSystem.tsx
+Related file: artifacts/trencheria/src/game/systems/SafeSpawn.ts
+Problem: building placement only checks terrain height, so placement can mismatch visible lakes/rivers.
+Task:
+- Use the same water checks as SafeSpawn: getLakeHeight and getRiverHeight.
+- Prevent placing structures in lakes/rivers unless explicitly on a valid bridge/buildable surface.
+
+6. Make spawn safety reliable
+Files:
+- artifacts/trencheria/src/game/components/Player.tsx
+- artifacts/trencheria/src/game/systems/SafeSpawn.ts
+- artifacts/trencheria/src/game/systems/CollisionSystem.ts
+Problem: Player calls findSafeSpawn before collision obstacles may be built.
+Task:
+- Ensure static obstacles are built before findSafeSpawn validates spawn.
+- Prefer exposing a safe initialize/buildStaticObstacles function from CollisionSystem rather than forcing a full dynamic rebuild.
+- Do not introduce repeated heavy work on every frame.
+
+7. Improve world-object performance
+Files:
+- artifacts/trencheria/src/game/components/WorldObjects.tsx
+- artifacts/trencheria/src/game/components/Player.tsx
+- artifacts/trencheria/src/game/systems/CollisionSystem.ts
+Problem: resources are scanned/render-culled by iterating the full resource list, and Player scans all resources for interaction.
+Task:
+- Add a simple spatial grid/bucket helper for world resources.
+- Use it so Player checks only nearby resources for interaction.
+- Use it so WorldObjects renders only nearby resource buckets instead of scanning the whole world every React render.
+- Keep behavior identical from the player perspective.
+- Do not over-engineer; a simple grid keyed by x/z cell is enough.
+
+8. Reduce repeated collision rebuild work
+File: artifacts/trencheria/src/game/components/Player.tsx
+Problem: collision is rebuilt every 0.5s from all resources/structures/horses.
+Task:
+- Rebuild collision only when relevant inputs change where possible.
+- If periodic rebuild remains, make it use nearby/dynamic data more efficiently.
+- Preserve player/resource/building collision behavior.
+
+9. Fix visual/collision mismatches
+Files:
+- artifacts/trencheria/src/game/components/TownDistrict.tsx
+- artifacts/trencheria/src/game/systems/CollisionSystem.ts
+- artifacts/trencheria/src/game/components/Settlements.tsx
+Problem: visible props like stalls, carts, wells, benches, barrels, docks/fountains/etc. often have no collision. Older settlement generated building positions are duplicated between renderer and collision.
+Task:
+- Add collision for obvious solid town/settlement props.
+- Keep small decorative items walkable if that feels better, but large visible blockers should block movement.
+- Move duplicated settlement placement generation into shared data if practical, similar to KingdomBuildingData.ts.
+- Avoid changing the visual layout unless needed.
+
+10. Reduce multiplayer frame allocations
+File: artifacts/trencheria/src/game/multiplayer/MultiplayerBroadcaster.tsx
+Problem: it creates a fresh NetworkPlayerState object every frame.
+Task:
+- Update/send local network state on the actual broadcast cadence, not every render frame.
+- Reuse refs where possible.
+- Keep remote player movement smooth.
+
+11. Clean up lighting performance/logs
+File: artifacts/trencheria/src/game/components/NightLighting.tsx
+Problem: repeated lamp sorting and production console logs.
+Task:
+- Remove production audit console.log calls.
+- Optimize nearest-lamp selection enough for gameplay, preferably with spatial buckets or partial nearest selection.
+- Preserve current night lighting behavior.
+
+12. Chat validation should not fail open
+File: artifacts/trencheria/src/game/multiplayer/useMultiplayer.ts
+Problem: if validate_chat fails, chat still sends.
+Task:
+- Change this to fail closed or apply a local cooldown fallback.
+- Do not allow unlimited chat spam when server validation fails.
+
+Verification:
+- Run pnpm install if needed.
+- Run pnpm run typecheck.
+- Run pnpm run build.
+- Test the game in Replit preview:
+  - wallet/faction registration still works
+  - territory claim/challenge actions no longer 403
+  - build placement works and refuses water
+  - spawn/respawn does not place player inside buildings
+  - resource gathering still works
+  - multiplayer movement/chat still works
+  - gameplay feels faster in build mode and near dense resources
+
+Please keep changes focused and explain each changed file when finished.
