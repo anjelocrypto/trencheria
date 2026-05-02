@@ -29,7 +29,11 @@ import { RailwayBridges } from './components/RailwayBridges';
 import { RailwayLamps } from './components/RailwayLamps';
 import { LevelCrossings } from './components/LevelCrossings';
 // DEV-only side-effect: world-map audit (rail/road/bridge consistency).
-import './systems/RailwayValidator';
+// Dynamically imported under import.meta.env.DEV so the validator code is
+// tree-shaken out of production bundles.
+if (import.meta.env.DEV) {
+  void import('./systems/RailwayValidator');
+}
 import { Train } from './components/Train';
 import { DebugCollision } from './components/DebugCollision';
 import { CameraController } from './systems/CameraController';
