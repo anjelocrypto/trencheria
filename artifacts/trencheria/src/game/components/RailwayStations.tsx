@@ -227,22 +227,16 @@ function Platform({ w, l }: { w: number; l: number }) {
 
 const IronholdCentralStation = memo(function IronholdCentralStation({ station }: { station: RailwayStation }) {
   const layout = useMemo(() => {
-    const [sx, sz] = station.position; // (-45, 89) — midpoint between Line A (z≈95) and Line B (z≈83) at x≈-40
+    const [sx, sz] = station.position; // v8: (-100, 130) — north rail-yard, between Line A (z=135) and Line B (z=125)
 
-    // Both lines now run roughly east through the hub as parallel tracks.
-    // Line A: (-40,95) → (-20,103) → (30,108) — northern track
-    // Line B: (-40,83) → (-20,83) → (45,80) — southern track
-    // Platform sits as a central island between them, aligned along the shared corridor.
-    const trackHeading = Math.atan2(
-      (30 - (-40) + 45 - (-40)) / 2, // avg ΔX ≈ 77.5
-      (108 - 95 + 80 - 83) / 2       // avg ΔZ ≈ 5
-    ); // ≈ 1.51 rad (roughly east)
+    // v8 north-yard layout — both lines run dead east through the hub as
+    // parallel tracks 10u apart, station is a slim 6×20 island platform
+    // centred between them. Heading is hard-east (+X), so trackHeading=π/2.
+    const trackHeading = Math.PI / 2;
 
-    // Sample the entire 12×20 platform footprint and use the lowest point so
-    // platform stays clear of any high-side terrain. Warn if footprint is on
-    // water or wildly uneven (footprint is on a flattened settlement plateau,
-    // so this should always pass — the warn is for future regressions).
-    const fp = sampleFootprint(sx, sz, 6, 10, trackHeading);
+    // Sample the 6×20 platform footprint and use the lowest point so the
+    // deck stays clear of any high-side terrain. Warns are dev-only.
+    const fp = sampleFootprint(sx, sz, 3, 10, trackHeading);
     if (import.meta.env.DEV) {
       if (fp.hasWater) console.warn('[RailwayStations] Ironhold Central footprint touches water');
       if (fp.heightDelta > 1.5) console.warn(`[RailwayStations] Ironhold Central footprint uneven (Δ=${fp.heightDelta.toFixed(2)}u)`);
@@ -251,13 +245,15 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
 
     return {
       position: new THREE.Vector3(sx, y, sz),
-      rotation: trackHeading, // Platform aligned along shared east-west corridor
+      rotation: trackHeading,
       y,
     };
   }, [station]);
 
-  // Custom capital dimensions — wider to feel like a proper hub
-  const platW = 12;
+  // v8: slim island platform — 6u wide so the 10u track gauge leaves 2u of
+  // clear space between platform edge and rail centerlines. Old 12-wide deck
+  // would have placed rails INSIDE the platform footprint.
+  const platW = 6;
   const platL = 20;
 
   return (
@@ -265,23 +261,26 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
       {/* ===== MAIN PLATFORM ===== */}
       <Platform w={platW} l={platL} />
 
+      {/* v8: with platW=6 the slim deck only fits centre-line shelters/benches.
+          Halls are squeezed so they fit within ±2u of platform centre — wider
+          structures would protrude into the rail clearance on either side. */}
       {/* ===== WEST HALL — main waiting hall ===== */}
-      <group position={[platW / 2 - 3, 0.55, 2]}>
-        <Shelter w={5} l={9} h={3.5} />
-        <Bench x={0} z={-3} length={3} />
-        <Bench x={0} z={0} length={3} />
-        <Bench x={0} z={3} length={3} />
+      <group position={[0, 0.55, 4]}>
+        <Shelter w={4} l={7} h={3.5} />
+        <Bench x={0} z={-2} length={2.5} />
+        <Bench x={0} z={0} length={2.5} />
+        <Bench x={0} z={2} length={2.5} />
       </group>
 
       {/* ===== EAST HALL — secondary shelter ===== */}
-      <group position={[-(platW / 2 - 3), 0.55, -3]}>
-        <Shelter w={4} l={6} h={3.2} />
-        <Bench x={0} z={-1.5} length={2.5} />
-        <Bench x={0} z={1.5} length={2.5} />
+      <group position={[0, 0.55, -5]}>
+        <Shelter w={3.5} l={5} h={3.2} />
+        <Bench x={0} z={-1.5} length={2} />
+        <Bench x={0} z={1.5} length={2} />
       </group>
 
-      {/* ===== CLOCK TOWER — at center-back of platform ===== */}
-      <group position={[platW / 2 - 1.2, 0.55, -platL / 2 + 2.5]}>
+      {/* ===== CLOCK TOWER — at platform centre ===== */}
+      <group position={[0, 0.55, 0]}>
         <mesh geometry={GEO.box} scale={[2, 5, 2]}
           position={[0, 2.5, 0]} material={MAT.stoneWarm} castShadow />
         {/* Tower windows on two faces */}
@@ -304,7 +303,7 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
           position={[0.11, 4.2, 1.05]} material={MAT.dark} />
       </group>
 
-      {/* ===== LAMPS — along both platform edges ===== */}
+      {/* ===== LAMPS — along both platform edges (slim island platform) ===== */}
       {Array.from({ length: 8 }, (_, i) => {
         const zp = -platL / 2 + (platL / 9) * (i + 1);
         const side = i % 2 === 0 ? platW / 2 - 0.5 : -(platW / 2 - 0.5);
@@ -312,7 +311,7 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
       })}
 
       {/* ===== ARCHED ENTRANCE — south end (approach side) ===== */}
-      {[-1.8, 1.8].map((xp, i) => (
+      {[-1.2, 1.2].map((xp, i) => (
         <group key={`arch-${i}`} position={[xp, 0, platL / 2 + 1.8]}>
           <mesh geometry={GEO.box} scale={[0.45, 3, 0.45]}
             position={[0, 1.5, 0]} material={MAT.stoneWarm} castShadow />

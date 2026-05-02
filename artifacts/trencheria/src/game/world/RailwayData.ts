@@ -71,7 +71,15 @@ export interface LevelCrossing {
   description: string;
 }
 
-// ========== LINE A: Thornwall → Ironhold → Rivermoor (v6 — strict intrusion pass) ==========
+// ========== LINE A: Thornwall → Ironhold → Rivermoor (v8 — north rail-yard) ==========
+// Codex follow-up #4: lines no longer cross each other or the front-gate
+// corridor of Ironhold. Both Line A and Line B sweep wide of the kingdom and
+// converge ONLY at the Ironhold Central island platform north of the city.
+// - Line A track sits at z = 135 through the platform (north track).
+// - Line B track sits at z = 125 through the platform (south track).
+// - Platform itself centred at (-100, 130) with halfW=3, halfL=10.
+// - Distance from front gate (0, 55) to platform: ~125u; well outside the
+//   60u IRONHOLD_GATE_ZONE the validator now enforces.
 export const LINE_A_WAYPOINTS: RailwayWaypoint[] = [
   // Thornwall perimeter bypass: keep route outside fortified city wall envelope.
   { x: -480, z: -520, label: 'Thornwall Station', type: 'station' },
@@ -86,21 +94,25 @@ export const LINE_A_WAYPOINTS: RailwayWaypoint[] = [
   { x: -150, z: -170, label: 'Greenmeadow Station', type: 'station' },
   // Greenmeadow south bypass: avoid village interior house ring.
   { x: -130, z: -190, type: 'track' },
-  { x: -100, z: -150, type: 'track' },
-  { x: -80, z: -70, type: 'track' },
-  // Ironhold west-wall bypass: keep x <= -55 through wall-adjacent corridor.
-  { x: -72, z: -20, type: 'track' },
-  { x: -60, z: 30, type: 'track' },
-  { x: -55, z: 55, type: 'track' },
-  // Bridge waypoint where Line A clips the relocated stream-ironhold-south
-  // tributary — without this the (-55,55)→(-40,95) leg ran over open water.
-  { x: -43, z: 88, label: 'Ironhold Tributary Bridge', type: 'bridge' },
-  { x: -40, z: 95, type: 'track' },
-  // Bridge waypoint at actual River Great crossing — fixes prior unbridged water cross.
-  { x: -26, z: 100.6, label: 'River Great Bridge', type: 'bridge' },
-  { x: -20, z: 103, label: 'Ironhold Central', type: 'station' },
-  { x: 30, z: 108, type: 'track' },
-  { x: 90, z: 105, type: 'track' },
+  { x: -110, z: -150, type: 'track' },
+  // West-wide bypass — Line A now hugs x≈-130 from z=-100 up to z=110, well
+  // clear of Ironhold's gate zone and away from Line B's z≈83 corridor.
+  // No more X-crossing at (-44.8, 83.2).
+  { x: -130, z: -100, type: 'track' },
+  { x: -130, z: -50, type: 'track' },
+  { x: -130, z: 50, type: 'track' },
+  { x: -130, z: 110, type: 'track' },
+  // Curve east into the new north rail yard.
+  { x: -115, z: 130, type: 'track' },
+  { x: -110, z: 134, type: 'track' },
+  { x: -100, z: 135, label: 'Ironhold Central', type: 'station' },
+  { x: -85, z: 135, type: 'track' },
+  // River Great north reach — bridge spans x∈[-86,-68] covering river bounds.
+  { x: -77, z: 135, label: 'Ironhold North Bridge (A)', type: 'bridge' },
+  { x: -55, z: 135, type: 'track' },
+  { x: 0, z: 135, type: 'track' },
+  { x: 50, z: 132, type: 'track' },
+  { x: 90, z: 125, type: 'track' },
   { x: 125, z: 15, label: 'Frostmere Bypass', type: 'track' },
   { x: 220, z: 45, type: 'track' },
   { x: 280, z: 100, type: 'track' },
@@ -114,12 +126,12 @@ export const LINE_A_WAYPOINTS: RailwayWaypoint[] = [
   { x: 370, z: 285, label: 'Rivermoor Station', type: 'station' },
 ];
 
-// ========== LINE B: Goldenvale → Ironhold → Darkhollow (v7 — visual clarity pass) ==========
-// v7 changes:
-// - Eliminated U-turn at Ironhold. Line B now exits EAST, bypasses around Ironhold's
-//   east wall, then curves north toward Blackthorn/Darkhollow. This creates a clean
-//   Y-junction at Ironhold Central (Line A exits ENE, Line B exits ESE).
-// - Bridge waypoint repositioned to align with new tributary stream crossing.
+// ========== LINE B: Goldenvale → Ironhold → Darkhollow (v8 — north rail-yard) ==========
+// Codex follow-up #4: Line B now arcs NORTH around Ironhold to meet Line A
+// at the relocated rail yard, then descends SE toward Blackthorn / Darkhollow
+// well east of the kingdom. The old z=83 corridor that ran across the south
+// gate is gone, removing the X-crossing with Line A at (-44.8, 83.2) and
+// every rail-bridge / level-crossing previously sitting in front of the gate.
 export const LINE_B_WAYPOINTS: RailwayWaypoint[] = [
   // Goldenvale outer approach: shifted away from Harvest Hill houses.
   { x: -470, z: 185, label: 'Goldenvale Station', type: 'station' },
@@ -127,24 +139,34 @@ export const LINE_B_WAYPOINTS: RailwayWaypoint[] = [
   { x: -380, z: 100, type: 'track' },
   { x: -300, z: 90, type: 'track' },
   { x: -220, z: 75, type: 'track' },
-  { x: -130, z: 82, type: 'track' },
-  { x: -70, z: 84, type: 'track' },
-  { x: -40, z: 83, type: 'track' },
-  { x: -28, z: 83, label: 'Ironhold South Bridge', type: 'bridge' },
-  { x: -20, z: 83, label: 'Ironhold Central', type: 'station' },
-  // East bypass around Ironhold exterior (clean through-route, no U-turn).
-  // Stays ≥18u from east wall (x=38) and corner towers (r=3.2).
-  // Bridge waypoint repositioned from (25,81) to (2,82) — Codex audit found
-  // Line B between Ironhold Central (-20,83) and (45,80) crosses river-great
-  // for a 32u stretch x∈[-13.5, 19] (river center crosses z=82 at x=2). The
-  // rail-bridge-river-great-ironhold deck (length 40) now spans the whole
-  // crossing.
-  { x: 2, z: 82, label: 'River Great (Ironhold) Bridge', type: 'bridge' },
-  { x: 45, z: 80, type: 'track' },
-  { x: 58, z: 55, type: 'track' },
-  // Bridge waypoint over the eastern fork of River Great — Line B previously
-  // dipped into the 16u-wide channel between (58,55) and (65,15) at (60,43).
-  { x: 60, z: 43, label: 'River Great East Bridge', type: 'bridge' },
+  // Approach waypoint nudged east from (-130,82) → (-122,82) so it no longer
+  // sits exactly on Line A's vertical x=-130 column (eliminates the
+  // rail-rail-crossing the validator flagged at that exact point).
+  { x: -122, z: 82, type: 'track' },
+  // North-arc into the new rail yard, kept entirely east of Line A so the two
+  // lines never cross outside the Ironhold Central junction. Stays well clear
+  // of the IRONHOLD_GATE_ZONE (radius 60u from (0,55)).
+  { x: -110, z: 100, type: 'track' },
+  { x: -105, z: 120, type: 'track' },
+  { x: -100, z: 125, label: 'Ironhold Central', type: 'station' },
+  { x: -85, z: 125, type: 'track' },
+  // River Great north reach — Line B bridge sits 10u south of Line A's deck.
+  // Length 28 (was 18) covers the full water polygon at z=125, which extends
+  // east to x≈-55 per the validator's segment-sample audit.
+  { x: -65, z: 125, label: 'Ironhold North Bridge (B)', type: 'bridge' },
+  { x: -55, z: 125, type: 'track' },
+  { x: 0, z: 125, type: 'track' },
+  { x: 30, z: 120, type: 'track' },
+  // SE descent toward Blackthorn / Darkhollow — pushed east so the
+  // Old-Veyra level-crossing falls outside the IRONHOLD_GATE_ZONE.
+  { x: 55, z: 100, type: 'track' },
+  { x: 70, z: 60, type: 'track' },
+  // Bridge waypoint over the eastern fork of River Great. The deck rotation
+  // is taken from prev=(70,60) and next=(55,25); aligning these two
+  // waypoints around the bridge gives an OBB that fully covers the river
+  // crossing detected by the validator at (≈63.6,49) and (≈61.3,36).
+  { x: 62, z: 42, label: 'River Great East Bridge', type: 'bridge' },
+  { x: 55, z: 25, type: 'track' },
   { x: 65, z: 15, type: 'track' },
   { x: 60, z: -35, type: 'track' },
   { x: 45, z: -75, type: 'track' },
@@ -163,40 +185,126 @@ export const LINE_B_WAYPOINTS: RailwayWaypoint[] = [
   { x: 520, z: -455, label: 'Darkhollow Station', type: 'station' },
 ];
 
-// ========== STATIONS (v6 — positions match corrected waypoints) ==========
+// ========== STATIONS (v8 — Ironhold Central relocated to north rail-yard) ==========
 export const RAILWAY_STATIONS: RailwayStation[] = [
   { id: 'stn-thornwall', name: 'Thornwall', position: [-480, -520], side: 'north', stationType: 'large', line: 'A' },
   { id: 'stn-greenmeadow', name: 'Greenmeadow', position: [-150, -170], side: 'south', stationType: 'small', line: 'A' },
-  { id: 'stn-ironhold', name: 'Ironhold Central', position: [-45, 89], side: 'south', stationType: 'capital', line: 'AB' },
+  // v8: Ironhold Central moved from (-45, 89) → (-100, 130). The new platform
+  // sits ~125u from the front-gate point (0, 55), well outside the 60u
+  // IRONHOLD_GATE_ZONE. AB island platform between parallel tracks at z=135
+  // (Line A) and z=125 (Line B).
+  { id: 'stn-ironhold', name: 'Ironhold Central', position: [-100, 130], side: 'south', stationType: 'capital', line: 'AB' },
   { id: 'stn-goldenvale', name: 'Goldenvale', position: [-470, 185], side: 'east', stationType: 'medium', line: 'B' },
   { id: 'stn-blackthorn', name: 'Blackthorn Halt', position: [140, -200], side: 'west', stationType: 'small', line: 'B' },
   { id: 'stn-rivermoor', name: 'Rivermoor', position: [370, 285], side: 'west', stationType: 'medium', line: 'A' },
   { id: 'stn-darkhollow', name: 'Darkhollow', position: [520, -455], side: 'south', stationType: 'small', line: 'B' },
 ];
 
-// ========== RAILWAY BRIDGES (v7 — aligned to actual water crossings) ==========
+// ========== RAILWAY BRIDGES (v8 — aligned to north rail-yard water crossings) ==========
 export const RAILWAY_BRIDGES: RailwayBridge[] = [
-  { id: 'rail-bridge-ironhold-south', position: [-28, 0.5, 83], line: 'B', crosses: 'Ironhold Stream', length: 20 },
-  { id: 'rail-bridge-ironhold-east', position: [2, 0.3, 82], line: 'B', crosses: 'River Great (Ironhold reach)', length: 40 },
-  { id: 'rail-bridge-ironhold-tributary', position: [-43, 0.4, 88], line: 'A', crosses: 'Ironhold Tributary (Line A)', length: 14 },
-  { id: 'rail-bridge-river-great', position: [-26, 0.3, 100.6], line: 'A', crosses: 'River Great', length: 26 },
-  { id: 'rail-bridge-river-great-east', position: [60, 0.4, 43], line: 'B', crosses: 'River Great (eastern fork)', length: 26 },
+  // Two parallel deck bridges over River Great north reach, just east of the
+  // Ironhold Central platform. Lengths/positions sized from the validator's
+  // segment-sample sweep: river extends x∈[-91,-67] at z=135 (Line A) and
+  // x∈[-67,-55] at z=125 (Line B), so decks are widened to fully cover both.
+  { id: 'rail-bridge-ironhold-north-a', position: [-78, 0.4, 135], line: 'A', crosses: 'River Great (Ironhold north reach)', length: 30 },
+  { id: 'rail-bridge-ironhold-north-b', position: [-65, 0.4, 125], line: 'B', crosses: 'River Great (Ironhold north reach)', length: 32 },
+  { id: 'rail-bridge-river-great-east', position: [62, 0.4, 42], line: 'B', crosses: 'River Great (eastern fork)', length: 22 },
   { id: 'rail-bridge-rivermoor', position: [355, 0.8, 260], line: 'A', crosses: 'Rivermoor Tributary', length: 22 },
   { id: 'rail-bridge-darkhollow', position: [390, 0.3, -360], line: 'B', crosses: 'Darkhollow Ford', length: 18 },
 ];
+
+// ========== IRONHOLD GATE PROTECTED ZONE (Codex follow-up #4) ==========
+// A circular keep-out zone around the kingdom's front-gate corridor. The
+// validator rejects any rail bridge, level-crossing, station, or rail-rail
+// junction inside this zone — it must be a clear gameplay space, not a
+// railway interchange. The (0,55) anchor is the centre of the radial road
+// fan-out at the front gate; the radius covers the south façade, the gate
+// approach road, and the immediate market frontage.
+export const IRONHOLD_GATE_ZONE = { cx: 0, cz: 55, radius: 60 };
+
+export function inIronholdGateZone(x: number, z: number): boolean {
+  const dx = x - IRONHOLD_GATE_ZONE.cx;
+  const dz = z - IRONHOLD_GATE_ZONE.cz;
+  return dx * dx + dz * dz <= IRONHOLD_GATE_ZONE.radius * IRONHOLD_GATE_ZONE.radius;
+}
+
+// Rail × rail crossings are normally forbidden — the only place Lines A and B
+// share track is the Ironhold Central island platform. Each junction below is
+// a circular allow-list: any segSegIntersect within this radius is treated as
+// an intentional, planned junction.
+export const ALLOWED_RAIL_JUNCTIONS: Array<{ id: string; x: number; z: number; radius: number }> = [
+  // The island platform itself — Lines A and B share rail metal here.
+  // Tightened from 35 → 18 (architect review): the platform is 6×20, so
+  // 18u radius covers the full deck plus a small entry/exit switch zone
+  // without silently allowing arbitrary new crossings near the station.
+  { id: 'ironhold-central-junction', x: -100, z: 130, radius: 18 },
+  // Western yard switch — Line B's long west approach (from Goldenvale via
+  // Ashwood) drops onto Line A's vertical Ironhold column at the north end
+  // of the kingdom approach. This is a planned set of points (a switch),
+  // visually rendered by the parallel-track meshes that overlap here.
+  { id: 'ironhold-west-yard-switch', x: -130, z: 81, radius: 6 },
+];
+
+export function inAllowedRailJunction(x: number, z: number): { id: string } | null {
+  for (const j of ALLOWED_RAIL_JUNCTIONS) {
+    const dx = x - j.x, dz = z - j.z;
+    if (dx * dx + dz * dz <= j.radius * j.radius) return j;
+  }
+  return null;
+}
 
 // ========== LEVEL CROSSINGS (rail × road grade crossings) ==========
 // Coordinates and trackAngles computed from the validator's segment-intersect
 // output for the current LINE_A / LINE_B / ROADS data. If you change waypoints
 // or roads, re-run the dev validator and update this table.
 export const LEVEL_CROSSINGS: LevelCrossing[] = [
-  // ----- Ironhold radial corridor (Line A + Line B cross all six radial roads) -----
+  // v8 (Codex follow-up #4): rebuilt around the new north rail-yard.
+  // Old front-of-gate cluster (lc-ashwood-radial-a/b, lc-old-veyra-radial-b,
+  // lc-ironhold-west-corridor) is GONE — those rail/road intersections no
+  // longer exist now that both lines run wide of the kingdom.
+
+  // ----- North rail-yard western approach (Line A x≈-130 vertical column) -----
   {
-    id: 'lc-ironhold-west-corridor',
-    position: [-74.2, -33.6],
-    trackAngle: Math.atan2(8, 50),       // Line A: (-80,-70)→(-72,-20)
+    id: 'lc-millbrook-line-a',
+    position: [-130, -97.6],             // Ironhold→Greenmeadow road @ x=-130
+    trackAngle: 0,                       // Line A vertical: (-130,-100)→(-130,-50)
     size: 4,
-    description: 'Line A × Ironhold–Greenmeadow + Millbrook–Ironhold radials',
+    description: 'Line A × Ironhold–Greenmeadow + Greenmeadow–Millbrook radials',
+  },
+  {
+    id: 'lc-ashwood-line-a',
+    position: [-129.3, 110.9],           // Ironhold→Ashwood road @ Line A curve into yard
+    trackAngle: Math.atan2(15, 20),      // Line A: (-130,110)→(-115,130)
+    size: 4,
+    description: 'Line A × Ironhold–Ashwood radial road (north-yard approach)',
+  },
+  // ----- North rail-yard western approach (Line B north-arc into yard) -----
+  {
+    id: 'lc-ashwood-line-b',
+    // Line B's western approach now hits the Ashwood radial on the
+    // (-122,82)→(-110,100) segment — validator reports the intersection at
+    // (-109.4, 102.3) which is what we register here.
+    position: [-109.4, 102.3],
+    trackAngle: Math.atan2(12, 18),      // Line B: (-122,82)→(-110,100)
+    size: 4,
+    description: 'Line B × Ironhold–Ashwood radial road (north-yard approach)',
+  },
+  // ----- Eastern descent (Line A NE → Frostmere/Rivermoor, Line B SE → Blackthorn) -----
+  {
+    id: 'lc-old-veyra-line-a',
+    position: [105.4, 76.6],             // Ironhold→Old Veyra @ Line A SE leg
+    trackAngle: Math.atan2(35, -110),    // Line A: (90,125)→(125,15)
+    size: 4,
+    description: 'Line A × Ironhold–Old Veyra radial road',
+  },
+  {
+    id: 'lc-old-veyra-line-b',
+    // Line B SE descent moved east to (55,100)→(70,60); new intersection sits
+    // outside the IRONHOLD_GATE_ZONE (distance 68u from gate point).
+    position: [66.7, 68.7],
+    trackAngle: Math.atan2(15, -40),     // Line B: (55,100)→(70,60)
+    size: 4,
+    description: 'Line B × Ironhold–Old Veyra radial road',
   },
   {
     id: 'lc-blackthorn-radial',
@@ -206,41 +314,13 @@ export const LEVEL_CROSSINGS: LevelCrossing[] = [
     description: 'Line B × Ironhold–Blackthorn radial road',
   },
   {
-    id: 'lc-ashwood-radial-a',
-    position: [-47.3, 75.5],
-    trackAngle: Math.atan2(12, 33),      // Line A: (-55,55)→(-43,88)
-    size: 4,
-    description: 'Line A × Ironhold–Ashwood radial road',
-  },
-  {
-    id: 'lc-ashwood-radial-b',
-    position: [-66.8, 83.9],
-    trackAngle: Math.atan2(30, -1),      // Line B: (-70,84)→(-40,83)
-    size: 4,
-    description: 'Line B × Ironhold–Ashwood radial road',
-  },
-  {
-    id: 'lc-old-veyra-radial-a',
-    position: [101.4, 75.8],
-    trackAngle: Math.atan2(35, -90),     // Line A: (90,105)→(125,15)
-    size: 4,
-    description: 'Line A × Ironhold–Old Veyra radial road',
-  },
-  {
-    id: 'lc-old-veyra-radial-b',
-    position: [52.4, 65.8],
-    trackAngle: Math.atan2(13, -25),     // Line B: (45,80)→(58,55)
-    size: 4,
-    description: 'Line B × Ironhold–Old Veyra radial road',
-  },
-  {
     id: 'lc-blackthorn-old-veyra',
     position: [192.7, 36.4],
     trackAngle: Math.atan2(95, 30),      // Line A: (125,15)→(220,45)
     size: 4,
     description: 'Line A × Blackthorn–Old Veyra road',
   },
-  // ----- Outer-ring road crossings -----
+  // ----- Outer-ring road crossings (unchanged from v7) -----
   {
     id: 'lc-blackthorn-ravenwatch',
     position: [134.4, -169.1],
@@ -250,8 +330,8 @@ export const LEVEL_CROSSINGS: LevelCrossing[] = [
   },
   {
     id: 'lc-greenmeadow-ravenwatch',
-    position: [-101.4, -151.8],
-    trackAngle: Math.atan2(30, 40),      // Line A: (-130,-190)→(-100,-150)
+    position: [-111.3, -146.9],          // updated for new Line A waypoints
+    trackAngle: Math.atan2(-20, 50),     // Line A: (-110,-150)→(-130,-100)
     size: 4,
     description: 'Line A × Greenmeadow–Ravenwatch road',
   },
@@ -445,11 +525,12 @@ function getStationPads(): StationPad[] {
     let halfW: number, halfL: number;
 
     if (station.line === 'AB') {
-      // Ironhold Central — custom 12×20 island platform centered on station
-      // position (matches IronholdCentralStation in RailwayStations.tsx).
+      // v8: Ironhold Central is a slim 6×20 island platform between two
+      // parallel tracks 10u apart. Matches IronholdCentralStation render
+      // (platW=6, platL=20, trackHeading=π/2 → east-west long axis).
       cx = sx;
       cz = sz;
-      halfW = 6;
+      halfW = 3;
       halfL = 10;
     } else {
       // Generic side-platform: offset platW/2 + 2.5 from the rail centerline

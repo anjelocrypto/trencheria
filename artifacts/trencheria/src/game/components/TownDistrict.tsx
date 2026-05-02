@@ -361,7 +361,11 @@ function generateTownBuildings(): TownBuildingDef[] {
     // Relocated south to clear Line B railway corridor (z≈83, need 15u clearance)
     [-18, 56, Math.PI * 0.4, 'Blacksmith'],
     [-24, 54, Math.PI * 0.5, 'Stable'],
-    [-120, 132, Math.PI * 0.3, 'Storage'],
+    // Codex follow-up #4: Storage was at (-120, 132) — directly under the
+    // new Line A approach into Ironhold Central (validator flagged it as
+    // 1.8u from rail). Pulled in next to the Stable in the SW workshop
+    // cluster so it's part of the actual town and clear of every railway.
+    [-30, 58, Math.PI * 0.3, 'Storage'],
     // Was (-82, 84) then (-82, 68) — moved well clear of Line B
     [-82, 56, Math.PI * 0.45],
   ];

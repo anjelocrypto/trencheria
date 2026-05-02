@@ -27,6 +27,10 @@ import {
   STATION_DIMS,
   getRailwaySegments,
   distToRailway,
+  IRONHOLD_GATE_ZONE,
+  inIronholdGateZone,
+  inAllowedRailJunction,
+  ALLOWED_RAIL_JUNCTIONS,
 } from '../world/RailwayData';
 import { ROADS, SETTLEMENTS } from '../world/RegionData';
 import { BRIDGES, INTENTIONAL_FORDS, inIntentionalFord } from '../world/BridgeData';
@@ -161,12 +165,9 @@ interface StationLayout {
 function getStationLayout(station: RailwayStation): StationLayout {
   const [sx, sz] = station.position;
   if (station.line === 'AB') {
-    // Ironhold Central — custom 12×20 platform along shared east-west corridor.
-    const trackHeading = Math.atan2(
-      (30 - (-40) + 45 - (-40)) / 2,
-      (108 - 95 + 80 - 83) / 2,
-    );
-    return { cx: sx, cz: sz, halfW: 6, halfL: 10, rotation: trackHeading };
+    // v8: Ironhold Central is a slim 6×20 island platform between Line A
+    // (z=135) and Line B (z=125). Long axis runs east (trackHeading=π/2).
+    return { cx: sx, cz: sz, halfW: 3, halfL: 10, rotation: Math.PI / 2 };
   }
   const dims = STATION_DIMS[station.stationType] || STATION_DIMS.small;
   const rotation = getTrackAngleAt(station.line, sx, sz);
@@ -348,18 +349,16 @@ export function runRailwayWorldAudit(): void {
         detail: `${station.id} platform at (${fmt(layout.cx)},${fmt(layout.cz)}) uneven (Δ=${fmt(fp.heightDelta, 2)}u, max=${STATION_HEIGHT_DELTA_LIMIT}u)`,
       });
     }
-    // Rail overlap: skipped for line='AB' because AB platforms are CENTER
-    // platforms that sit between two parallel tracks (rail near center is
-    // expected). For side platforms, distToRailway from platform CENTER must
-    // exceed halfW so the rail stays outside the platform's narrow axis.
-    if (station.line !== 'AB') {
-      const railD = distToRailway(layout.cx, layout.cz, layout.halfW + 1);
-      if (railD !== null && railD < layout.halfW - 0.5) {
-        issues.push({
-          category: 'station-footprint-rail-overlap',
-          detail: `${station.id} platform center is only ${fmt(railD)}u from rail (need >${fmt(layout.halfW - 0.5)}u, halfW=${fmt(layout.halfW)})`,
-        });
-      }
+    // Codex follow-up #4: removed the legacy AB skip. Even island platforms
+    // must keep the rail centerline OUTSIDE the platform deck — the v8
+    // Ironhold Central layout has 5u from platform centre to each rail and
+    // halfW=3, so distToRailway returns 5 ≥ halfW - 0.5 = 2.5 and passes.
+    const railD = distToRailway(layout.cx, layout.cz, layout.halfW + 1);
+    if (railD !== null && railD < layout.halfW - 0.5) {
+      issues.push({
+        category: 'station-footprint-rail-overlap',
+        detail: `${station.id} platform center is only ${fmt(railD)}u from rail (need >${fmt(layout.halfW - 0.5)}u, halfW=${fmt(layout.halfW)})`,
+      });
     }
     // Road overlap: a road centerline running through the platform footprint
     // would visually slice through the deck.
@@ -700,10 +699,82 @@ export function runRailwayWorldAudit(): void {
     FORTIFIED_CITY_HOUSES.length + RIVER_TOWN_HOUSES.length +
     MOUNTAIN_HOLD_HOUSES.length + FRONTIER_CAMP_HOUSES.length +
     TRADE_CITY_HOUSES.length;
+  // ============================================================
+  // 11. Rail × rail crossings (Codex follow-up #4)
+  //     Lines A and B may share track ONLY inside an entry of
+  //     ALLOWED_RAIL_JUNCTIONS (the Ironhold Central island platform).
+  //     Any other intersection is a planning bug.
+  // ============================================================
+  for (let i = 0; i < LINE_A_WAYPOINTS.length - 1; i++) {
+    const a0 = LINE_A_WAYPOINTS[i], a1 = LINE_A_WAYPOINTS[i + 1];
+    for (let j = 0; j < LINE_B_WAYPOINTS.length - 1; j++) {
+      const b0 = LINE_B_WAYPOINTS[j], b1 = LINE_B_WAYPOINTS[j + 1];
+      const p = segSegIntersect(a0.x, a0.z, a1.x, a1.z, b0.x, b0.z, b1.x, b1.z);
+      if (!p) continue;
+      const allowed = inAllowedRailJunction(p.x, p.z);
+      if (!allowed) {
+        issues.push({
+          category: 'rail-rail-crossing',
+          detail: `Line A seg #${i} × Line B seg #${j} cross at (${fmt(p.x)},${fmt(p.z)}) — outside every ALLOWED_RAIL_JUNCTION`,
+        });
+      }
+    }
+  }
+
+  // ============================================================
+  // 12. Infrastructure inside the Ironhold gate zone (Codex follow-up #4)
+  //     The 60u radius circle around the front-gate point (0,55) must stay
+  //     clear of railway bridges, level crossings, and stations so the
+  //     player's first view of the kingdom is uncluttered.
+  // ============================================================
+  for (const b of RAILWAY_BRIDGES) {
+    if (inIronholdGateZone(b.position[0], b.position[2])) {
+      issues.push({
+        category: 'infrastructure-in-ironhold-gate-zone',
+        detail: `rail bridge ${b.id} at (${fmt(b.position[0])},${fmt(b.position[2])}) sits inside the Ironhold gate zone (radius ${IRONHOLD_GATE_ZONE.radius}u from (${IRONHOLD_GATE_ZONE.cx},${IRONHOLD_GATE_ZONE.cz}))`,
+      });
+    }
+  }
+  for (const station of RAILWAY_STATIONS) {
+    if (inIronholdGateZone(station.position[0], station.position[1])) {
+      issues.push({
+        category: 'infrastructure-in-ironhold-gate-zone',
+        detail: `station ${station.id} at (${fmt(station.position[0])},${fmt(station.position[1])}) sits inside the Ironhold gate zone`,
+      });
+    }
+  }
+  // ============================================================
+  // 12b. Allowed rail-rail junctions must themselves stay out of the gate zone
+  //      (architect review hardening — prevents anyone "fixing" a future
+  //      rail-rail-crossing violation by drawing the allowlist through the
+  //      front gate instead of moving the offending track).
+  // ============================================================
+  for (const j of ALLOWED_RAIL_JUNCTIONS) {
+    if (inIronholdGateZone(j.x, j.z)) {
+      issues.push({
+        category: 'infrastructure-in-ironhold-gate-zone',
+        detail: `ALLOWED_RAIL_JUNCTION ${j.id} at (${fmt(j.x)},${fmt(j.z)}) sits inside the Ironhold gate zone — junctions cannot be declared inside the front-gate keep-out`,
+      });
+    }
+  }
+
+  // ============================================================
+  // 13. Level crossings inside the kingdom core (Codex follow-up #4)
+  // ============================================================
+  for (const lc of LEVEL_CROSSINGS) {
+    if (inIronholdGateZone(lc.position[0], lc.position[1])) {
+      issues.push({
+        category: 'level-crossing-in-kingdom-core',
+        detail: `${lc.id} at (${fmt(lc.position[0])},${fmt(lc.position[1])}) sits inside the Ironhold gate zone (move the rail or the road instead of decorating the crossing)`,
+      });
+    }
+  }
+
   if (issues.length === 0) {
     console.log(
       `[RailwayValidator] ✓ No rail/road/bridge violations. ` +
       `${intersections.length} intersection(s) decorated; ` +
+      `${ALLOWED_RAIL_JUNCTIONS.length} rail-rail junction(s) declared; ` +
       `${RAILWAY_STATIONS.length} station footprint(s) clean; ` +
       `${WILDERNESS_BUILDINGS.length} wilderness building(s) clear; ` +
       `${TOWN_BUILDINGS.length} town building(s) + ${TOWN_PROPS.length} town prop(s) clear; ` +
