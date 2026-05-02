@@ -337,29 +337,34 @@ export function getRailwaySegments(): RailSegment[] {
  * Get distance from point to nearest railway track segment.
  * Returns [distance, interpolatedFraction] or null if > maxDist.
  */
-// Pre-computed bounding boxes for fast spatial rejection
+// Pre-computed unpadded bounding boxes for fast spatial rejection.
+// maxDist is applied per query so different callers (e.g. distToRailway with
+// the default 12u, getRailFlattenGrid with 11u, validator with up to 36u) all
+// share a single cache. Earlier versions stored padded bounds keyed off the
+// first caller's maxDist, which silently truncated wider queries.
 let _segBounds: { minX: number; maxX: number; minZ: number; maxZ: number }[] | null = null;
 
-function getSegBounds(maxDist: number) {
+function getSegBounds() {
   if (_segBounds) return _segBounds;
   const segs = getRailwaySegments();
   _segBounds = segs.map(seg => ({
-    minX: Math.min(seg.ax, seg.bx) - maxDist,
-    maxX: Math.max(seg.ax, seg.bx) + maxDist,
-    minZ: Math.min(seg.az, seg.bz) - maxDist,
-    maxZ: Math.max(seg.az, seg.bz) + maxDist,
+    minX: Math.min(seg.ax, seg.bx),
+    maxX: Math.max(seg.ax, seg.bx),
+    minZ: Math.min(seg.az, seg.bz),
+    maxZ: Math.max(seg.az, seg.bz),
   }));
   return _segBounds;
 }
 
 export function distToRailway(x: number, z: number, maxDist: number = 12): number | null {
   const segs = getRailwaySegments();
-  const bounds = getSegBounds(maxDist);
+  const bounds = getSegBounds();
   let best = maxDist + 1;
   for (let i = 0; i < segs.length; i++) {
     const b = bounds[i];
-    // Fast AABB rejection
-    if (x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) continue;
+    // Fast AABB rejection — pad the cached unpadded bounds by maxDist
+    if (x < b.minX - maxDist || x > b.maxX + maxDist ||
+        z < b.minZ - maxDist || z > b.maxZ + maxDist) continue;
     const seg = segs[i];
     if (seg.len2 < 1) continue;
     const dx = seg.bx - seg.ax, dz = seg.bz - seg.az;
@@ -414,7 +419,7 @@ export function getRailFlattenGrid(): RailFlattenGrid {
   const data = new Float32Array(cols * rows);
 
   // Pre-compute flatten value at each grid point
-  const bounds = getSegBounds(GRID_MAX_DIST);
+  const bounds = getSegBounds();
   for (let row = 0; row < rows; row++) {
     const gz = minZ + row * GRID_CELL;
     for (let col = 0; col < cols; col++) {
@@ -424,7 +429,8 @@ export function getRailFlattenGrid(): RailFlattenGrid {
       let best = GRID_MAX_DIST + 1;
       for (let i = 0; i < segs.length; i++) {
         const b = bounds[i];
-        if (gx < b.minX || gx > b.maxX || gz < b.minZ || gz > b.maxZ) continue;
+        if (gx < b.minX - GRID_MAX_DIST || gx > b.maxX + GRID_MAX_DIST ||
+            gz < b.minZ - GRID_MAX_DIST || gz > b.maxZ + GRID_MAX_DIST) continue;
         const seg = segs[i];
         if (seg.len2 < 1) continue;
         const dx = seg.bx - seg.ax, dz = seg.bz - seg.az;

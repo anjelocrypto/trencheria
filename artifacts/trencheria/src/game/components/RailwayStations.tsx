@@ -27,14 +27,14 @@ const bannerBlueMat = new THREE.MeshLambertMaterial({ color: '#2a3a8b', side: TH
 const cobbleMat = new THREE.MeshLambertMaterial({ color: '#6a6a5a' });
 
 // ========== STATION DIMENSIONS ==========
-interface StationDims {
+export interface StationDims {
   platW: number; platL: number;
   shelterW: number; shelterL: number;
   shelterH: number;
   numLamps: number;
 }
 
-const STATION_DIMS: Record<string, StationDims> = {
+export const STATION_DIMS: Record<string, StationDims> = {
   capital: { platW: 10, platL: 18, shelterW: 5.5, shelterL: 10, shelterH: 3.5, numLamps: 6 },
   large:   { platW: 7,  platL: 14, shelterW: 4.5, shelterL: 8,  shelterH: 3.2, numLamps: 4 },
   medium:  { platW: 6,  platL: 11, shelterW: 3.8, shelterL: 6.5, shelterH: 3,  numLamps: 3 },
