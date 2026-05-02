@@ -6,20 +6,56 @@
 --   requiring proof that the caller actually controls the wallet. A user
 --   could register/migrate any wallet they knew the address of.
 --
--- Fix: add `_session_token text DEFAULT NULL` and validate it with
---   `verify_wallet_session(_clean_wallet, _session_token)` at the top of
---   the function. Returns `{ success: false, error: 'Invalid or expired
---   session' }` when the check fails. The parameter has a NULL default so
---   the SQL function shape stays backward-compatible at deploy time, but
---   any client that omits the token will be fail-closed by the runtime
---   check.
+-- Fix:
+--   1. Drop the old 4-arg signature so we don't end up with two overloads
+--      (one secure, one not) — PostgreSQL would NOT replace the old function
+--      because the new one has a different argument count.
+--   2. Create a new register_with_faction with `_session_token` and
+--      validate it via `verify_wallet_session(...)`.
+--   3. Loosen `create_wallet_session` so brand-new wallets (no
+--      player_accounts row yet) can receive a session token. Without this,
+--      registration of a brand-new wallet is impossible: the verify-wallet
+--      edge function would fail to issue a token, MenuOverlay would send
+--      an empty `_session_token`, and secure register_with_faction would
+--      reject the new user. The Phantom signature is already verified by
+--      the edge function before create_wallet_session is called, so
+--      issuing a token for a wallet without an account is safe.
+--   4. Wrap everything in a single transaction so partial application
+--      cannot leave the database in a half-migrated state.
+--   5. Explicit REVOKE + GRANT EXECUTE so authenticated/anon clients can
+--      still call the new function.
 --
--- This file lives in `supabase/pending/` because there is no active
--- `supabase/migrations/` folder in this repo (the real source lives
--- elsewhere). Apply it via your Supabase tooling, then delete this file.
+-- DEPLOYMENT SAFETY:
+--   - Apply this SQL at the same time as (or before) the matching
+--     MenuOverlay.tsx change that passes `_session_token`. If the
+--     frontend ships first without this SQL, the old 4-arg function
+--     keeps working for existing players but the new `_session_token`
+--     keyword arg will be rejected by Supabase. If this SQL ships first,
+--     the old frontend will simply hit the new function with NULL token
+--     and get a friendly 'Session token required' error.
+--   - This file lives in `supabase/pending/` because there is no active
+--     `supabase/migrations/` folder in this repo (the real source lives
+--     elsewhere). Apply via your Supabase tooling, then delete this file.
 -- =====================================================================
 
-CREATE OR REPLACE FUNCTION public.register_with_faction(
+BEGIN;
+
+-- ---------------------------------------------------------------------
+-- 1. Drop the old 4-arg signature.
+--    PostgreSQL identifies functions by (name, argument types), so
+--    CREATE OR REPLACE with a new arg count creates an OVERLOAD, leaving
+--    the old function in place. We must explicitly drop it.
+-- ---------------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.register_with_faction(text, text, text, uuid);
+
+-- (Belt and suspenders: also drop the new signature if a partial run
+--  already created it. Safe no-op otherwise.)
+DROP FUNCTION IF EXISTS public.register_with_faction(text, text, text, uuid, text);
+
+-- ---------------------------------------------------------------------
+-- 2. Create the new register_with_faction with `_session_token`.
+-- ---------------------------------------------------------------------
+CREATE FUNCTION public.register_with_faction(
   _wallet_address text,
   _display_name text DEFAULT 'Knight'::text,
   _community_name text DEFAULT NULL::text,
@@ -142,3 +178,53 @@ BEGIN
   );
 END;
 $function$;
+
+-- ---------------------------------------------------------------------
+-- 3. Lock down execute privileges on the new function.
+--    SECURITY DEFINER + REVOKE FROM PUBLIC + explicit GRANT is the
+--    standard hardening pattern: only Supabase auth roles can call it,
+--    and the function body itself runs with the function owner's rights.
+-- ---------------------------------------------------------------------
+REVOKE ALL ON FUNCTION public.register_with_faction(text, text, text, uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.register_with_faction(text, text, text, uuid, text) TO anon, authenticated, service_role;
+
+-- ---------------------------------------------------------------------
+-- 4. Allow brand-new wallets to receive a session token.
+--    The original create_wallet_session refused wallets with no
+--    player_accounts row, but registration creates the row AFTER the
+--    session is issued. The Phantom signature has already been verified
+--    by the verify-wallet edge function before this function is called,
+--    so issuing a session for a not-yet-registered wallet is safe — the
+--    wallet_sessions row carries no privileges on its own.
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.create_wallet_session(_wallet_address text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  _token text;
+  _clean_wallet text;
+BEGIN
+  _clean_wallet := trim(coalesce(_wallet_address, ''));
+  IF _clean_wallet !~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$' THEN
+    RAISE EXCEPTION 'Invalid wallet address';
+  END IF;
+  -- Note: the previous version required an existing player_accounts row
+  -- here. We removed that check so brand-new wallets can register a
+  -- faction (the account row is created later inside register_with_faction).
+  -- Revoke old sessions
+  DELETE FROM public.wallet_sessions WHERE wallet_address = _clean_wallet;
+  -- Generate secure token
+  _token := encode(gen_random_bytes(32), 'hex');
+  INSERT INTO public.wallet_sessions (wallet_address, session_token, expires_at)
+  VALUES (_clean_wallet, _token, now() + interval '24 hours');
+  RETURN _token;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.create_wallet_session(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.create_wallet_session(text) TO anon, authenticated, service_role;
+
+COMMIT;

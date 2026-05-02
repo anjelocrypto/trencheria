@@ -1,8 +1,9 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { COLORS } from '../constants';
 import { WorldResource } from '../systems/WorldResources';
+import { buildResourceGrid, forEachNearbyResource } from '../world/ResourceSpatialGrid';
 
 interface Props {
   resources: WorldResource[];
@@ -30,23 +31,58 @@ const berryMat = new THREE.MeshLambertMaterial({ color: '#cc3344' });
 const crateMat = new THREE.MeshLambertMaterial({ color: '#6b4f10' });
 const crateBandMat = new THREE.MeshLambertMaterial({ color: '#4a3a20' });
 
+// Worst-case render-cull radius (matches the original per-resource cullDist:
+// 80 ungatherable trees, 100 ungatherable rocks/etc, 120 gatherable trees,
+// 150 gatherable rocks/etc). The grid scan picks up everything within this
+// radius; per-resource type-specific culling still happens in the render path.
+const VISIBILITY_RADIUS = 150;
+
+// Recompute the visible set when the player moves more than this OR when this
+// many seconds elapse (whichever comes first). Keeps the React fiber tree
+// proportional to nearby resources, not total resources, while avoiding a
+// per-frame setState.
+const RECOMPUTE_DISTANCE_SQ = 25; // 5 units
+const RECOMPUTE_INTERVAL_S = 1.0;
+
 export function WorldObjects({
   resources, playerPositionRef, shakeResourceRef, highlightedResourceRef,
 }: Props) {
   const shakesRef = useRef<Map<string, { timer: number }>>(new Map());
   const groupRefs = useRef<Map<string, THREE.Group>>(new Map());
 
+  // T011: bucketed resource grid. Rebuild only when the resources array
+  // identity changes (world load or new batch), not every frame.
+  const grid = useMemo(() => buildResourceGrid(resources), [resources]);
+
+  // T011: only render resources within VISIBILITY_RADIUS of the player so
+  // React fiber count is bounded by ~nearby resources rather than total
+  // resources. The visible set updates when the player moves enough, never
+  // every frame.
+  const [visible, setVisible] = useState<WorldResource[]>(() => {
+    // Initial population: include everything (player position not yet known).
+    // The first useFrame tick will narrow this down once we know where the
+    // player is.
+    return resources.filter((r) => !r.depleted);
+  });
+
+  // Recompute the initial visible set whenever resources change identity.
+  // Force refresh on next useFrame by invalidating the last sample point.
+  const lastSampleRef = useRef<{ x: number; z: number; t: number; gridId: ResourceGrid | null }>({
+    x: Number.NaN,
+    z: Number.NaN,
+    t: 0,
+    gridId: null,
+  });
+
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
 
-    // Check for new shakes triggered by Player interaction
+    // ---- shake update (existing behavior) ----
     const shakeId = shakeResourceRef.current;
     if (shakeId) {
       shakesRef.current.set(shakeId, { timer: 0.3 });
       shakeResourceRef.current = null;
     }
-
-    // Update existing shakes
     shakesRef.current.forEach((state, id) => {
       state.timer -= dt;
       const group = groupRefs.current.get(id);
@@ -59,6 +95,33 @@ export function WorldObjects({
         }
       }
     });
+
+    // ---- T011: recompute visible set when player has moved enough ----
+    const pos = playerPositionRef.current;
+    if (!pos) return;
+
+    const last = lastSampleRef.current;
+    last.t += dt;
+
+    const gridChanged = last.gridId !== grid;
+    const movedSq = Number.isNaN(last.x)
+      ? Infinity
+      : (pos.x - last.x) * (pos.x - last.x) + (pos.z - last.z) * (pos.z - last.z);
+
+    if (!gridChanged && movedSq < RECOMPUTE_DISTANCE_SQ && last.t < RECOMPUTE_INTERVAL_S) {
+      return;
+    }
+
+    last.x = pos.x;
+    last.z = pos.z;
+    last.t = 0;
+    last.gridId = grid;
+
+    const next: WorldResource[] = [];
+    forEachNearbyResource(grid, pos.x, pos.z, VISIBILITY_RADIUS, (r) => {
+      if (!r.depleted) next.push(r);
+    });
+    setVisible(next);
   });
 
   const setRef = useCallback((id: string, el: THREE.Group | null) => {
@@ -70,13 +133,13 @@ export function WorldObjects({
 
   return (
     <group>
-      {resources.map(res => {
+      {visible.map(res => {
         if (res.depleted) return null;
         if (playerPos) {
           const dx = playerPos.x - res.position[0];
           const dz = playerPos.z - res.position[2];
           const distSq = dx * dx + dz * dz;
-          // Tighter culling for performance with high tree count
+          // Tighter type-specific culling within the broad visible set.
           const cullDist = res.type === 'tree' ? (res.gatherable ? 120 : 80) : (res.gatherable ? 150 : 100);
           if (distSq > cullDist * cullDist) return null;
         }
@@ -144,3 +207,5 @@ export function WorldObjects({
     </group>
   );
 }
+
+type ResourceGrid = ReturnType<typeof buildResourceGrid>;
