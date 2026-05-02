@@ -1,0 +1,88 @@
+Objective:
+Fix the serious Ironhold/main-kingdom railway/bridge visual bug. The railway/bridge cluster in front of the main kingdom looks crossed, boxy, and intersects buildings. Do NOT touch SQL, Supabase, auth, migrations, or .migration-backup. This is only map layout + railway/bridge rendering + validator work.
+
+Context from Codex audit:
+- In artifacts/trencheria/src/game/world/RailwayData.ts, Ironhold has multiple rail bridges clustered near the capital:
+  rail-bridge-ironhold-south around [-28, 83]
+  rail-bridge-ironhold-east around [2, 82]
+  rail-bridge-ironhold-tributary around [-43, 88]
+  rail-bridge-river-great around [-26, 100.6]
+  This creates a messy crossed-bridge look in front of the main kingdom.
+- artifacts/trencheria/src/game/components/RailwayTrack.tsx uses long box meshes for ballast/rails/sleepers. This creates the ugly rectangular “box railway” slabs seen in the screenshots.
+- artifacts/trencheria/src/game/systems/RailwayValidator.ts does not fully validate all real rendered buildings/props from TownDistrict and kingdom building data against rail/bridge footprints.
+- The railway is rendered after TownDistrict in GameScene.tsx, so any overlap becomes very visible.
+
+Tasks:
+
+T001 — Audit exact Ironhold collision/overlap
+Files:
+- artifacts/trencheria/src/game/world/RailwayData.ts
+- artifacts/trencheria/src/game/components/RailwayTrack.tsx
+- artifacts/trencheria/src/game/components/RailwayBridges.tsx
+- artifacts/trencheria/src/game/components/TownDistrict.tsx
+- artifacts/trencheria/src/game/world/KingdomBuildingData.ts
+- artifacts/trencheria/src/game/systems/RailwayValidator.ts
+Find every rail/bridge/station segment near Ironhold that intersects or visually crowds buildings, props, market stalls, castle walls, or roads.
+
+T002 — Extend RailwayValidator for all building/bridge/rail intersections
+Update RailwayValidator so it checks rail segments, railway bridges, road bridges, station platforms, and level crossings against:
+- TOWN_BUILDINGS and TOWN_PROPS from TownDistrict.tsx
+- all static kingdom house/building arrays from KingdomBuildingData.ts
+- WILDERNESS_BUILDINGS
+- settlement/POI/landmark footprints where available
+Validator output must identify exact object id/type/position and the rail/bridge id or segment causing the overlap.
+
+Acceptance:
+- Validator must fail if any static building/prop footprint intersects a rail segment, railway bridge, road bridge, station platform, or level crossing.
+- It must not give a false “clean” result while the screenshot issue still exists.
+
+T003 — Fix Ironhold/main kingdom railway layout
+Rework RailwayData.ts around Ironhold so the capital front gate and town market are visually clean.
+Requirements:
+- No crossed rail bridges directly in front of the main kingdom.
+- No railway bridge inside or touching buildings.
+- No station platform inside town buildings/props.
+- Keep at least 12–15 world units clearance from town buildings, market props, castle walls, and major roads unless it is an intentional decorated crossing.
+- Simplify the bridge cluster: only use railway bridges where the rail actually crosses water.
+- If needed, move the Ironhold station/junction outside the front gate area so the city feels planned, not randomly cut by rails.
+
+T004 — Remove ugly “box railway” look
+Refactor RailwayTrack.tsx visual geometry:
+- Do not use giant continuous rectangular slabs for ballast/deck.
+- Use thinner rails, individual sleepers/ties, and a low gravel/embankment strip.
+- Hide or reduce ballast on bridge decks.
+- Avoid huge black/brown rectangular beams crossing the screen.
+- Keep performance reasonable with instancing or cached geometry where possible.
+
+T005 — Improve RailwayBridges visual style
+Refactor RailwayBridges.tsx:
+- Bridges should look like intentional medieval/industrial fantasy rail bridges, not giant box blocks.
+- Use slimmer deck, side rails/trusses, supports/piers only where needed.
+- No bridge should extend far beyond the water crossing unless visually justified.
+- No bridge should overlap a building or station platform.
+
+T006 — Protect future player-built buildings
+Check BuildingSystem placement rules.
+If player buildings can be placed near railway/bridges/stations, add rejection rules so users cannot build on or through:
+- rail tracks
+- railway bridges
+- road bridges
+- station platforms
+- level crossings
+Use a clear build feedback message like “Too close to railway” or “Cannot build on bridge.”
+
+T007 — Browser visual verification
+After fixing, run the game preview and inspect:
+- Ironhold/front main kingdom from the same screenshot angle
+- Ironhold station area
+- all railway bridges
+- all level crossings
+- all seven kingdom/town areas
+
+Acceptance:
+- No railway/bridge crosses through buildings.
+- No boxy bridge/rail slabs in front of the main kingdom.
+- Railway feels logically routed around cities, not through them.
+- RailwayValidator reports zero rail/bridge/building violations.
+- Production build passes.
+- No SQL/Supabase/auth/migration files touched.
