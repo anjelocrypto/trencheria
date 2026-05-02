@@ -1,0 +1,61 @@
+Stop checking the railway/world-map task. That task is already done.
+
+New task: audit and fix the CLAN WAR / TERRITORY BATTLE system only.
+
+Codex checked latest main and found that clan wars are not fully finished because WarScoreboard.tsx still says “Alpha — Admin resolves winner”. I want this audited properly.
+
+Read these files:
+- artifacts/trencheria/src/game/hooks/useClanSystem.ts
+- artifacts/trencheria/src/game/ui/FactionPanel.tsx
+- artifacts/trencheria/src/game/ui/Minimap.tsx
+- artifacts/trencheria/src/game/ui/SurvivalHUD.tsx
+- artifacts/trencheria/src/game/ui/WarScoreboard.tsx
+- artifacts/trencheria/src/game/ui/WarNotifications.tsx
+- artifacts/trencheria/src/game/GameScene.tsx
+- artifacts/trencheria/src/admin/AdminWorldMap.tsx
+- artifacts/api-server/src/routes/rpc.ts
+- supabase/pending/20260502000001_war_rpcs_allow_faction_members.sql
+
+Audit these questions:
+
+1. Can every fixed-faction clan member challenge enemy territory, or only leaders?
+2. Was the pending SQL for faction-member war permissions actually applied to the live DB?
+3. How does a war start?
+4. How does the pending countdown work?
+5. How does war become active?
+6. How are kills counted?
+7. How does a territory winner get decided?
+8. Is winner resolution automatic, or still admin/manual?
+9. Does the map clearly show pending wars, active wars, cooldowns, owners, scores, and countdowns to all clan members?
+10. Does the HUD show clan members where to go, who is winning, and how much time is left?
+
+Expected result:
+- No more “Admin resolves winner” as the main gameplay path.
+- War should auto-resolve from kill score:
+  - attacker wins if attacker kills > defender kills
+  - defender holds on tie or defender higher score
+- Territory owner updates automatically.
+- Cooldown starts automatically.
+- Territory history records the result.
+- Admin resolve can stay only as an override tool.
+
+Improve map/HUD like San Andreas Multiplayer:
+- full map shows all territories colored by faction
+- active wars flash red
+- pending wars flash orange with countdown
+- cooldowns shown clearly
+- clan members see “My Clan Wars” even when far away
+- show attacker, defender, score, timer, distance/direction to war
+- show recent war kills globally for my clan
+
+Do not touch railway, bridges, map geometry, SQL, or Supabase unless required for clan-war logic. If SQL changes are needed, create a pending SQL file and ask before applying.
+
+Do not mark complete until you prove:
+- challenge works
+- pending → active works
+- PvP only counts inside active territory war
+- kills update scoreboard
+- war auto-resolves
+- territory owner changes
+- map/HUD shows the war clearly to clan members
+- build/typecheck checked

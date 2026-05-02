@@ -85,8 +85,8 @@ export function WarNotifications({ challenges, territories, myClan, playerX, pla
         playResolvedSound();
         addToast({
           icon: '⏳',
-          title: 'War Ended — Awaiting Resolution',
-          subtitle: `${ch.territory_name} — Admin will decide the outcome`,
+          title: 'War Ended — Tallying Kills',
+          subtitle: `${ch.territory_name} — Winner auto-decided from kill score`,
           color: 'hsl(40,70%,65%)',
           borderColor: 'hsla(40,70%,50%,0.5)',
         });

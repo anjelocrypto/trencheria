@@ -213,7 +213,9 @@ export function WarScoreboard({ playerX, playerZ, territories, challenges, myCla
         {/* Alpha notice */}
         <div className="mt-2 pt-1.5 text-center" style={{ borderTop: '1px solid hsla(40,30%,45%,0.15)' }}>
           <span style={{ fontSize: 7, color: 'hsl(40,15%,35%)', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
-            ⚠️ Alpha — Admin resolves winner
+            {isActive
+              ? '⚔️ Auto-resolves at war end · Most kills wins'
+              : '⏳ Resolving from kill scores…'}
           </span>
         </div>
       </div>

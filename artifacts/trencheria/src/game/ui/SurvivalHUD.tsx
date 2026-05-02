@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { SurvivalState, ResourceInventory, ProgressionState } from '../types';
 import { BuildableConfig } from '../systems/BuildingData';
 import { TIER2_KILLS_REQUIRED, TIER2_STRUCTURES_REQUIRED } from '../constants';
@@ -6,6 +7,155 @@ import type { TerritoryInfo, ChallengeInfo } from '../hooks/useClanSystem';
 import { CLAN_COLOR_HEX } from '../hooks/useClanSystem';
 import { FACTIONS, FactionDef } from '../systems/FactionData';
 import type { InterpolatedPlayer } from '../multiplayer/types';
+import { supabase } from '@/integrations/supabase/client';
+
+/* ── 8-direction compass arrow from player → target ── */
+const DIR_ARROWS = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+function compassArrow(dx: number, dz: number): string {
+  // World: +x = east, +z = south. Game "north" = -z.
+  const angle = Math.atan2(dx, -dz); // 0 = north, +pi/2 = east
+  const idx = Math.round(((angle + Math.PI * 2) % (Math.PI * 2)) / (Math.PI / 4)) % 8;
+  return DIR_ARROWS[idx];
+}
+
+/* ── My-clan wars panel: every active/pending war for my clan with score, timer, distance + arrow ── */
+function MyClanWarsPanel({
+  challenges, territories, myClan, playerX, playerZ, panelStyle,
+}: {
+  challenges: ChallengeInfo[];
+  territories: TerritoryInfo[];
+  myClan: { clan_name: string; clan_color: string; clan_id: string };
+  playerX: number;
+  playerZ: number;
+  panelStyle: React.CSSProperties;
+}) {
+  const myWars = challenges.filter(
+    c => (c.attacker_clan_id === myClan.clan_id || c.defender_clan_id === myClan.clan_id)
+      && (c.status === 'pending' || c.status === 'active' || c.status === 'pending_resolution')
+  );
+
+  const [scores, setScores] = useState<Record<string, { att: number; def: number }>>({});
+  const [, setTick] = useState(0);
+
+  // 1Hz tick for live countdowns
+  useEffect(() => {
+    if (myWars.length === 0) return;
+    const iv = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(iv);
+  }, [myWars.length]);
+
+  // Poll kill scores for active + resolving wars (20s cadence; pauses when tab hidden)
+  const activeIds = myWars.filter(w => w.status === 'active' || w.status === 'pending_resolution').map(w => w.id).join(',');
+  useEffect(() => {
+    if (!activeIds) { setScores({}); return; }
+    const ids = activeIds.split(',').filter(Boolean);
+    let cancelled = false;
+    const fetchAll = async () => {
+      const updates: Record<string, { att: number; def: number }> = {};
+      await Promise.all(ids.map(async id => {
+        const ch = myWars.find(w => w.id === id);
+        if (!ch) return;
+        try {
+          const { data } = await supabase.rpc('get_war_kills' as any, { _challenge_id: id });
+          const kd = typeof data === 'string' ? JSON.parse(data) : data;
+          if (kd && typeof kd === 'object' && !Array.isArray(kd)) {
+            const kills: { clan_id: string; kill_count: number }[] = kd.kills || [];
+            let att = 0, def = 0;
+            for (const k of kills) {
+              const n = Number(k.kill_count) || 0;
+              if (k.clan_id === ch.attacker_clan_id) att += n;
+              else if (k.clan_id === ch.defender_clan_id) def += n;
+            }
+            updates[id] = { att, def };
+          }
+        } catch { /* silent */ }
+      }));
+      if (!cancelled) setScores(prev => ({ ...prev, ...updates }));
+    };
+    fetchAll();
+    const iv = setInterval(() => { if (!document.hidden) fetchAll(); }, 20000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [activeIds]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (myWars.length === 0) return null;
+
+  return (
+    <>
+      {myWars.map(myCh => {
+        const isAttacker = myCh.attacker_clan_id === myClan.clan_id;
+        const isPending = myCh.status === 'pending';
+        const isActive = myCh.status === 'active';
+        const isPendingRes = myCh.status === 'pending_resolution';
+        const targetTime = isPending ? myCh.war_starts_at : isActive ? myCh.war_ends_at : myCh.cooldown_ends_at;
+        const diff = new Date(targetTime).getTime() - Date.now();
+        const mins = Math.max(0, Math.floor(diff / 60000));
+        const secs = Math.max(0, Math.floor((diff % 60000) / 1000));
+        const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+        const borderColor = isPending ? 'hsla(30,70%,50%,0.5)' : isActive ? 'hsla(0,70%,50%,0.5)' : 'hsla(40,70%,50%,0.5)';
+        const icon = isPending ? '⚔️' : isActive ? '🔥' : '⏳';
+        const label = isPending ? 'WAR PENDING' : isActive ? 'WAR ACTIVE' : 'RESOLVING…';
+        const labelColor = isPending ? 'hsl(30,70%,65%)' : isActive ? 'hsl(0,70%,65%)' : 'hsl(40,70%,65%)';
+        const timeLabel = isPending ? `Starts ${timeStr}` : isActive ? `Ends ${timeStr}` : 'Auto-resolving from kills';
+
+        const territory = territories.find(t => t.id === myCh.territory_id);
+        let dist = 0;
+        let arrow = '';
+        if (territory) {
+          const dx = territory.center_x - playerX;
+          const dz = territory.center_z - playerZ;
+          dist = Math.sqrt(dx * dx + dz * dz);
+          arrow = compassArrow(dx, dz);
+        }
+
+        const score = scores[myCh.id];
+        const myScore = score ? (isAttacker ? score.att : score.def) : null;
+        const oppScore = score ? (isAttacker ? score.def : score.att) : null;
+        const oppName = isAttacker ? myCh.defender_clan_name : myCh.attacker_clan_name;
+        const myColor = isAttacker
+          ? (CLAN_COLOR_HEX[myCh.attacker_clan_color as import('../hooks/useClanSystem').ClanColor] || '#ccc')
+          : (CLAN_COLOR_HEX[myCh.defender_clan_color as import('../hooks/useClanSystem').ClanColor] || '#ccc');
+        const oppColor = isAttacker
+          ? (CLAN_COLOR_HEX[myCh.defender_clan_color as import('../hooks/useClanSystem').ClanColor] || '#ccc')
+          : (CLAN_COLOR_HEX[myCh.attacker_clan_color as import('../hooks/useClanSystem').ClanColor] || '#ccc');
+
+        return (
+          <div key={myCh.id}
+            className={`flex items-center gap-2.5 px-3.5 py-2 rounded-lg ${isActive || isPendingRes ? 'animate-pulse' : ''}`}
+            style={{ ...panelStyle, border: `1px solid ${borderColor}`, boxShadow: `0 0 12px ${borderColor}` }}
+          >
+            <span style={{ fontSize: 14 }}>{icon}</span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="flex items-center gap-2">
+                <div style={{ fontSize: 10, fontWeight: 700, color: labelColor, letterSpacing: '0.06em' }}>
+                  {label}
+                </div>
+                {(isActive || isPendingRes) && score && (
+                  <div style={{
+                    fontSize: 10, fontWeight: 800, fontFamily: 'ui-monospace, monospace',
+                    color: 'hsl(40,30%,85%)',
+                  }}>
+                    <span style={{ color: myColor }}>{myScore}</span>
+                    <span style={{ color: 'hsl(40,15%,45%)' }}> – </span>
+                    <span style={{ color: oppColor }}>{oppScore}</span>
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: 9, color: 'hsl(40,15%,55%)' }}>
+                {myCh.territory_name} · {isAttacker ? `vs ${oppName}` : `${oppName} attacking`} · {timeLabel}
+              </div>
+              {territory && (
+                <div style={{ fontSize: 9, color: 'hsl(40,15%,45%)' }}>
+                  <span style={{ color: 'hsl(40,40%,70%)', fontWeight: 700 }}>{arrow}</span>
+                  {' '}{Math.round(dist)}u away
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
 
 interface HUDProps {
   survival: SurvivalState;
@@ -208,46 +358,19 @@ export function SurvivalHUD({
 
       {/* ═══ BOTTOM LEFT — Survival bars + Faction identity + War alerts ═══ */}
       <div className="absolute bottom-6 left-6 flex flex-col gap-2">
-        {/* War alert — shown when player's clan has an active challenge */}
-        {myClan && challenges && (() => {
-          const myCh = challenges.find(
-            c => (c.attacker_clan_id === myClan.clan_id || c.defender_clan_id === myClan.clan_id)
-              && (c.status === 'pending' || c.status === 'active' || c.status === 'pending_resolution' || c.status === 'resolved')
-          );
-          if (!myCh) return null;
-          const isAttacker = myCh.attacker_clan_id === myClan.clan_id;
-          const isPending = myCh.status === 'pending';
-          const isActive = myCh.status === 'active';
-          const isPendingRes = myCh.status === 'pending_resolution';
-          const isResolved = myCh.status === 'resolved';
-          const targetTime = isPending ? myCh.war_starts_at : isActive ? myCh.war_ends_at : myCh.cooldown_ends_at;
-          const diff = new Date(targetTime).getTime() - Date.now();
-          const mins = Math.max(0, Math.floor(diff / 60000));
-          const secs = Math.max(0, Math.floor((diff % 60000) / 1000));
-          const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-          const borderColor = isPending ? 'hsla(30,70%,50%,0.5)' : isActive ? 'hsla(0,70%,50%,0.5)' : isPendingRes ? 'hsla(40,70%,50%,0.5)' : 'hsla(210,50%,50%,0.4)';
-          const icon = isPending ? '⚔️' : isActive ? '🔥' : isPendingRes ? '⏳' : '🛡️';
-          const label = isPending ? 'WAR PENDING' : isActive ? 'WAR ACTIVE' : isPendingRes ? 'AWAITING RESOLUTION' : 'COOLDOWN';
-          const labelColor = isPending ? 'hsl(30,70%,65%)' : isActive ? 'hsl(0,70%,65%)' : isPendingRes ? 'hsl(40,70%,65%)' : 'hsl(210,50%,65%)';
-          const timeLabel = isPending ? `Starts ${timeStr}` : isActive ? `Ends ${timeStr}` : isPendingRes ? 'Admin review pending' : `Ends ${timeStr}`;
-          return (
-            <div className={`flex items-center gap-2.5 px-3.5 py-2 rounded-lg ${isActive || isPendingRes ? 'animate-pulse' : ''}`} style={{
-              ...panelStyle,
-              border: `1px solid ${borderColor}`,
-              boxShadow: `0 0 12px ${borderColor}`,
-            }}>
-              <span style={{ fontSize: 14 }}>{icon}</span>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: labelColor, letterSpacing: '0.06em' }}>
-                  {label}
-                </div>
-                <div style={{ fontSize: 9, color: 'hsl(40,15%,50%)' }}>
-                  {myCh.territory_name} · {isAttacker ? 'Attacking' : 'Defending'} · {timeLabel}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        {/* My-clan wars panel — every pending/active/resolving war for my clan,
+            with attacker/defender/score/timer/distance/direction. Visible to
+            every faction member anywhere on the map (SAMP-style). */}
+        {myClan && challenges && territories && (
+          <MyClanWarsPanel
+            challenges={challenges}
+            territories={territories}
+            myClan={myClan}
+            playerX={playerX}
+            playerZ={playerZ}
+            panelStyle={panelStyle}
+          />
+        )}
 
         {/* Faction identity badge */}
         {myClan && (() => {
