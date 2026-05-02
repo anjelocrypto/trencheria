@@ -74,6 +74,10 @@ A DEV-only validator (`src/game/systems/RailwayValidator.ts`) runs once at modul
 - rail/road segments crossing rivers/lakes without a matching bridge OBB
 - rails passing within a settlement's required clearance
 - rail × road intersections missing a `LEVEL_CROSSING` entry
+- **town buildings (`TOWN_BUILDINGS`) and town props (`TOWN_PROPS`)** within rail clearance, or whose footprint overlaps a rail/road bridge OBB, station footprint, or level-crossing radius
+- **kingdom houses** (`FORTIFIED_CITY_HOUSES`, `RIVER_TOWN_HOUSES`, `MOUNTAIN_HOLD_HOUSES`, `FRONTIER_CAMP_HOUSES`, `TRADE_CITY_HOUSES`) — local coords are transformed into world space using the matching `SettlementDef` position before the same checks run
+
+`RailwayTrack` and `RailwayBridges` were also restyled in this pass: gravel ballast slimmed from 3.0u → 1.7u, sleepers from 2.0u → 1.35u; rail bridges no longer use 1.8u-tall iron girder walls + middle pier — they are now a slim deck with low parapet rails, slim balusters every 2u, and two end piers only. This removed the bulky girder cluster visible from the Ironhold approach. One known residual `road-water-no-bridge` warning remains at ≈(426,326) where the Rivermoor approach road grazes the kingdom-side shore of lake-silvermere — bridging it fully would re-overlap the kingdom's waterfront houses, so the kingdom-clear constraint takes priority.
 
 The audit reshaped a number of map data sources to keep the railway/road network feeling planned:
 - `src/game/world/RailwayData.ts` — added explicit bridge waypoints + `RAILWAY_BRIDGES` entries on Lines A/B over river-great, the Ironhold tributaries, and the eastern fork; rebuilt `LEVEL_CROSSINGS` to cover all rail × road intersections.

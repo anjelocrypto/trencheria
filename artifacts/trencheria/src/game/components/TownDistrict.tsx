@@ -294,14 +294,18 @@ function generateTownBuildings(): TownBuildingDef[] {
     });
   }
 
-  // === MARKET SQUARE (southeast, centered around [20, 55]) ===
+  // === MARKET SQUARE (southeast, centered around [20, 50]) ===
+  // Codex follow-up audit: 3 entries (26,56), (24,60), (18,58) sat inside
+  // bridge-old-veyra-river's OBB at (32.5,61.7) rot=1.367 length=28 width=5.
+  // Pulled south of z=46 so the bridge corridor is clear of market roofs.
+  // Stall positions in TOWN_PROPS were already at z=52/58 outside the OBB.
   const marketBuildings: Array<[number, number, number, string?]> = [
     [22, 48, 0, 'Bakery'],
     [28, 50, -0.3, 'Butcher'],
-    [26, 56, 0.2],
+    [26, 44, 0.2],          // was (26,56) — clear of bridge-old-veyra-river OBB
     [30, 54, -0.5, 'Food Stall'],
-    [24, 60, 0.1],
-    [18, 58, 0.3],
+    [22, 42, 0.1],          // was (24,60)
+    [18, 44, 0.3],          // was (18,58)
   ];
 
   for (const [x, z, rot, label] of marketBuildings) {
@@ -327,16 +331,17 @@ function generateTownBuildings(): TownBuildingDef[] {
     [-30, 46, Math.PI * 0.6],
     [-34, 50, Math.PI * 0.65],
     [-32, 56, Math.PI * 0.4],
-    // East spread
+    // East spread — Codex audit: (32,60) shifted south to (34,46) so it
+    // clears bridge-old-veyra-river's OBB instead of overlapping its deck.
     [34, 48, -Math.PI * 0.3],
     [36, 54, -Math.PI * 0.4],
-    [32, 60, -Math.PI * 0.2],
+    [34, 46, -Math.PI * 0.2],
     // North side (behind walls)
     [-14, 42, Math.PI],
     [14, 42, -Math.PI],
     // Along roads further out — relocated south to clear Line B corridor (z≈83)
     [-16, 64, Math.PI * 0.5],
-    [16, 60, -Math.PI * 0.4],
+    [14, 46, -Math.PI * 0.4],   // was (16,60) — clear of bridge-old-veyra-river OBB
     // Was (10, 74) and (14, 72) — too close to Line B. Moved south.
     [10, 62, -Math.PI * 0.45],
     [14, 60, -Math.PI * 0.5],

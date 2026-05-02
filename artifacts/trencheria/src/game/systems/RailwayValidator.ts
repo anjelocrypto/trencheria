@@ -34,6 +34,15 @@ import { getLakeHeight, getRiverHeight } from '../world/WaterData';
 import { sampleFootprint } from './Grounding';
 import { WILDERNESS_BUILDINGS } from '../components/WildernessStructures';
 import { generateWorldResources } from './WorldResources';
+import { TOWN_BUILDINGS, TOWN_PROPS } from '../components/TownDistrict';
+import {
+  FORTIFIED_CITY_HOUSES,
+  RIVER_TOWN_HOUSES,
+  MOUNTAIN_HOLD_HOUSES,
+  FRONTIER_CAMP_HOUSES,
+  TRADE_CITY_HOUSES,
+  KingdomHouseDef,
+} from '../world/KingdomBuildingData';
 
 // Track-aligned angle per rail bridge (matches RailwayBridges.tsx logic).
 function getRailBridgeAngle(b: RailwayBridge): number {
@@ -432,14 +441,186 @@ export function runRailwayWorldAudit(): void {
   }
 
   // ============================================================
+  // 9. Town buildings — must clear rail/bridge/station/level-crossing footprints
+  // ============================================================
+  // Codex follow-up: validator previously did not import TOWN_BUILDINGS or
+  // TOWN_PROPS, so the "✓ no violations" message was understating coverage.
+  const TOWN_BUILDING_RAIL_CLEARANCE = 12; // ≥12u from any rail centerline
+  const TOWN_PROP_RAIL_CLEARANCE = 4;
+  const stationFootprints = RAILWAY_STATIONS.map(getStationLayout);
+
+  function inStationFootprint(x: number, z: number): RailwayStation | null {
+    for (let i = 0; i < stationFootprints.length; i++) {
+      const fp = stationFootprints[i];
+      const cos = Math.cos(-fp.rotation), sin = Math.sin(-fp.rotation);
+      const dx = x - fp.cx, dz = z - fp.cz;
+      const lx = cos * dx + sin * dz;
+      const lz = -sin * dx + cos * dz;
+      if (Math.abs(lx) <= fp.halfW + 0.5 && Math.abs(lz) <= fp.halfL + 0.5) {
+        return RAILWAY_STATIONS[i];
+      }
+    }
+    return null;
+  }
+
+  function inLevelCrossing(x: number, z: number): typeof LEVEL_CROSSINGS[number] | null {
+    for (const lc of LEVEL_CROSSINGS) {
+      const dx = x - lc.position[0], dz = z - lc.position[1];
+      if (dx * dx + dz * dz <= (lc.size + 1.5) * (lc.size + 1.5)) return lc;
+    }
+    return null;
+  }
+
+  function checkBuilding(
+    label: string, x: number, z: number, w: number, d: number,
+  ): void {
+    const r = Math.max(w, d) / 2;
+    const need = r + TOWN_BUILDING_RAIL_CLEARANCE;
+    const dRail = distToRailway(x, z, need);
+    if (dRail !== null && dRail < r + 2) {
+      issues.push({
+        category: 'town-building-on-rail',
+        detail: `${label} at (${fmt(x)},${fmt(z)}) ${fmt(dRail)}u from rail (need ≥${fmt(r + 2)}u, half=${fmt(r)})`,
+      });
+    }
+    // Sample footprint corners for bridge / station / crossing OBB hits.
+    const corners: Array<[number, number]> = [
+      [x - w / 2, z - d / 2], [x + w / 2, z - d / 2],
+      [x + w / 2, z + d / 2], [x - w / 2, z + d / 2],
+      [x, z],
+    ];
+    for (const [cx, cz] of corners) {
+      const rb = inRailBridgeOBB(cx, cz);
+      if (rb) {
+        issues.push({
+          category: 'town-building-on-rail-bridge',
+          detail: `${label} at (${fmt(x)},${fmt(z)}) corner (${fmt(cx)},${fmt(cz)}) overlaps ${rb.id}`,
+        });
+        return;
+      }
+      const rdb = inRoadBridgeOBB(cx, cz);
+      if (rdb) {
+        issues.push({
+          category: 'town-building-on-road-bridge',
+          detail: `${label} at (${fmt(x)},${fmt(z)}) corner (${fmt(cx)},${fmt(cz)}) overlaps road bridge ${rdb.id}`,
+        });
+        return;
+      }
+      const stn = inStationFootprint(cx, cz);
+      if (stn) {
+        issues.push({
+          category: 'town-building-on-station',
+          detail: `${label} at (${fmt(x)},${fmt(z)}) corner (${fmt(cx)},${fmt(cz)}) overlaps station ${stn.id}`,
+        });
+        return;
+      }
+      const lc = inLevelCrossing(cx, cz);
+      if (lc) {
+        issues.push({
+          category: 'town-building-on-level-crossing',
+          detail: `${label} at (${fmt(x)},${fmt(z)}) corner (${fmt(cx)},${fmt(cz)}) overlaps ${lc.id}`,
+        });
+        return;
+      }
+    }
+  }
+
+  let townHits = 0;
+  const townPrev = issues.length;
+  for (let i = 0; i < TOWN_BUILDINGS.length; i++) {
+    const b = TOWN_BUILDINGS[i];
+    const before = issues.length;
+    checkBuilding(`town#${i}${b.label ? `(${b.label})` : ''}`, b.x, b.z, b.w, b.d);
+    if (issues.length > before) townHits++;
+  }
+  // Suppress noise: keep first 5 town-building issues, summarize the rest.
+  if (issues.length - townPrev > 5) {
+    const removed = issues.splice(townPrev + 5, issues.length - townPrev - 5).length;
+    issues.push({
+      category: 'town-building-on-rail',
+      detail: `… ${removed} more town-building violation(s) suppressed`,
+    });
+  }
+
+  let propHits = 0;
+  for (const p of TOWN_PROPS) {
+    const r = p.shape === 'circle'
+      ? (p.radius ?? 0.3)
+      : Math.max(p.halfW ?? 0.4, p.halfD ?? 0.4);
+    const need = r + TOWN_PROP_RAIL_CLEARANCE;
+    const dRail = distToRailway(p.x, p.z, need);
+    if (dRail !== null && dRail < r + 0.5) {
+      propHits++;
+      if (propHits <= 3) {
+        issues.push({
+          category: 'town-prop-on-rail',
+          detail: `prop @(${fmt(p.x)},${fmt(p.z)}) r=${fmt(r)} is ${fmt(dRail)}u from rail`,
+        });
+      }
+    }
+    if (inRailBridgeOBB(p.x, p.z)) {
+      issues.push({
+        category: 'town-prop-on-rail-bridge',
+        detail: `prop @(${fmt(p.x)},${fmt(p.z)}) overlaps rail bridge`,
+      });
+    }
+  }
+  if (propHits > 3) {
+    issues.push({
+      category: 'town-prop-on-rail',
+      detail: `… ${propHits - 3} more prop violation(s) suppressed`,
+    });
+  }
+
+  // ============================================================
+  // 10. Kingdom houses (Thornwall / Rivermoor / Stonepeak / Frontier / Goldenvale)
+  // ============================================================
+  // Houses are stored in LOCAL coords inside KingdomBuildingData and rendered
+  // inside <group position={[cx, y, cz]}> by NewKingdomRenderers. Transform
+  // each house to world space using the matching SettlementDef position.
+  const kingdomMap: Array<{ id: string; type: string; houses: KingdomHouseDef[] }> = [
+    { id: 'thornwall', type: 'fortified_city', houses: FORTIFIED_CITY_HOUSES },
+    { id: 'rivermoor', type: 'river_town', houses: RIVER_TOWN_HOUSES },
+    { id: 'stonepeak', type: 'mountain_hold', houses: MOUNTAIN_HOLD_HOUSES },
+    { id: 'darkhollow', type: 'frontier_camp', houses: FRONTIER_CAMP_HOUSES },
+    { id: 'goldenvale', type: 'trade_city', houses: TRADE_CITY_HOUSES },
+  ];
+  let kingdomHits = 0;
+  const kingdomPrev = issues.length;
+  for (const km of kingdomMap) {
+    const def = SETTLEMENTS.find(s => s.type === km.type);
+    if (!def) continue;
+    const [cx, cz] = def.position;
+    for (let i = 0; i < km.houses.length; i++) {
+      const h = km.houses[i];
+      const before = issues.length;
+      checkBuilding(`${km.id}#${i}`, cx + h.x, cz + h.z, h.w, h.d);
+      if (issues.length > before) kingdomHits++;
+    }
+  }
+  if (issues.length - kingdomPrev > 5) {
+    const removed = issues.splice(kingdomPrev + 5, issues.length - kingdomPrev - 5).length;
+    issues.push({
+      category: 'kingdom-house-on-rail',
+      detail: `… ${removed} more kingdom-house violation(s) suppressed`,
+    });
+  }
+
+  // ============================================================
   // Output
   // ============================================================
+  const totalKingdomHouses =
+    FORTIFIED_CITY_HOUSES.length + RIVER_TOWN_HOUSES.length +
+    MOUNTAIN_HOLD_HOUSES.length + FRONTIER_CAMP_HOUSES.length +
+    TRADE_CITY_HOUSES.length;
   if (issues.length === 0) {
     console.log(
       `[RailwayValidator] ✓ No rail/road/bridge violations. ` +
       `${intersections.length} intersection(s) decorated; ` +
       `${RAILWAY_STATIONS.length} station footprint(s) clean; ` +
       `${WILDERNESS_BUILDINGS.length} wilderness building(s) clear; ` +
+      `${TOWN_BUILDINGS.length} town building(s) + ${TOWN_PROPS.length} town prop(s) clear; ` +
+      `${totalKingdomHouses} kingdom house(s) clear; ` +
       `${resources.length} resource(s) clear of rail clearance.`,
     );
   } else {

@@ -30,11 +30,24 @@ export const BRIDGES: BridgeDef[] = [
   // Reed Village → Rivermoor road [400,300]→[450,350] runs straight through
   // lake-silvermere at (420,320). Bridge is a long causeway across the lake.
   // road dir = (50,50); rotation = atan2(50,50) = π/4 ≈ 0.785 rad.
+  // Codex follow-up: original 64u causeway centered at (420,320) extended to
+  // (442.6, 342.6), which sat inside Rivermoor's house ring (centered at
+  // (450,350)). Pulled centre west to (410,310) and shortened to length 40 so
+  // the bridge sits over the deepest part of lake-silvermere instead of
+  // marching into the kingdom. New extent ≈ (395.9,295.9)→(424.1,324.1) clears
+  // RIVER_TOWN_HOUSES at (430..443, 327..342) by ≥6u.
+  //
+  // Known residual: validator still warns "road-water-no-bridge at ~(426,326)"
+  // for the last ~16u of the road inside the lake on the kingdom-side shore.
+  // Geometry constraint: any bridge length ≥48 reintroduces a kingdom-house
+  // overlap (waterfront[0] corner at lz=25.17 vs halfL+2). The kingdom-clear
+  // constraint is prioritised — visually the road approaches Rivermoor as a
+  // shallow ford / quay rather than an engineered crossing past the deck.
   {
     id: 'bridge-rivermoor-approach',
-    position: [420, 0.5, 320],
+    position: [410, 0.5, 310],
     rotation: 0.785,
-    length: 64,
+    length: 40,
     width: 5,
     style: 'grand',
   },

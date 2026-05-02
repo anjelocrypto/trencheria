@@ -8,14 +8,20 @@ import * as THREE from 'three';
 import { LINE_A_WAYPOINTS, LINE_B_WAYPOINTS, RailwayWaypoint } from '../world/RailwayData';
 import { getRailGroundHeight } from '../systems/Grounding';
 
-const GAUGE = 1.2;
-const BALLAST_H = 0.15;
-const SLEEPER_H = 0.12;
-const RAIL_H = 0.15;
+// v8 visual slim pass (Codex follow-up): no more bulky rectangular ballast
+// slabs. Narrower gravel embankment strip, smaller ties, thinner rails.
+const GAUGE = 1.1;
+const BALLAST_W = 1.7;       // was implicit 3.0 box — now a thin gravel strip
+const BALLAST_H = 0.07;      // was 0.15
+const SLEEPER_W = 1.35;      // was 2.0
+const SLEEPER_H = 0.08;      // was 0.12
+const SLEEPER_D = 0.22;      // was 0.3
+const RAIL_W = 0.08;         // was 0.12
+const RAIL_H = 0.10;         // was 0.15
 const RAIL_Y_OFF = BALLAST_H + SLEEPER_H + RAIL_H / 2;
 const SLP_Y_OFF = BALLAST_H + SLEEPER_H / 2;
-const SLEEPER_SPACING = 2.0;
-const TRACK_HEIGHT_OFFSET = 0.35;
+const SLEEPER_SPACING = 1.6; // was 2.0 — denser, smaller ties
+const TRACK_HEIGHT_OFFSET = 0.18; // was 0.35 — embankment sits lower
 const SUBDIV = 4;
 
 const railMat = new THREE.MeshLambertMaterial({ color: '#3a3a3a' });
@@ -210,21 +216,21 @@ function buildDirectGeometry(wps: RailwayWaypoint[]): TrackGeos {
     writeBox(railPos, railNor, railIdx,
       railBox * VERTS_PER_BOX, railBox * INDICES_PER_BOX,
       mx + _cross.x * (GAUGE / 2), my + RAIL_Y_OFF, mz + _cross.z * (GAUGE / 2),
-      _q.x, _q.y, _q.z, _q.w, 0.12, RAIL_H, len);
+      _q.x, _q.y, _q.z, _q.w, RAIL_W, RAIL_H, len);
     railBox++;
 
     // Right rail
     writeBox(railPos, railNor, railIdx,
       railBox * VERTS_PER_BOX, railBox * INDICES_PER_BOX,
       mx - _cross.x * (GAUGE / 2), my + RAIL_Y_OFF, mz - _cross.z * (GAUGE / 2),
-      _q.x, _q.y, _q.z, _q.w, 0.12, RAIL_H, len);
+      _q.x, _q.y, _q.z, _q.w, RAIL_W, RAIL_H, len);
     railBox++;
 
-    // Ballast
+    // Gravel embankment strip — much thinner than v7's 3u-wide slab.
     writeBox(ballPos, ballNor, ballIdx,
       ballBox * VERTS_PER_BOX, ballBox * INDICES_PER_BOX,
       mx, my + BALLAST_H / 2, mz,
-      _q.x, _q.y, _q.z, _q.w, 3.0, BALLAST_H, len);
+      _q.x, _q.y, _q.z, _q.w, BALLAST_W, BALLAST_H, len);
     ballBox++;
   }
 
@@ -249,7 +255,7 @@ function buildDirectGeometry(wps: RailwayWaypoint[]): TrackGeos {
 
       writeBox(slpPos, slpNor, slpIdx,
         slpBox * VERTS_PER_BOX, slpBox * INDICES_PER_BOX,
-        sx, sy, sz, _q.x, _q.y, _q.z, _q.w, 2.0, SLEEPER_H, 0.3);
+        sx, sy, sz, _q.x, _q.y, _q.z, _q.w, SLEEPER_W, SLEEPER_H, SLEEPER_D);
       slpBox++;
       nextDist += SLEEPER_SPACING;
     }

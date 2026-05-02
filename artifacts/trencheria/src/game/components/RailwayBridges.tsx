@@ -39,68 +39,57 @@ const RailBridgeRenderer = memo(function RailBridgeRenderer({ bridge }: { bridge
 
   const [px, , pz] = bridge.position;
   const len = bridge.length;
-  const gauge = 1.2;
-  const deckW = 3.2;
-  const girderH = 1.8;
-  const pierW = 2.0;
+  // v8 visual slim pass (Codex follow-up): no more bulky girder boxes in front
+  // of the kingdom. Slimmer deck/rails, low parapet rails instead of huge box
+  // girders + top chord, two end piers only (no middle pier or chunky caps).
+  const gauge = 1.1;
+  const deckW = 2.2;     // was 3.2
+  const deckH = 0.18;    // was 0.25
+  const parapetH = 0.7;  // was a 1.8u-tall iron girder + top chord
+  const pierW = 1.1;     // was 2.0
 
   return (
     <group position={[px, py, pz]} rotation={[0, rotation, 0]}>
-      {/* Deck — timber planks on iron frame */}
-      <mesh geometry={GEO.box} scale={[deckW, 0.25, len]}
+      {/* Slim timber deck on slim iron frame */}
+      <mesh geometry={GEO.box} scale={[deckW, deckH, len]}
         position={[0, 1.0, 0]} material={deckMat} castShadow receiveShadow />
 
-      {/* Rails on deck */}
-      <mesh geometry={GEO.box} scale={[0.12, 0.15, len]}
-        position={[gauge / 2, 1.2, 0]} material={railMat} castShadow />
-      <mesh geometry={GEO.box} scale={[0.12, 0.15, len]}
-        position={[-gauge / 2, 1.2, 0]} material={railMat} castShadow />
+      {/* Rails on deck — match RailwayTrack RAIL_W/RAIL_H */}
+      <mesh geometry={GEO.box} scale={[0.08, 0.10, len]}
+        position={[gauge / 2, 1.0 + deckH / 2 + 0.08, 0]} material={railMat} castShadow />
+      <mesh geometry={GEO.box} scale={[0.08, 0.10, len]}
+        position={[-gauge / 2, 1.0 + deckH / 2 + 0.08, 0]} material={railMat} castShadow />
 
-      {/* Iron girders — left and right */}
-      <mesh geometry={GEO.box} scale={[0.2, girderH, len]}
-        position={[-deckW / 2, 1.0 + girderH / 2, 0]} material={ironMat} castShadow />
-      <mesh geometry={GEO.box} scale={[0.2, girderH, len]}
-        position={[deckW / 2, 1.0 + girderH / 2, 0]} material={ironMat} castShadow />
+      {/* Low iron parapet rails (handrail look — not a tall girder wall) */}
+      <mesh geometry={GEO.box} scale={[0.06, 0.06, len]}
+        position={[-deckW / 2 - 0.04, 1.0 + parapetH, 0]} material={ironMat} castShadow />
+      <mesh geometry={GEO.box} scale={[0.06, 0.06, len]}
+        position={[deckW / 2 + 0.04, 1.0 + parapetH, 0]} material={ironMat} castShadow />
 
-      {/* Top chord */}
-      <mesh geometry={GEO.box} scale={[deckW + 0.2, 0.15, len]}
-        position={[0, 1.0 + girderH, 0]} material={ironDarkMat} castShadow />
-
-      {/* Cross bracing (X pattern) — simplified as diagonal bars */}
-      {Array.from({ length: Math.floor(len / 4) }, (_, i) => {
-        const zOff = -len / 2 + 2 + i * 4;
+      {/* Slim balusters every 2u (vertical posts under the parapet) */}
+      {Array.from({ length: Math.max(2, Math.floor(len / 2)) }, (_, i) => {
+        const count = Math.max(2, Math.floor(len / 2));
+        const zOff = -len / 2 + (i + 0.5) * (len / count);
         return (
-          <group key={i}>
-            {/* Vertical strut */}
-            <mesh geometry={GEO.box} scale={[0.1, girderH, 0.1]}
-              position={[-deckW / 2 + 0.1, 1.0 + girderH / 2, zOff]} material={ironDarkMat} />
-            <mesh geometry={GEO.box} scale={[0.1, girderH, 0.1]}
-              position={[deckW / 2 - 0.1, 1.0 + girderH / 2, zOff]} material={ironDarkMat} />
-            {/* Cross beam under deck */}
-            <mesh geometry={GEO.box} scale={[deckW, 0.12, 0.12]}
-              position={[0, 0.88, zOff]} material={ironMat} />
+          <group key={`bal-${i}`}>
+            <mesh geometry={GEO.box} scale={[0.05, parapetH, 0.05]}
+              position={[-deckW / 2 - 0.04, 1.0 + parapetH / 2 + deckH / 2, zOff]} material={ironDarkMat} />
+            <mesh geometry={GEO.box} scale={[0.05, parapetH, 0.05]}
+              position={[deckW / 2 + 0.04, 1.0 + parapetH / 2 + deckH / 2, zOff]} material={ironDarkMat} />
           </group>
         );
       })}
 
-      {/* Stone piers — at each end and center */}
-      {[-len / 2 + 1, 0, len / 2 - 1].map((zOff, i) => {
-        const pierH = Math.max(3, py + 3);
+      {/* End piers only — no chunky middle pier or oversize caps */}
+      {[-len / 2 + 0.6, len / 2 - 0.6].map((zOff, i) => {
+        const pierH = Math.max(2.5, py + 3);
         return (
           <mesh key={`pier-${i}`} geometry={GEO.box}
-            scale={[pierW, pierH, pierW]}
+            scale={[pierW, pierH, pierW * 0.9]}
             position={[0, -pierH / 2 + 1.0, zOff]}
             material={stonePierMat} castShadow />
         );
       })}
-
-      {/* Pier caps */}
-      {[-len / 2 + 1, 0, len / 2 - 1].map((zOff, i) => (
-        <mesh key={`cap-${i}`} geometry={GEO.box}
-          scale={[pierW + 0.4, 0.3, pierW + 0.4]}
-          position={[0, 0.85, zOff]}
-          material={stonePierMat} castShadow />
-      ))}
     </group>
   );
 });
