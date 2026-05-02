@@ -52,12 +52,13 @@ function isPointBlocked(x: number, z: number, radius: number): boolean {
 }
 
 function isTerrainValid(x: number, z: number): boolean {
+  // Bridge takes priority over water/terrain checks: standing on a bridge
+  // deck is valid even when water flows beneath it.
+  if (getBridgeHeight(x, z) !== null) return true;
   const y = getTerrainHeight(x, z);
   if (y < -0.5) return false;
   if (getLakeHeight(x, z) !== null) return false;
   if (getRiverHeight(x, z) !== null) return false;
-  const bridgeY = getBridgeHeight(x, z);
-  if (bridgeY !== null) return true;
   return true;
 }
 
@@ -174,6 +175,11 @@ function getSeperatedSpawnPoint(cx: number, cz: number, index: number): [number,
 }
 
 function getRejectReason(x: number, z: number): string {
+  // Bridge surface is always valid — water/terrain checks beneath are ignored.
+  if (getBridgeHeight(x, z) !== null) {
+    if (isPointBlocked(x, z, SPAWN_CHECK_RADIUS)) return 'collision with obstacle';
+    return 'unknown';
+  }
   const y = getTerrainHeight(x, z);
   if (y < -0.5) return 'terrain below water level';
   if (getLakeHeight(x, z) !== null) return 'inside lake';

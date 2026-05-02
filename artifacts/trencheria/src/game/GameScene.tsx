@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Terrain, getTerrainHeight } from './components/Terrain';
 import { Water } from './components/Water';
 import { Player, MountedDebugData } from './components/Player';
+import { FACTIONS, getFactionById } from './systems/FactionData';
 import { Atmosphere } from './components/Atmosphere';
 import { Sky } from './components/Sky';
 import { WorldObjects } from './components/WorldObjects';
@@ -409,6 +410,32 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
     return () => clearInterval(timer);
   }, []);
 
+  // === PVP: Active wars map (keyed by OPPONENT faction color) ===
+  // Drives both attacker-side gating in <Player/> and receiver-side validation
+  // below. Rebuilt whenever challenges/territories/myClan change.
+  const activeWarsRef = useRef<Map<string, { centerX: number; centerZ: number; radius: number }>>(new Map());
+  useEffect(() => {
+    const map = new Map<string, { centerX: number; centerZ: number; radius: number }>();
+    const myClanId = clanSystem.myClan?.clan_id;
+    if (myClanId) {
+      for (const ch of clanSystem.challenges) {
+        if (ch.status !== 'active') continue;
+        if (ch.attacker_clan_id !== myClanId && ch.defender_clan_id !== myClanId) continue;
+        const oppId = ch.attacker_clan_id === myClanId ? ch.defender_clan_id : ch.attacker_clan_id;
+        const oppFaction = FACTIONS.find(f => f.id === oppId);
+        if (!oppFaction) continue;
+        const territory = clanSystem.territories.find(t => t.id === ch.territory_id);
+        if (!territory) continue;
+        map.set(oppFaction.color, {
+          centerX: territory.center_x,
+          centerZ: territory.center_z,
+          radius: territory.radius,
+        });
+      }
+    }
+    activeWarsRef.current = map;
+  }, [clanSystem.challenges, clanSystem.territories, clanSystem.myClan]);
+
   // === PVP: Register incoming hit callback ===
   useEffect(() => {
     if (!multiplayer.connected) return;
@@ -428,9 +455,41 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
       // Respawn invulnerability — cannot receive PvP damage
       if (Date.now() < respawnInvulnRef.current) return;
 
+      // === Active-war gate (server-truth driven) ===
+      // Receiver-side validation mirrors the attacker check in Player.tsx so a
+      // malicious or out-of-date attacker cannot deal damage outside an active
+      // war or outside the contested territory radius.
+      //
+      // SECURITY: we derive the attacker's faction from the authoritative
+      // remote player record (broadcast by the server with their clanColor),
+      // NOT from `hitData.attackerClanId` (attacker-supplied). We additionally
+      // cross-check the two and reject any mismatch so a spoofed attackerClanId
+      // cannot route damage through a war that the attacker isn't actually in.
+      const attackerPlayerId = (hitData as any)._attackerPlayerId || 'unknown';
+      const attackerRemote = multiplayer.remotePlayersRef?.current?.get(attackerPlayerId);
+      if (!attackerRemote) return;                 // unknown attacker → reject
+      if (!attackerRemote.clanColor) return;       // attacker has no faction → reject
+      // Cross-check attacker-supplied id against authoritative remote color
+      const claimedFaction = hitData.attackerClanId ? getFactionById(hitData.attackerClanId) : null;
+      if (!claimedFaction || claimedFaction.color !== attackerRemote.clanColor) return;
+      // Active-war lookup uses the authoritative color
+      const war = activeWarsRef.current.get(attackerRemote.clanColor);
+      if (!war) return;
+      // I (defender) must be inside the war territory
+      const myPos = playerPositionRef.current;
+      const dxMe = myPos.x - war.centerX;
+      const dzMe = myPos.z - war.centerZ;
+      if (dxMe * dxMe + dzMe * dzMe > war.radius * war.radius) return;
+      // Attacker must also be inside (last-known interpolated position).
+      // This is a hard requirement, not a soft pass.
+      const ax = attackerRemote.renderPosition[0];
+      const az = attackerRemote.renderPosition[2];
+      const dxA = ax - war.centerX;
+      const dzA = az - war.centerZ;
+      if (dxA * dxA + dzA * dzA > war.radius * war.radius) return;
+
       // Anti-spam: cooldown per attacker
       const now = Date.now();
-      const attackerPlayerId = (hitData as any)._attackerPlayerId || 'unknown';
       const last = lastDamageSourceRef.current;
       if (last && last.attackerId === attackerPlayerId && now - last.timestamp < 500) return;
 
@@ -442,12 +501,9 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
       setPvpDamageFlash(true);
       setTimeout(() => setPvpDamageFlash(false), 300);
 
-      // Resolve attacker display info from remote players
-      const attackerRemote = multiplayer.remotePlayersRef?.current?.get(attackerPlayerId);
-      const attackerName = attackerRemote?.displayName || 'Unknown';
-      const attackerClanColor = attackerRemote?.clanColor
-        ? CLAN_COLOR_HEX[attackerRemote.clanColor as ClanColor] || '#e74c3c'
-        : '#e74c3c';
+      // Resolve attacker display info from authoritative remote (already validated above)
+      const attackerName = attackerRemote.displayName || 'Unknown';
+      const attackerClanColor = CLAN_COLOR_HEX[attackerRemote.clanColor as ClanColor] || '#e74c3c';
 
       // Track last damage source
       lastDamageSourceRef.current = {
@@ -810,6 +866,7 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
             damageFlash={damageFlash}
             remotePlayersRef={multiplayer.remotePlayersRef}
             localClanId={loadWalletSession()?.faction_id ?? null}
+            activeWarsRef={activeWarsRef}
             onPvpHit={handlePvpHit}
           />
           <WorldObjects

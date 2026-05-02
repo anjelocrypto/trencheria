@@ -329,18 +329,23 @@ export function MenuOverlay({ onEnterWorld, isReconnecting }: Props) {
           <div className="grid grid-cols-7 gap-2 mb-6">
             {FACTIONS.map(f => {
               const isSelected = selectedFaction?.id === f.id;
+              const isLocked = !f.available;
               return (
                 <button key={f.id}
-                  onClick={() => setSelectedFaction(f)}
+                  onClick={() => { if (!isLocked) setSelectedFaction(f); }}
+                  disabled={isLocked}
+                  title={isLocked ? `${f.name} — coming soon (assets in development)` : f.name}
                   className="rounded-xl overflow-hidden text-center transition-all duration-200 p-3"
                   style={{
                     background: isSelected
                       ? `linear-gradient(180deg, ${f.colorHex}25, ${f.colorHex}10)`
                       : 'rgba(255,255,255,0.03)',
                     border: isSelected ? `2px solid ${f.colorHex}` : '2px solid rgba(255,255,255,0.08)',
-                    cursor: 'pointer',
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
                     transform: isSelected ? 'translateY(-4px)' : 'none',
                     boxShadow: isSelected ? `0 8px 30px ${f.colorHex}30` : 'none',
+                    opacity: isLocked ? 0.45 : 1,
+                    filter: isLocked ? 'grayscale(0.7)' : 'none',
                   }}>
                   <div className="text-2xl mb-1">{f.icon}</div>
                   <div className="text-xs font-bold tracking-wide mb-0.5" style={{
@@ -350,10 +355,10 @@ export function MenuOverlay({ onEnterWorld, isReconnecting }: Props) {
                   <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
                     {f.kingdomName}
                   </div>
-                  {!f.available && (
+                  {isLocked && (
                     <div className="text-[7px] mt-1 px-1 py-0.5 rounded" style={{
                       background: 'rgba(255,200,0,0.1)', color: '#cc9900', border: '1px solid rgba(255,200,0,0.2)',
-                    }}>Preview</div>
+                    }}>Coming Soon</div>
                   )}
                   {isSelected && (
                     <div className="text-[8px] mt-1 font-bold uppercase tracking-widest" style={{ color: '#66cc66' }}>

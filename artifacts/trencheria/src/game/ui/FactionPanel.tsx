@@ -217,6 +217,7 @@ export function FactionPanel({ open, onClose, playerX, playerZ, clanSystem: clan
                         const isAttacker = ch.attacker_clan_id === clan.myClan?.clan_id;
                         const attackerFaction = FACTIONS.find(f => f.id === ch.attacker_clan_id);
                         const defenderFaction = FACTIONS.find(f => f.id === ch.defender_clan_id);
+                        const canCancel = isAttacker && ch.status === 'pending';
                         return (
                           <div key={ch.id} className="px-3 py-2.5 rounded-lg mb-1.5" style={{
                             background: 'hsla(30,50%,30%,0.1)', border: '1px solid hsla(30,50%,40%,0.2)',
@@ -236,12 +237,38 @@ export function FactionPanel({ open, onClose, playerX, playerZ, clanSystem: clan
                               <span>{defenderFaction?.icon || '🛡️'}</span>
                               <span style={{ fontSize: 10, color: defenderFaction?.colorHex || '#888' }}>{ch.defender_clan_name}</span>
                             </div>
-                            <span style={{ fontSize: 9, color: 'hsl(30,50%,55%)' }}>
-                              {ch.status === 'pending' ? `⏳ War in ${formatCountdown(ch.war_starts_at)}`
-                                : ch.status === 'active' ? `🔥 Ends ${formatCountdown(ch.war_ends_at)}`
-                                : ch.status === 'pending_resolution' ? `⏳ Awaiting admin resolution`
-                                : `🛡️ Cooldown ${formatCountdown(ch.cooldown_ends_at)}`}
-                            </span>
+                            <div className="flex items-center justify-between gap-2">
+                              <span style={{ fontSize: 9, color: 'hsl(30,50%,55%)' }}>
+                                {ch.status === 'pending' ? `⏳ War in ${formatCountdown(ch.war_starts_at)}`
+                                  : ch.status === 'active' ? `🔥 Ends ${formatCountdown(ch.war_ends_at)}`
+                                  : ch.status === 'pending_resolution' ? `⏳ Awaiting admin resolution`
+                                  : `🛡️ Cooldown ${formatCountdown(ch.cooldown_ends_at)}`}
+                              </span>
+                              {canCancel && (
+                                <button
+                                  onClick={async () => {
+                                    if (clan.loading) return;
+                                    const ok = await clan.cancelChallenge(ch.id);
+                                    if (!ok) {
+                                      console.warn('[FactionPanel] cancelChallenge failed', clan.error);
+                                    }
+                                  }}
+                                  disabled={clan.loading}
+                                  style={{
+                                    fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
+                                    color: 'hsl(0,60%,75%)',
+                                    background: 'hsla(0,50%,30%,0.25)',
+                                    border: '1px solid hsla(0,50%,45%,0.4)',
+                                    padding: '4px 8px', borderRadius: 6,
+                                    cursor: clan.loading ? 'wait' : 'pointer',
+                                    opacity: clan.loading ? 0.5 : 1,
+                                  }}
+                                  title="Cancel this pending challenge before the war begins"
+                                >
+                                  🚫 Cancel Challenge
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
@@ -292,6 +319,27 @@ export function FactionPanel({ open, onClose, playerX, playerZ, clanSystem: clan
                     const dist = Math.sqrt((playerX - t.center_x) ** 2 + (playerZ - t.center_z) ** 2);
                     const inRange = dist <= t.radius + 30;
 
+                    // === Challenge eligibility ===
+                    // Eligible iff: I have a faction; territory is owned by another
+                    // faction; territory is peaceful (no contest, no cooldown); my
+                    // faction has no other outgoing challenge already in flight.
+                    const myClanId = clan.myClan?.clan_id ?? null;
+                    const isOwnTerritory = !!myClanId && t.owning_clan_id === myClanId;
+                    const hasOutgoing = !!myClanId && clan.challenges.some(c =>
+                      c.attacker_clan_id === myClanId &&
+                      (c.status === 'pending' || c.status === 'active' || c.status === 'pending_resolution')
+                    );
+                    let challengeReason: string | null = null;
+                    if (!myClanId) challengeReason = 'Join a faction to challenge';
+                    else if (isOwnTerritory) challengeReason = 'Your own kingdom';
+                    else if (!t.owning_clan_id) challengeReason = 'Unclaimed';
+                    else if (t.war_state === 'contested') challengeReason = 'Already challenged';
+                    else if (t.war_state === 'active_war') challengeReason = 'War in progress';
+                    else if (t.war_state === 'pending_resolution') challengeReason = 'Awaiting resolution';
+                    else if (t.war_state === 'cooldown') challengeReason = 'In cooldown';
+                    else if (hasOutgoing) challengeReason = 'You already have an active challenge';
+                    const canChallenge = challengeReason === null && t.war_state === 'peaceful';
+
                     return (
                       <div key={t.id} className="px-3 py-2.5 rounded-lg" style={{
                         background: ownerFaction ? `${ownerFaction.colorHex}10` : 'hsla(0,0%,100%,0.03)',
@@ -305,10 +353,49 @@ export function FactionPanel({ open, onClose, playerX, playerZ, clanSystem: clan
                             {inRange ? '📍 In range' : `${Math.round(dist)}u`}
                           </span>
                         </div>
-                        <div className="text-[10px]" style={{ color: 'hsl(40,15%,45%)' }}>
-                          {ownerFaction
-                            ? `🏴 ${ownerFaction.name} Faction Home Kingdom`
-                            : '⬜ Neutral territory'}
+                        <div className="flex items-center justify-between gap-2 mt-1">
+                          <div className="text-[10px]" style={{ color: 'hsl(40,15%,45%)' }}>
+                            {ownerFaction
+                              ? `🏴 ${ownerFaction.name} Faction Home Kingdom`
+                              : '⬜ Neutral territory'}
+                          </div>
+                          {!isOwnTerritory && t.owning_clan_id && (
+                            canChallenge ? (
+                              <button
+                                onClick={async () => {
+                                  if (clan.loading) return;
+                                  const ok = await clan.challengeTerritory(t.id);
+                                  if (!ok) {
+                                    console.warn('[FactionPanel] challengeTerritory failed', clan.error);
+                                  }
+                                }}
+                                disabled={clan.loading}
+                                style={{
+                                  fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
+                                  color: 'hsl(30,70%,80%)',
+                                  background: 'hsla(30,55%,32%,0.3)',
+                                  border: '1px solid hsla(30,55%,50%,0.45)',
+                                  padding: '4px 8px', borderRadius: 6,
+                                  cursor: clan.loading ? 'wait' : 'pointer',
+                                  opacity: clan.loading ? 0.5 : 1,
+                                  whiteSpace: 'nowrap',
+                                }}
+                                title={`Start a war for ${t.name}. War begins in 15 minutes.`}
+                              >
+                                ⚔️ Challenge
+                              </button>
+                            ) : challengeReason ? (
+                              <span
+                                title={challengeReason}
+                                style={{
+                                  fontSize: 9, color: 'hsl(40,15%,45%)',
+                                  fontStyle: 'italic', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {challengeReason}
+                              </span>
+                            ) : null
+                          )}
                         </div>
                       </div>
                     );

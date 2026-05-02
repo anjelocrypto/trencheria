@@ -244,6 +244,27 @@ export function useClanSystem() {
     return () => clearInterval(iv);
   }, [loadChallenges]);
 
+  // War state transition cadence — Supabase has no scheduler in this repo,
+  // so the frontend must drive pending → active and active → pending_resolution.
+  // 30s cadence; gated on document.hidden to avoid background thrash. The
+  // realtime territories subscription will pick up any row updates and
+  // auto-refresh territories+challenges, so we don't reload manually here.
+  useEffect(() => {
+    // Kick once shortly after mount to catch any wars whose start time has
+    // already passed while the player was offline.
+    const initialKick = setTimeout(() => {
+      if (!document.hidden) transitionWarStates();
+    }, 1500);
+    const iv = setInterval(() => {
+      if (document.hidden) return;
+      transitionWarStates();
+    }, 30000);
+    return () => {
+      clearTimeout(initialKick);
+      clearInterval(iv);
+    };
+  }, [transitionWarStates]);
+
   // ========== Mutations ==========
   const withLoading = useCallback(async <T>(fn: () => Promise<T>): Promise<T> => {
     setLoading(true);

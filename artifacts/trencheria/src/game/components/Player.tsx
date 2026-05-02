@@ -87,6 +87,14 @@ interface PlayerProps {
   // PvP
   remotePlayersRef?: React.RefObject<Map<string, InterpolatedPlayer>>;
   localClanId?: string | null;
+  /**
+   * Active wars where the local player's faction is engaged. Keyed by the
+   * OPPONENT faction color (1:1 with faction in the fixed-faction system).
+   * Value is the contested territory's center + radius. PvP damage may
+   * only be dealt to a remote player whose color is in this map AND when
+   * BOTH players are inside the radius.
+   */
+  activeWarsRef?: React.RefObject<Map<string, { centerX: number; centerZ: number; radius: number }>>;
   onPvpHit?: (victimId: string, damage: number, isCombo: boolean) => void;
 }
 
@@ -121,7 +129,7 @@ export function Player({
   resources, mountedDebugRef,
   externalMoveSpeedRef, externalIsRunningRef, externalIsGroundedRef, externalAttackAnimRef,
   activeEmote, activeEmoteId, onEmoteComplete, damageFlash,
-  remotePlayersRef, localClanId, onPvpHit,
+  remotePlayersRef, localClanId, activeWarsRef, onPvpHit,
 }: PlayerProps) {
   const { character } = useCharacter();
   const groupRef = useRef<THREE.Group>(null);
@@ -592,31 +600,47 @@ export function Player({
       }
 
       // === PVP HIT DETECTION ===
-      // Faction-based: different factions can damage each other, same faction cannot
-      // Uses stable faction color (1:1 with faction UUID) for same-faction protection
+      // Damage is allowed only when:
+      //   1) Local player has a faction (guests cannot PvP).
+      //   2) Remote player has a faction and a different one from local.
+      //   3) An ACTIVE war exists between the two factions.
+      //   4) BOTH players are inside the contested territory radius.
       if (onPvpHit && localClanId && remotePlayersRef?.current) {
         const pvpDmg = isCombo ? PVP_COMBO_DAMAGE : PVP_DAMAGE;
-        // Resolve our local faction color from FactionData for stable comparison
         const localFaction = getFactionById(localClanId);
         const localFactionColor = localFaction?.color ?? null;
-        remotePlayersRef.current.forEach((remote) => {
-          // Skip: dead players (health <= 0)
-          if (remote.health <= 0) return;
-          // Skip: remote has no faction (guests can't PvP)
-          if (!remote.clanColor) return;
-          // Skip: same faction — compare via faction color slug (1:1 with faction, immutable)
-          if (localFactionColor && remote.clanColor === localFactionColor) return;
-          const dx = remote.renderPosition[0] - pos.x;
-          const dz = remote.renderPosition[2] - pos.z;
-          const distSq = dx * dx + dz * dz;
-          if (distSq > PLAYER_ATTACK_RANGE * PLAYER_ATTACK_RANGE) return;
-          const dist = Math.sqrt(distSq);
-          if (dist < 0.01) return;
-          _toEnemy.set(dx / dist, 0, dz / dist);
-          if (_forward.dot(_toEnemy) > cosArc) {
-            onPvpHit(remote.playerId, pvpDmg, isCombo);
-          }
-        });
+        if (!localFactionColor) {
+          // Local has no resolvable faction — skip PvP entirely.
+        } else {
+          const activeWars = activeWarsRef?.current;
+          remotePlayersRef.current.forEach((remote) => {
+            if (remote.health <= 0) return;
+            if (!remote.clanColor) return;                        // guests can't be hit
+            if (remote.clanColor === localFactionColor) return;   // same faction protection
+            // Active-war gate (server-truth driven, refreshed by GameScene)
+            const war = activeWars?.get(remote.clanColor);
+            if (!war) return;
+            // Local must be inside the war territory
+            const aDx = pos.x - war.centerX;
+            const aDz = pos.z - war.centerZ;
+            if (aDx * aDx + aDz * aDz > war.radius * war.radius) return;
+            // Remote must also be inside the war territory
+            const rDx = remote.renderPosition[0] - war.centerX;
+            const rDz = remote.renderPosition[2] - war.centerZ;
+            if (rDx * rDx + rDz * rDz > war.radius * war.radius) return;
+            // Existing arc + range check
+            const dx = remote.renderPosition[0] - pos.x;
+            const dz = remote.renderPosition[2] - pos.z;
+            const distSq = dx * dx + dz * dz;
+            if (distSq > PLAYER_ATTACK_RANGE * PLAYER_ATTACK_RANGE) return;
+            const dist = Math.sqrt(distSq);
+            if (dist < 0.01) return;
+            _toEnemy.set(dx / dist, 0, dz / dist);
+            if (_forward.dot(_toEnemy) > cosArc) {
+              onPvpHit(remote.playerId, pvpDmg, isCombo);
+            }
+          });
+        }
       }
     }
 
