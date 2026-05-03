@@ -58,11 +58,22 @@ export function WorldObjects({
   // React fiber count is bounded by ~nearby resources rather than total
   // resources. The visible set updates when the player moves enough, never
   // every frame.
+  //
+  // PERF FIX: previously the initial visible set included EVERY non-depleted
+  // resource (~900 trees/rocks/etc), which caused a multi-second startup
+  // hitch as React mounted them all on the first frame before the first
+  // useFrame tick narrowed it down. Now we initialise from
+  // playerPositionRef if available, else start empty — the first useFrame
+  // tick (~16ms later) will populate the nearby set.
   const [visible, setVisible] = useState<WorldResource[]>(() => {
-    // Initial population: include everything (player position not yet known).
-    // The first useFrame tick will narrow this down once we know where the
-    // player is.
-    return resources.filter((r) => !r.depleted);
+    const pos = playerPositionRef.current;
+    if (!pos) return [];
+    const initialGrid = buildResourceGrid(resources);
+    const out: WorldResource[] = [];
+    forEachNearbyResource(initialGrid, pos.x, pos.z, VISIBILITY_RADIUS, (r) => {
+      if (!r.depleted) out.push(r);
+    });
+    return out;
   });
 
   // Recompute the initial visible set whenever resources change identity.

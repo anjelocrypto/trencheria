@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useAnimations, useGLTF } from '@react-three/drei';
@@ -165,7 +166,7 @@ export function RemoteNemoClawModel({ moveSpeed, isRunning, isGrounded, attackAn
 
   const targetHeight = useMemo(() => {
     const h = getSceneHeight(idleScene);
-    console.log('[RemoteNemoClaw] targetHeight from idle scene:', h);
+    devLog('[RemoteNemoClaw] targetHeight from idle scene:', h);
     return h;
   }, [idleScene]);
 

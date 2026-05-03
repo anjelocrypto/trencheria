@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 import { Component, ReactNode, Suspense, useEffect } from 'react';
 
 interface SceneErrorBoundaryState {
@@ -26,14 +27,14 @@ export class SceneErrorBoundary extends Component<{ children: ReactNode }, Scene
 
 function SceneSuspenseFallback() {
   useEffect(() => {
-    console.warn('[SceneDiag] Scene suspended — waiting for 3D assets/components');
+    devWarn('[SceneDiag] Scene suspended — waiting for 3D assets/components');
     const timeout = window.setTimeout(() => {
       console.error('[SceneDiag] Scene still suspended after 5000ms');
     }, 5000);
 
     return () => {
       window.clearTimeout(timeout);
-      console.log('[SceneDiag] Scene suspense resolved');
+      devLog('[SceneDiag] Scene suspense resolved');
     };
   }, []);
 

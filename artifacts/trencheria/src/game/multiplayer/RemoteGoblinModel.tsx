@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useAnimations, useGLTF } from '@react-three/drei';
@@ -250,13 +251,13 @@ export function RemoteGoblinModel({ moveSpeed, isRunning, isGrounded, attackAnim
   // Compute targetHeight from idle scene's native height — matches local canonicalHeight exactly
   const targetHeight = useMemo(() => {
     const h = getSceneHeight(idleScene);
-    console.log('[RemoteGoblin] targetHeight from idle scene:', h);
+    devLog('[RemoteGoblin] targetHeight from idle scene:', h);
     return h;
   }, [idleScene]);
 
   const idleNorm = useMemo(() => {
     const norm = buildModelNormalization(idleScene, targetHeight, 0);
-    console.log('[RemoteGoblin] idleScale:', norm.scale, 'idleAnchor:', norm.modelAnchorOffset, 'idleYaw:', norm.yawCorrection);
+    devLog('[RemoteGoblin] idleScale:', norm.scale, 'idleAnchor:', norm.modelAnchorOffset, 'idleYaw:', norm.yawCorrection);
     return norm;
   }, [idleScene, targetHeight]);
   const walkNorm = useMemo(

@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 /**
  * RailwayLamps — Continuous medieval guide lamps along both railway lines.
  * Uses InstancedMesh for all lamp posts and glow cores (two draw calls total).
@@ -140,7 +141,7 @@ export const RailwayLamps = memo(function RailwayLamps({ playerPositionRef }: Ra
     const lampsA = generateLampsAlongLine(LINE_A_WAYPOINTS);
     const lampsB = generateLampsAlongLine(LINE_B_WAYPOINTS);
     const all = [...lampsA, ...lampsB];
-    console.log(`[RailwayLamps] Generated ${all.length} lamps (A:${lampsA.length} B:${lampsB.length})`);
+    devLog(`[RailwayLamps] Generated ${all.length} lamps (A:${lampsA.length} B:${lampsB.length})`);
     return all;
   }, []);
 

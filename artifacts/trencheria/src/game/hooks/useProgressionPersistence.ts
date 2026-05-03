@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 /**
  * Hook for saving/loading player progression to/from the database.
  * Now passes session token for authenticated saves.
@@ -56,10 +57,10 @@ export function useProgressionPersistence() {
         _session_token: session?.session_token || undefined,
       } as any);
       if (error) {
-        console.warn('[Progression] Save failed:', error.message);
+        devWarn('[Progression] Save failed:', error.message);
       }
     } catch (err) {
-      console.warn('[Progression] Save error:', err);
+      devWarn('[Progression] Save error:', err);
     }
   }, []);
 
@@ -80,7 +81,7 @@ export function useProgressionPersistence() {
         areasSecured: (d.areas_secured as string[]) || [],
       };
     } catch (err) {
-      console.warn('[Progression] Load error:', err);
+      devWarn('[Progression] Load error:', err);
       return null;
     }
   }, []);

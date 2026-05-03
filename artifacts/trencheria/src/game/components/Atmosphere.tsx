@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { advanceTime, getSunDirection, getTimeColors } from '../systems/TimeOfDay';
+import { useQualitySettings } from '../hooks/useQualitySettings';
 
 interface Props {
   playerPositionRef: React.RefObject<THREE.Vector3>;
@@ -20,6 +21,13 @@ export function Atmosphere({ playerPositionRef }: Props) {
   const lightRef = useRef<THREE.DirectionalLight>(null);
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const hemiRef = useRef<THREE.HemisphereLight>(null);
+  const quality = useQualitySettings();
+  // Far-prop shadows: shrink the sun's shadow camera so distant objects
+  // (which use castShadow) simply fall outside the shadow frustum and
+  // never hit the depth pass. ~3-4× cheaper shadow render on Med/Low.
+  const shadowFar = quality.farShadows ? 200 : 90;
+  const shadowExtent = quality.farShadows ? 60 : 35;
+  const shadowMapDim = quality.shadowMapSize;
 
   useFrame(({ scene }, delta) => {
     // Advance global clock
@@ -73,13 +81,13 @@ export function Atmosphere({ playerPositionRef }: Props) {
         ref={lightRef}
         position={[120, 60, 80]}
         intensity={1.4}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-far={200}
-        shadow-camera-left={-60}
-        shadow-camera-right={60}
-        shadow-camera-top={60}
-        shadow-camera-bottom={-60}
+        castShadow={quality.shadows}
+        shadow-mapSize={[shadowMapDim, shadowMapDim]}
+        shadow-camera-far={shadowFar}
+        shadow-camera-left={-shadowExtent}
+        shadow-camera-right={shadowExtent}
+        shadow-camera-top={shadowExtent}
+        shadow-camera-bottom={-shadowExtent}
         color="#ffe0a0"
       >
         <object3D attach="target" />

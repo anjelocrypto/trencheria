@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 /**
  * HorseGLBModel — CLEAN REBUILD
  * Uses exactly 2 GLBs: mainhorsestanding.glb + mainhorsewalking.glb
@@ -111,7 +112,7 @@ export function HorseGLBModel({ moveSpeed, scale = 1, renderPath = 'unknown' }: 
 
     if (!loggedRef.current) {
       loggedRef.current = true;
-      console.log(`[HorseGLBModel:${renderPath}] AUDIT`, {
+      devLog(`[HorseGLBModel:${renderPath}] AUDIT`, {
         renderPath,
         strategy: 'single-rig-animation-system',
         standBounds: metrics.audit.stand.bounds,

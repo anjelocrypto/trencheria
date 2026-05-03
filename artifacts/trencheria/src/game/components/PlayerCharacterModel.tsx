@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 import { useEffect, useMemo, useRef, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useAnimations, useGLTF } from '@react-three/drei';
@@ -311,9 +312,9 @@ export function PlayerGLBModel({ moveSpeedRef, controllerHalfHeight, isGroundedR
     if (auditLoggedRef.current) return;
     auditLoggedRef.current = true;
     console.groupCollapsed('[Character Audit] GLB integration');
-    console.log('Idle:', idleNorm, 'Walk:', walkNorm, 'Jump:', jumpNorm);
-    console.log('PushupEnter:', pushupEnterNorm, 'PushupLoop:', pushupLoopNorm, 'PushupExit:', pushupExitNorm);
-    console.log('Clips - walk:', walkClipName, 'jump:', jumpClipName, 'pushupEnter:', pushupEnterClipName, 'pushupLoop:', pushupLoopClipName, 'pushupExit:', pushupExitClipName);
+    devLog('Idle:', idleNorm, 'Walk:', walkNorm, 'Jump:', jumpNorm);
+    devLog('PushupEnter:', pushupEnterNorm, 'PushupLoop:', pushupLoopNorm, 'PushupExit:', pushupExitNorm);
+    devLog('Clips - walk:', walkClipName, 'jump:', jumpClipName, 'pushupEnter:', pushupEnterClipName, 'pushupLoop:', pushupLoopClipName, 'pushupExit:', pushupExitClipName);
     console.groupEnd();
   }, [idleNorm, walkNorm, jumpNorm, pushupEnterNorm, pushupLoopNorm, pushupExitNorm, walkClipName, jumpClipName, pushupEnterClipName, pushupLoopClipName, pushupExitClipName]);
 

@@ -70,11 +70,11 @@ function getTrainDist(cfg: TrainConfig, time: number): { distance: number; direc
 function Locomotive() {
   return (
     <group>
-      <mesh geometry={GEO.cyl8} scale={[0.7, 3.5, 0.7]} position={[0, 1.2, 1.0]} rotation={[Math.PI / 2, 0, 0]} material={boilerMat} castShadow />
-      <mesh geometry={GEO.box} scale={[1.8, 1.8, 2.0]} position={[0, 1.4, -1.2]} material={cabMat} castShadow />
-      <mesh geometry={GEO.box} scale={[2.0, 0.12, 2.2]} position={[0, 2.35, -1.2]} material={carRoofMat} castShadow />
-      <mesh geometry={GEO.cyl8} scale={[0.3, 1.0, 0.3]} position={[0, 2.0, 2.2]} material={chimneyMat} castShadow />
-      <mesh geometry={GEO.box} scale={[1.6, 0.3, 0.6]} position={[0, 0.3, 3.0]} material={bodyMat} castShadow />
+      <mesh geometry={GEO.cyl8} scale={[0.7, 3.5, 0.7]} position={[0, 1.2, 1.0]} rotation={[Math.PI / 2, 0, 0]} material={boilerMat} />
+      <mesh geometry={GEO.box} scale={[1.8, 1.8, 2.0]} position={[0, 1.4, -1.2]} material={cabMat} />
+      <mesh geometry={GEO.box} scale={[2.0, 0.12, 2.2]} position={[0, 2.35, -1.2]} material={carRoofMat} />
+      <mesh geometry={GEO.cyl8} scale={[0.3, 1.0, 0.3]} position={[0, 2.0, 2.2]} material={chimneyMat} />
+      <mesh geometry={GEO.box} scale={[1.6, 0.3, 0.6]} position={[0, 0.3, 3.0]} material={bodyMat} />
       <mesh geometry={GEO.sphere8} scale={[0.35, 0.35, 0.35]} position={[0, 2.0, 0.5]} material={detailMat} />
       <mesh geometry={GEO.sphere8} scale={[0.15, 0.15, 0.15]} position={[0, 1.8, 3.0]} material={detailMat} />
       <mesh geometry={GEO.box} scale={[1.6, 0.15, 6.0]} position={[0, 0.15, 0.5]} material={bodyMat} />
@@ -85,8 +85,8 @@ function Locomotive() {
 function PassengerCar({ offset }: { offset: number }) {
   return (
     <group position={[0, 0, offset]}>
-      <mesh geometry={GEO.box} scale={[1.8, 1.5, 5.0]} position={[0, 1.1, 0]} material={carBodyMat} castShadow />
-      <mesh geometry={GEO.box} scale={[2.0, 0.15, 5.2]} position={[0, 1.9, 0]} material={carRoofMat} castShadow />
+      <mesh geometry={GEO.box} scale={[1.8, 1.5, 5.0]} position={[0, 1.1, 0]} material={carBodyMat} />
+      <mesh geometry={GEO.box} scale={[2.0, 0.15, 5.2]} position={[0, 1.9, 0]} material={carRoofMat} />
       {[-1.5, 0.5].map((zOff, i) => (
         <group key={i}>
           <mesh geometry={GEO.box} scale={[0.02, 0.5, 0.6]} position={[0.91, 1.3, zOff]} material={windowMat} />

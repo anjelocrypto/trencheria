@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 import { useEffect, useMemo, useRef, useCallback, useState, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useAnimations, useGLTF } from '@react-three/drei';
@@ -257,7 +258,7 @@ export function OctopusGLBModel({ moveSpeedRef, controllerHalfHeight, isGrounded
   // Enable shadows
   useEffect(() => {
     [idleGltf.scene, walkGltf.scene, runGltf.scene, jumpGltf.scene, hitGltf.scene, fightGltf.scene].forEach(enableMeshShadows);
-    console.log('[Octopus] Clip names — idle:', idleClipName, 'walk:', walkClipName, 'run:', runClipName, 'jump:', jumpClipName, 'hit:', hitClipName, 'fight:', fightClipName);
+    devLog('[Octopus] Clip names — idle:', idleClipName, 'walk:', walkClipName, 'run:', runClipName, 'jump:', jumpClipName, 'hit:', hitClipName, 'fight:', fightClipName);
   }, [idleGltf.scene, walkGltf.scene, runGltf.scene, jumpGltf.scene, hitGltf.scene, fightGltf.scene, idleClipName, walkClipName, runClipName, jumpClipName, hitClipName, fightClipName]);
 
   // Initialize idle (looping)

@@ -1,0 +1,50 @@
+Codex audited latest FPS hardening commit d234846. Good progress, but not fully complete.
+
+Please do a follow-up FPS hardening pass with these exact fixes:
+
+1. Finish the shadow budget
+- shadowMapSize and farShadows are currently defined in useQualitySettings but not actually used by most scene objects.
+- There are still hundreds of castShadow usages.
+- Add a shared shadow policy/helper and disable castShadow on tiny props, far resources, railway props, loot, medium/far remote LOD, and decorative town objects.
+- Only nearby important objects should cast shadows.
+
+2. Fix WorldObjects startup hitch
+- WorldObjects still initializes visible resources with all non-depleted resources.
+- Change initial visible set to empty or nearby-only based on playerPositionRef.
+- Avoid mounting ~900 resources on first world frame.
+
+3. Fix RemotePlayer first-frame LOD
+- RemotePlayer starts every remote as full LOD before first distance sample.
+- Initialize lodTier from player target position vs local player position, so far players never mount full GLBs for one frame.
+
+4. Finish production log cleanup
+- Gate remaining non-error console.log/warn diagnostics behind devLog/devWarn or import.meta.env.DEV.
+- Especially GLB character logs, RailwayTrack/RailwayData logs, RailwayStations warnings, StartupReadiness logs, Remote model audit logs, voice logs, and SceneDiagnostics.
+
+5. Make quality settings user-facing
+- Add Low / Medium / High quality to SettingsPanel, not only F3 perf HUD.
+- Changing quality should clearly explain what changes: DPR, shadows, antialias, far shadows.
+
+6. Handle Canvas antialias correctly
+- Antialias is a WebGL context creation option. If quality changes antialias, remount Canvas with a key based on quality tier or document that AA only changes after reload.
+- DPR/shadows can update live, but antialias needs special handling.
+
+7. Restore opengraph.jpg
+- Latest commit changed public/opengraph.jpg from the restored larger version back to ~35KB.
+- Restore the intended 93594-byte version unless there is a deliberate reason.
+
+8. Verify with real FPS numbers
+- Run F3 / ?perf=1 benchmark in:
+  - open field
+  - Ironhold/main kingdom
+  - forest/resources area
+  - combat
+  - multiplayer with several remotes
+- Report avg FPS, 1% low, draw calls, triangles, heap, and WebGL context losses.
+
+Acceptance:
+- Production build passes.
+- No SQL/Supabase/auth/clan-war/map-geometry changes.
+- No console spam in production.
+- 60 FPS target in normal gameplay, 45+ FPS in Ironhold/combat.
+- No WebGL context loss after entering/leaving game several times.

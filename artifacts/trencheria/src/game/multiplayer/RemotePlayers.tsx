@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 import { forwardRef } from 'react';
 import * as THREE from 'three';
 import { InterpolatedPlayer, LOD_HIDDEN_DISTANCE } from './types';
@@ -16,7 +17,7 @@ function mpAuditRender(label: string, data?: Record<string, unknown>) {
   if (count >= AUDIT_RENDER_LIMIT) return;
   auditRenderCounts[label] = count + 1;
   const suffix = data ? ' — ' + JSON.stringify(data) : '';
-  console.log(`[MP-Audit] ${label}${suffix}`);
+  devLog(`[MP-Audit] ${label}${suffix}`);
 }
 
 export const RemotePlayers = forwardRef<THREE.Group, Props>(function RemotePlayers({ remotePlayers, playerPositionRef }, ref) {

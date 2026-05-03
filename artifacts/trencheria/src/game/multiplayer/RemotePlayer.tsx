@@ -17,15 +17,16 @@ import { RemoteChillhouseModel } from './RemoteChillhouseModel';
 import { PlaceholderRemoteModel } from '../components/PlaceholderCharacterModel';
 import { getFactionByCharacter } from '../systems/FactionData';
 
-// Visible placeholder capsule shown while remote character GLBs are loading
+// Visible placeholder capsule shown while remote character GLBs are loading.
+// No castShadow — this is a transient fallback, not worth a depth-pass cost.
 function RemotePlayerFallback() {
   return (
     <group>
-      <mesh position={[0, 0.9, 0]} castShadow>
+      <mesh position={[0, 0.9, 0]}>
         <capsuleGeometry args={[0.3, 1.2, 4, 8]} />
         <meshStandardMaterial color="#888" transparent opacity={0.6} />
       </mesh>
-      <mesh position={[0, 1.8, 0]} castShadow>
+      <mesh position={[0, 1.8, 0]}>
         <sphereGeometry args={[0.22, 8, 8]} />
         <meshStandardMaterial color="#aaa" transparent opacity={0.6} />
       </mesh>
@@ -33,18 +34,20 @@ function RemotePlayerFallback() {
   );
 }
 
-// LOD capsule for medium-distance players — cheaper than full GLB model
+// LOD capsule for medium-distance players — cheaper than full GLB model.
+// No castShadow: medium-LOD silhouettes are by definition far enough that
+// shadows wouldn't read; cuts shadow-pass cost across all remotes.
 function LODCapsule({ isMounted }: { isMounted: boolean }) {
   if (isMounted) {
     return (
       <group>
         {/* Horse silhouette */}
-        <mesh position={[0, 0.8, 0]} castShadow>
+        <mesh position={[0, 0.8, 0]}>
           <boxGeometry args={[0.8, 1, 1.8]} />
           <meshStandardMaterial color="#8B6914" transparent opacity={0.4} />
         </mesh>
         {/* Rider silhouette */}
-        <mesh position={[0, 2, 0]} castShadow>
+        <mesh position={[0, 2, 0]}>
           <capsuleGeometry args={[0.2, 0.6, 4, 6]} />
           <meshStandardMaterial color="#888" transparent opacity={0.4} />
         </mesh>
@@ -53,7 +56,7 @@ function LODCapsule({ isMounted }: { isMounted: boolean }) {
   }
   return (
     <group>
-      <mesh position={[0, 0.9, 0]} castShadow>
+      <mesh position={[0, 0.9, 0]}>
         <capsuleGeometry args={[0.25, 1, 4, 6]} />
         <meshStandardMaterial color="#888" transparent opacity={0.4} />
       </mesh>
@@ -102,11 +105,24 @@ export function RemotePlayer({ player, playerPositionRef }: Props) {
   const groupRef = useRef<THREE.Group>(null);
   const currentPos = useRef(new THREE.Vector3(...player.renderPosition));
   const currentRot = useRef(player.renderRotation);
+  // Initial distance + LOD tier — pick the right tier on the very first frame
+  // so far-away players never mount full GLBs even for one frame (which
+  // would trigger a useless GLB clone + animation rig setup).
+  const initialTier: LodTier = (() => {
+    const lp = playerPositionRef.current;
+    if (!lp) return 'full';
+    const dx = player.targetPosition[0] - lp.x;
+    const dz = player.targetPosition[2] - lp.z;
+    const d = Math.sqrt(dx * dx + dz * dz);
+    if (d > LOD_MED_OUT) return 'far';
+    if (d > LOD_FULL_OUT) return 'medium';
+    return 'full';
+  })();
   const distanceRef = useRef(0);
   // LOD tier in actual React state so hide/show of <Html> + GLB models
   // re-renders. Throttled to LOD_TICK_MS in useFrame to avoid per-frame churn.
-  const [lodTier, setLodTier] = useState<LodTier>('full');
-  const lodTierRef = useRef<LodTier>('full');
+  const [lodTier, setLodTier] = useState<LodTier>(initialTier);
+  const lodTierRef = useRef<LodTier>(initialTier);
   const lastLodSampleRef = useRef(0);
 
   mpAuditRemote('RemotePlayer mounted', {
@@ -285,15 +301,16 @@ export function RemotePlayer({ player, playerPositionRef }: Props) {
   );
 }
 
-// Visible placeholder for mounted remote players while horse/rider GLBs load
+// Visible placeholder for mounted remote players while horse/rider GLBs load.
+// No castShadow — transient fallback, see RemotePlayerFallback comment.
 function MountedRemoteFallback() {
   return (
     <group>
-      <mesh position={[0, 0.8, 0]} castShadow>
+      <mesh position={[0, 0.8, 0]}>
         <boxGeometry args={[1, 1.2, 2.2]} />
         <meshStandardMaterial color="#8B6914" transparent opacity={0.5} />
       </mesh>
-      <mesh position={[0, 2.2, 0]} castShadow>
+      <mesh position={[0, 2.2, 0]}>
         <capsuleGeometry args={[0.25, 0.8, 4, 8]} />
         <meshStandardMaterial color="#888" transparent opacity={0.5} />
       </mesh>

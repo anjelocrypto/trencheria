@@ -52,19 +52,19 @@ const RailBridgeRenderer = memo(function RailBridgeRenderer({ bridge }: { bridge
     <group position={[px, py, pz]} rotation={[0, rotation, 0]}>
       {/* Slim timber deck on slim iron frame */}
       <mesh geometry={GEO.box} scale={[deckW, deckH, len]}
-        position={[0, 1.0, 0]} material={deckMat} castShadow receiveShadow />
+        position={[0, 1.0, 0]} material={deckMat} receiveShadow />
 
       {/* Rails on deck — match RailwayTrack RAIL_W/RAIL_H */}
       <mesh geometry={GEO.box} scale={[0.08, 0.10, len]}
-        position={[gauge / 2, 1.0 + deckH / 2 + 0.08, 0]} material={railMat} castShadow />
+        position={[gauge / 2, 1.0 + deckH / 2 + 0.08, 0]} material={railMat} />
       <mesh geometry={GEO.box} scale={[0.08, 0.10, len]}
-        position={[-gauge / 2, 1.0 + deckH / 2 + 0.08, 0]} material={railMat} castShadow />
+        position={[-gauge / 2, 1.0 + deckH / 2 + 0.08, 0]} material={railMat} />
 
       {/* Low iron parapet rails (handrail look — not a tall girder wall) */}
       <mesh geometry={GEO.box} scale={[0.06, 0.06, len]}
-        position={[-deckW / 2 - 0.04, 1.0 + parapetH, 0]} material={ironMat} castShadow />
+        position={[-deckW / 2 - 0.04, 1.0 + parapetH, 0]} material={ironMat} />
       <mesh geometry={GEO.box} scale={[0.06, 0.06, len]}
-        position={[deckW / 2 + 0.04, 1.0 + parapetH, 0]} material={ironMat} castShadow />
+        position={[deckW / 2 + 0.04, 1.0 + parapetH, 0]} material={ironMat} />
 
       {/* Slim balusters every 2u (vertical posts under the parapet) */}
       {Array.from({ length: Math.max(2, Math.floor(len / 2)) }, (_, i) => {
@@ -87,7 +87,7 @@ const RailBridgeRenderer = memo(function RailBridgeRenderer({ bridge }: { bridge
           <mesh key={`pier-${i}`} geometry={GEO.box}
             scale={[pierW, pierH, pierW * 0.9]}
             position={[0, -pierH / 2 + 1.0, zOff]}
-            material={stonePierMat} castShadow />
+            material={stonePierMat} />
         );
       })}
     </group>

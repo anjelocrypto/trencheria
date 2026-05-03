@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useAnimations, useGLTF } from '@react-three/drei';
@@ -221,7 +222,7 @@ export function RemoteSoldierModel({ moveSpeed, isRunning, isGrounded, attackAni
 
   const targetHeight = useMemo(() => {
     const h = getSceneHeight(idleScene);
-    console.log('[RemoteSoldier] targetHeight from idle scene:', h);
+    devLog('[RemoteSoldier] targetHeight from idle scene:', h);
     return h;
   }, [idleScene]);
 

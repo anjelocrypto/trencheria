@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 /**
  * RailwayStations — Rich medieval-fantasy station structures at all 7 positions.
  * Hierarchy: capital > large > medium > small.
@@ -238,8 +239,8 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
     // deck stays clear of any high-side terrain. Warns are dev-only.
     const fp = sampleFootprint(sx, sz, 3, 10, trackHeading);
     if (import.meta.env.DEV) {
-      if (fp.hasWater) console.warn('[RailwayStations] Ironhold Central footprint touches water');
-      if (fp.heightDelta > 1.5) console.warn(`[RailwayStations] Ironhold Central footprint uneven (Δ=${fp.heightDelta.toFixed(2)}u)`);
+      if (fp.hasWater) devWarn('[RailwayStations] Ironhold Central footprint touches water');
+      if (fp.heightDelta > 1.5) devWarn(`[RailwayStations] Ironhold Central footprint uneven (Δ=${fp.heightDelta.toFixed(2)}u)`);
     }
     const y = fp.minY;
 
@@ -379,8 +380,8 @@ const StationRenderer = memo(function StationRenderer({ station }: { station: Ra
     // and warn in DEV if the footprint is in water or extremely uneven.
     const fp = sampleFootprint(px, pz, dims.platW / 2, dims.platL / 2, rotation);
     if (import.meta.env.DEV) {
-      if (fp.hasWater) console.warn(`[RailwayStations] ${station.id} footprint touches water at offset (${px.toFixed(1)},${pz.toFixed(1)})`);
-      if (fp.heightDelta > 1.6) console.warn(`[RailwayStations] ${station.id} footprint uneven (Δ=${fp.heightDelta.toFixed(2)}u)`);
+      if (fp.hasWater) devWarn(`[RailwayStations] ${station.id} footprint touches water at offset (${px.toFixed(1)},${pz.toFixed(1)})`);
+      if (fp.heightDelta > 1.6) devWarn(`[RailwayStations] ${station.id} footprint uneven (Δ=${fp.heightDelta.toFixed(2)}u)`);
     }
     const y = fp.minY;
 

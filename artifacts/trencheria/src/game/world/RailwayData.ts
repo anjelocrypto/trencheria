@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 /**
  * RailwayData — Single source of truth for railway routes, stations, and bridges.
  * Phase 1: Two-line cross-hub through Ironhold.
@@ -686,6 +687,6 @@ export function getRailFlattenGrid(): RailFlattenGrid {
     },
   };
 
-  console.log(`[Railway] Flatten grid built: ${cols}x${rows} = ${cols * rows} cells (${(data.byteLength / 1024).toFixed(1)} KB)`);
+  devLog(`[Railway] Flatten grid built: ${cols}x${rows} = ${cols * rows} cells (${(data.byteLength / 1024).toFixed(1)} KB)`);
   return _flattenGrid;
 }

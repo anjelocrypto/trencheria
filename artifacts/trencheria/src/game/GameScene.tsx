@@ -847,7 +847,14 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
         isPlayingEmote={activeEmote !== null}
       />
 
+      {/*
+        key includes antialias because antialias is a WebGL context creation
+        flag — it cannot be changed live, so we remount the Canvas (and
+        therefore recreate the GL context) when the user toggles a tier
+        that flips antialias. DPR / shadows / shadow-map-size update live.
+      */}
       <Canvas
+        key={`q-${quality.antialias ? 'aa' : 'noaa'}`}
         shadows={quality.shadows}
         dpr={quality.dpr}
         camera={{ fov: 55, near: 0.5, far: 1500, position: [0, 10, 15] }}

@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { loadWalletSession, WalletSession } from '../hooks/usePlayerAccount';
 import { supabase } from '@/integrations/supabase/client';
 import { validateDisplayName, NAME_MIN_LENGTH, NAME_MAX_LENGTH } from '../utils/profanityFilter';
+import { useQualitySettings, QualityTier } from '../hooks/useQualitySettings';
 
 interface Props {
   open: boolean;
@@ -31,6 +32,7 @@ export function SettingsPanel({ open, onClose, currentDisplayName, onNameUpdated
   const [nameError, setNameError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const quality = useQualitySettings();
 
   // Load wallet session on open
   useEffect(() => {
@@ -327,6 +329,50 @@ export function SettingsPanel({ open, onClose, currentDisplayName, onNameUpdated
             </p>
           </div>
         )}
+
+        {/* Graphics Quality */}
+        <div className="mb-4 px-4 py-3 rounded-lg" style={{
+          background: 'hsla(0,0%,100%,0.02)',
+          border: '1px solid hsla(0,0%,100%,0.05)',
+        }}>
+          <div style={{
+            fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.1em', color: 'hsl(40,15%,45%)', marginBottom: 8,
+          }}>
+            🎨 Graphics Quality
+          </div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            {(['low', 'medium', 'high'] as QualityTier[]).map(t => (
+              <button
+                key={t}
+                onClick={() => quality.setTier(t)}
+                className="flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all"
+                style={{
+                  background: quality.tier === t
+                    ? 'linear-gradient(135deg, hsl(35,60%,45%), hsl(30,50%,35%))'
+                    : 'hsla(0,0%,100%,0.04)',
+                  color: quality.tier === t ? 'hsl(40,30%,90%)' : 'hsl(40,15%,55%)',
+                  border: quality.tier === t
+                    ? '1px solid hsla(40,30%,50%,0.5)'
+                    : '1px solid hsla(0,0%,100%,0.08)',
+                }}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+          <ul className="space-y-1" style={{ fontSize: 10, color: 'hsl(40,15%,45%)' }}>
+            <li>• <span style={{ color: 'hsl(40,15%,55%)' }}>DPR cap</span>: {quality.dpr[1]}x{quality.tier === 'high' ? ' (sharp on Retina)' : quality.tier === 'medium' ? ' (balanced)' : ' (lowest, fastest)'}</li>
+            <li>• <span style={{ color: 'hsl(40,15%,55%)' }}>Anti-aliasing</span>: {quality.antialias ? 'on (smoother edges)' : 'off (faster)'}</li>
+            <li>• <span style={{ color: 'hsl(40,15%,55%)' }}>Shadows</span>: {quality.shadows ? `on (${quality.shadowMapSize}×${quality.shadowMapSize} map)` : 'off (big perf win)'}</li>
+            <li>• <span style={{ color: 'hsl(40,15%,55%)' }}>Far shadows</span>: {quality.farShadows ? 'on (full sun frustum)' : 'off (smaller, faster shadow camera)'}</li>
+          </ul>
+          {!quality.antialias ? null : (
+            <div style={{ marginTop: 6, fontSize: 9, color: 'hsl(40,15%,40%)', fontStyle: 'italic' }}>
+              Note: changing anti-aliasing recreates the WebGL view (the screen will briefly flash).
+            </div>
+          )}
+        </div>
 
         {/* Name Rules Info */}
         <div className="px-4 py-3 rounded-lg" style={{

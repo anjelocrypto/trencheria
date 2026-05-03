@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 /**
  * StartupReadiness — tracks real loading milestones from inside the R3F Canvas.
  * 
@@ -45,7 +46,7 @@ export function StartupReadiness({ onReady }: Props) {
     // have had time to resolve — not just the first few empty frames.
     if (frameCount.current >= MIN_STABLE_FRAMES && elapsed >= MIN_ELAPSED_MS) {
       fired.current = true;
-      console.log(`[Startup] Scene ready after ${frameCount.current} frames, ${elapsed}ms`);
+      devLog(`[Startup] Scene ready after ${frameCount.current} frames, ${elapsed}ms`);
       onReady();
     }
   });
@@ -57,7 +58,7 @@ export function StartupReadiness({ onReady }: Props) {
     const t = setTimeout(() => {
       if (fired.current) return;
       fired.current = true;
-      console.warn(`[Startup] Force-ready after ${HARD_FAILSAFE_MS}ms (useFrame frames=${frameCount.current}); scene may still be hydrating.`);
+      devWarn(`[Startup] Force-ready after ${HARD_FAILSAFE_MS}ms (useFrame frames=${frameCount.current}); scene may still be hydrating.`);
       onReady();
     }, HARD_FAILSAFE_MS);
     return () => clearTimeout(t);

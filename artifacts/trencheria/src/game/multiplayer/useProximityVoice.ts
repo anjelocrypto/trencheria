@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 /**
  * Proximity Voice Chat — WebRTC peer-to-peer audio with Supabase signaling.
  *
@@ -41,7 +42,7 @@ function voiceLog(label: string, data?: Record<string, unknown>) {
   if (c >= 8) return;
   vLog[label] = c + 1;
   const s = data ? ' — ' + JSON.stringify(data) : '';
-  console.log(`[Voice] ${label}${s}`);
+  devLog(`[Voice] ${label}${s}`);
 }
 
 interface PeerEntry {

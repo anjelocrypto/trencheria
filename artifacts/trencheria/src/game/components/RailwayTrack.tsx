@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 /**
  * RailwayTrack — Static BufferGeometry built with direct typed-array writes.
  * NO .clone(), NO mergeGeometries(), NO useFrame. Minimal heap footprint.
@@ -282,7 +283,7 @@ function buildDirectGeometry(wps: RailwayWaypoint[]): TrackGeos {
   const totalBytes = (railPos.byteLength + railNor.byteLength + railIdx.byteLength +
     ballPos.byteLength + ballNor.byteLength + ballIdx.byteLength +
     slpPos.byteLength + slpNor.byteLength + slpIdx.byteLength);
-  console.log(`[RailwayTrack] Direct geometry: ${segCount} segs, ${slpBox} sleepers, ${totalVerts} verts, ${(totalBytes / 1024).toFixed(0)} KB`);
+  devLog(`[RailwayTrack] Direct geometry: ${segCount} segs, ${slpBox} sleepers, ${totalVerts} verts, ${(totalBytes / 1024).toFixed(0)} KB`);
 
   return { rails, sleepers, ballast };
 }
@@ -296,9 +297,9 @@ const StaticTrackLine = memo(function StaticTrackLine({
 
   return (
     <group name={`track-${name}`}>
-      <mesh geometry={geo.rails} material={railMat} castShadow />
+      <mesh geometry={geo.rails} material={railMat} />
       <mesh geometry={geo.ballast} material={ballastMat} />
-      <mesh geometry={geo.sleepers} material={sleeperMat} castShadow />
+      <mesh geometry={geo.sleepers} material={sleeperMat} />
     </group>
   );
 });

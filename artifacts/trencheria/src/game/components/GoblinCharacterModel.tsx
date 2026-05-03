@@ -1,3 +1,4 @@
+import { devLog, devWarn } from '../utils/devLog';
 import { useEffect, useMemo, useRef, useCallback, useState, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useAnimations, useGLTF } from '@react-three/drei';
@@ -260,8 +261,8 @@ export function GoblinGLBModel({ moveSpeedRef, controllerHalfHeight, isGroundedR
   // Enable shadows + debug
   useEffect(() => {
     [idleGltf.scene, walkGltf.scene, runGltf.scene, jumpGltf.scene, getHitGltf.scene, fightGltf.scene].forEach(enableMeshShadows);
-    console.log('[Goblin] Clip names — idle:', idleClipName, 'walk:', walkClipName, 'run:', runClipName, 'jump:', jumpClipName, 'hit:', hitClipName);
-    console.log('[LocalGoblin] canonicalHeight:', canonicalHeight, 'idleScale:', idleNorm.scale, 'idleAnchor:', idleNorm.modelAnchorOffset, 'idleYaw:', idleNorm.yawCorrection, 'controllerGroundOffset:', idleNorm.controllerGroundOffset);
+    devLog('[Goblin] Clip names — idle:', idleClipName, 'walk:', walkClipName, 'run:', runClipName, 'jump:', jumpClipName, 'hit:', hitClipName);
+    devLog('[LocalGoblin] canonicalHeight:', canonicalHeight, 'idleScale:', idleNorm.scale, 'idleAnchor:', idleNorm.modelAnchorOffset, 'idleYaw:', idleNorm.yawCorrection, 'controllerGroundOffset:', idleNorm.controllerGroundOffset);
   }, [idleGltf.scene, walkGltf.scene, runGltf.scene, jumpGltf.scene, getHitGltf.scene, fightGltf.scene, idleClipName, walkClipName, runClipName, jumpClipName, hitClipName]);
 
   // Initialize idle (looping)
