@@ -30,3 +30,8 @@ externalPort = 80
 [[ports]]
 localPort = 24952
 externalPort = 3000
+
+[userenv]
+
+[userenv.production]
+ALLOWED_ORIGINS = "https://trencheria.com,https://www.trencheria.com"
