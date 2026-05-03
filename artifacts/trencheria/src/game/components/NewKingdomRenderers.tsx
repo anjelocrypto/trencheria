@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { SettlementDef } from '../world/RegionData';
 import { GEO, MAT } from '../world/SettlementPieces';
-import { sampleFootprint } from '../systems/Grounding';
+import { sampleFootprint, WATER_LEVEL_Y } from '../systems/Grounding';
 import {
   FORTIFIED_CITY_HOUSES,
   RIVER_TOWN_HOUSES,
@@ -95,7 +95,7 @@ export function FortifiedCity({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
   // Anchor to lowest corner of the ±45 wall ring so the city base never floats.
   const fp = sampleFootprint(cx, cz, 45, 45, 0);
-  const y = fp.minY;
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
 
   return (
     <group position={[cx, y, cz]}>
@@ -191,7 +191,7 @@ export function RiverTown({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
   // Anchor to lowest corner of the ±25 wall ring so the town deck never floats.
   const fp = sampleFootprint(cx, cz, 25, 25, 0);
-  const y = fp.minY;
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
 
   return (
     <group position={[cx, y, cz]}>
@@ -284,7 +284,7 @@ export function MountainHold({ def }: { def: SettlementDef }) {
   // Anchor to the LOWEST corner of the outer wall footprint so the 50×50 stone
   // platform never floats over noise residue inside the plateau zone.
   const fp = sampleFootprint(cx, cz, 25, 25, 0);
-  const y = fp.minY;
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
 
   return (
     <group position={[cx, y, cz]}>
@@ -376,7 +376,7 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
   // dip. Was previously raw getTerrainHeight(cx, cz) which sampled a
   // single noisy point and let pieces clip the ground at footprint edges.
   const fp = sampleFootprint(cx, cz, 27, 27, 0);
-  const y = fp.minY;
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
 
   return (
     <group position={[cx, y, cz]}>
@@ -476,7 +476,7 @@ export function TradeCity({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
   // Anchor to lowest corner of the wall ring so the trade-city base never floats.
   const fp = sampleFootprint(cx, cz, 40, 35, 0);
-  const y = fp.minY;
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
 
   return (
     <group position={[cx, y, cz]}>

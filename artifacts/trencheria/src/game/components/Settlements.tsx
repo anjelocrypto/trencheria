@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { SETTLEMENTS, SettlementDef } from '../world/RegionData';
 import { GEO, MAT, seededRng } from '../world/SettlementPieces';
 import { getTerrainHeight } from './Terrain';
+import { sampleFootprint, WATER_LEVEL_Y } from '../systems/Grounding';
 
 interface Props {
   playerPositionRef: React.RefObject<THREE.Vector3>;
@@ -458,7 +459,11 @@ function Brazier({ pos }: { pos: [number, number, number] }) {
 
 function CapitalCity({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  // Anchor to lowest corner of the ±35 outer ring so the capital base never
+  // floats. Floor-clamped above water level so kingdoms placed near water
+  // never visually submerge.
+  const fp = sampleFootprint(cx, cz, 35, 35, 0);
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
   const rng = seededRng(7777);
 
   const houses = useMemo(() => {
@@ -699,7 +704,8 @@ function CapitalCity({ def }: { def: SettlementDef }) {
 
 function FarmingVillage({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  const fp = sampleFootprint(cx, cz, 25, 25, 0);
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
   const rng = seededRng(3333);
 
   return (
@@ -830,7 +836,9 @@ function FarmingVillage({ def }: { def: SettlementDef }) {
 
 function MilitaryFort({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  // Anchor to lowest corner of the ±20 wall perimeter.
+  const fp = sampleFootprint(cx, cz, 22, 22, 0);
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
 
   return (
     <group position={[cx, y, cz]}>
@@ -954,7 +962,8 @@ function MilitaryFort({ def }: { def: SettlementDef }) {
 
 function RuinedCity({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  const fp = sampleFootprint(cx, cz, 38, 38, 0);
+  const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
   const rng = seededRng(9999);
 
   return (
