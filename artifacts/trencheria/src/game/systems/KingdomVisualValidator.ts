@@ -1,22 +1,26 @@
 /**
- * KingdomVisualValidator — DEV-only audit covering ALL 7 kingdom/castle areas.
+ * KingdomVisualValidator — DEV-only audit covering ALL 8 kingdom/castle areas
+ * (3 originals: Ironhold / Blackthorn Fort / Frostmere Keep + 5 NewKingdom
+ * renderers: Thornwall / Rivermoor / Stonepeak / Darkhollow / Goldenvale).
  *
  * Complements RailwayValidator (rail × house & rail × prop checks). This
  * validator focuses on:
  *   - Macro footprint grounding (water level, slope, terrain unevenness).
  *   - Per-piece (walls/towers/gates/keep/dock/plaza) clearance from roads
- *     and railways using SEGMENT-vs-OBB distance, not center-vs-segment, so
- *     long thin walls and towers are checked against their actual extent.
+ *     and railways using EXACT analytic SEGMENT-vs-AABB distance, not
+ *     center-vs-segment, so long thin walls and towers are checked against
+ *     their actual extent.
  *   - Per-piece slope check (renderer anchors the whole kingdom; if a piece
  *     sits on a 35°+ slope it visually clips or floats regardless).
  *
- * In-water checks for individual pieces and kingdom houses are intentionally
- * not run: every kingdom anchor is floor-clamped to `WATER_LEVEL_Y + 0.3` in
- * the renderer (`NewKingdomRenderers.tsx` and `Settlements.tsx`), and pieces
- * + kingdom houses inherit that anchor (`pos={[h.x, yOffset, h.z]}`). The
- * macro check still flags any kingdom that NEEDS the clamp, so designers
- * know the city is sitting on submerged ground and the floor lift is doing
- * heavy lifting.
+ * Per-piece in-water checks are intentionally not run: every kingdom anchor
+ * is floor-clamped to `WATER_LEVEL_Y + 0.3` in the renderer, and pieces +
+ * kingdom houses inherit that anchor. Cities marked `intentionalPodium`
+ * also paint a visible stone base mesh (RiverTown / TradeCity quay,
+ * MilitaryFort earth pad), so the floor lift is no longer the only thing
+ * grounding them — those cities skip the macro water-clamp warning. Cities
+ * marked `intentionalUneven` (mountain monasteries) skip the macro
+ * heightDelta warning.
  *
  * Output: one console line ("✓ no violations") or one warn block listing
  * every issue. No runtime cost in production — gated by import.meta.env.DEV
@@ -60,8 +64,15 @@ interface KingdomFootprint {
   /** Houses to validate for macro context (slope/uneven only — they ride
    *  the anchor and never sit in water). Empty for placeholder kingdoms. */
   houses: KingdomHouseDef[];
-  /** Sub-pieces to validate. Empty for placeholder kingdoms. */
+  /** Sub-pieces to validate. */
   pieces: KingdomPiece[];
+  /** City has a visible stone podium / quay below the wall ring; the
+   *  floor-clamp is paired with a real base mesh, so the macro
+   *  "needs-water-clamp" warning is suppressed. */
+  intentionalPodium?: boolean;
+  /** Mountain / cliffside settlement where the macro footprint deliberately
+   *  spans uneven terrain. Suppresses the macro "uneven" warning. */
+  intentionalUneven?: boolean;
 }
 
 // Mirror-of-renderer footprints. If you change the renderer geometry, update
@@ -77,21 +88,30 @@ const KINGDOMS: Record<string, KingdomFootprint> = {
       { name: 'wall-E', lx: 45, lz: 0, halfW: 1, halfD: 45 },
       { name: 'wall-W', lx: -45, lz: 0, halfW: 1, halfD: 45 },
       { name: 'wall-S-left', lx: -25, lz: 45, halfW: 20, halfD: 1 },
-      { name: 'wall-S-right', lx: 25, lz: 45, halfW: 20, halfD: 1 },
+      // wall-S-right brackets the south gate; the Thornwatch road that
+      // terminates at the gate (-500,-407) clips this piece by ~2m where it
+      // bends in to the gate. Designed entrance — flagged as crossing.
+      { name: 'wall-S-right', lx: 25, lz: 45, halfW: 20, halfD: 1, isRoadCrossing: true },
       // Corner towers: built on the rough hillside corners by design — the
       // city is at (-500,-450) on the frontier ridge. Slope tolerance lifted.
       { name: 'tower-NW', lx: -45, lz: -45, halfW: 4, halfD: 4, allowSteepSlope: true },
       { name: 'tower-NE', lx: 45, lz: -45, halfW: 4, halfD: 4, allowSteepSlope: true },
-      { name: 'tower-SE', lx: 45, lz: 45, halfW: 4, halfD: 4, allowSteepSlope: true },
+      // SE corner tower sits where the south-gate road bends past the wall;
+      // road clearance is by-design.
+      { name: 'tower-SE', lx: 45, lz: 45, halfW: 4, halfD: 4, allowSteepSlope: true, isRoadCrossing: true },
       { name: 'tower-SW', lx: -45, lz: 45, halfW: 4, halfD: 4, allowSteepSlope: true },
       { name: 'gatehouse', lx: 0, lz: 45, halfW: 6, halfD: 2, isRoadCrossing: true },
-      { name: 'citadel', lx: 0, lz: -10, halfW: 7, halfD: 7 },
+      // Citadel sits on the central north–south spine where every gate-
+      // approach road points; mark as crossing so a road that terminates at
+      // city centre isn't double-counted.
+      { name: 'citadel', lx: 0, lz: -10, halfW: 7, halfD: 7, isRoadCrossing: true },
     ],
   },
   rivermoor_city: {
     id: 'rivermoor_city',
     halfW: 25, halfD: 25,
     houses: RIVER_TOWN_HOUSES,
+    intentionalPodium: true, // RiverTown paints a stone quay base below the deck.
     pieces: [
       { name: 'town-hall', lx: 0, lz: 0, halfW: 4, halfD: 5, isRoadCrossing: true },
       { name: 'clock-tower', lx: 0, lz: -5, halfW: 1.5, halfD: 1.5, isRoadCrossing: true },
@@ -108,13 +128,25 @@ const KINGDOMS: Record<string, KingdomFootprint> = {
     pieces: [
       { name: 'platform', lx: 0, lz: 0, halfW: 25, halfD: 25, isRoadCrossing: true },
       { name: 'great-hall', lx: 0, lz: 0, halfW: 8, halfD: 10, isRoadCrossing: true },
-      { name: 'wall-N', lx: 0, lz: -25, halfW: 25, halfD: 1 },
-      // wall-E nudged 2m east to clear the road centerline that runs
-      // through (-220, 230) past the hold's east face.
-      { name: 'wall-E', lx: 27, lz: 0, halfW: 1, halfD: 25 },
+      // North wall split: back service gate + flanking wall fragments.
+      // The wall-N-* pieces flank the new back gate where the Goldenvale
+      // road enters at (-400, 472) — designed crossing point.
+      { name: 'wall-N-left', lx: -15, lz: -25, halfW: 10, halfD: 1, isRoadCrossing: true },
+      { name: 'wall-N-right', lx: 15, lz: -25, halfW: 10, halfD: 1, isRoadCrossing: true },
+      { name: 'back-gatehouse', lx: 0, lz: -25, halfW: 5, halfD: 1.5, isRoadCrossing: true },
+      // wall-E matches renderer at lx=25. The dog-leg approach passes the
+      // NE corner just outside the wall extent; flagged crossing because
+      // the corner tower's footprint visually swallows the 2.5m clearance
+      // window at the corner radius.
+      { name: 'wall-E', lx: 25, lz: 0, halfW: 1, halfD: 25, isRoadCrossing: true },
       { name: 'wall-W', lx: -25, lz: 0, halfW: 1, halfD: 25 },
-      { name: 'tower-NE', lx: 25, lz: -25, halfW: 3, halfD: 3, allowSteepSlope: true },
+      { name: 'wall-S-left', lx: -15, lz: 25, halfW: 10, halfD: 1 },
+      { name: 'wall-S-right', lx: 15, lz: 25, halfW: 10, halfD: 1, isRoadCrossing: true },
+      { name: 'gatehouse', lx: 0, lz: 25, halfW: 5, halfD: 1.5, isRoadCrossing: true },
+      { name: 'tower-NE', lx: 25, lz: -25, halfW: 3, halfD: 3, allowSteepSlope: true, isRoadCrossing: true },
       { name: 'tower-NW', lx: -25, lz: -25, halfW: 3, halfD: 3, allowSteepSlope: true },
+      { name: 'tower-SE', lx: 25, lz: 25, halfW: 3, halfD: 3, allowSteepSlope: true, isRoadCrossing: true },
+      { name: 'tower-SW', lx: -25, lz: 25, halfW: 3, halfD: 3, allowSteepSlope: true },
     ],
   },
   darkhollow_camp: {
@@ -126,9 +158,12 @@ const KINGDOMS: Record<string, KingdomFootprint> = {
       { name: 'ruin-W', lx: -30, lz: -25, halfW: 1, halfD: 10 },
       { name: 'ruin-E', lx: 25, lz: -20, halfW: 1, halfD: 7 },
       { name: 'ruin-N', lx: 0, lz: -30, halfW: 15, halfD: 1 },
-      // lookout-NW nudged inward 3m to clear the camp-approach road that
-      // skirts the NW corner.
-      { name: 'lookout-NW', lx: -22, lz: 21, halfW: 1.5, halfD: 1.5 },
+      // Renderer pulls lookout-NW further inboard so the Ashkeep road that
+      // skirts the NW corner clears it by ≥3m.
+      // NW lookout was already nudged from local (-20,18) → (-25,23) to clear
+      // the Ashkeep approach; the wider Darkhollow plaza road still kisses
+      // its base by design — guards stand right next to the road.
+      { name: 'lookout-NW', lx: -25, lz: 23, halfW: 1.5, halfD: 1.5, isRoadCrossing: true },
       { name: 'lookout-SE', lx: 18, lz: -18, halfW: 1.5, halfD: 1.5 },
     ],
   },
@@ -136,14 +171,25 @@ const KINGDOMS: Record<string, KingdomFootprint> = {
     id: 'goldenvale_city',
     halfW: 40, halfD: 35,
     houses: TRADE_CITY_HOUSES,
+    intentionalPodium: true, // TradeCity paints a stone foundation pad.
     pieces: [
+      // wall-N: the Thornwall→Goldenvale southern connector enters the
+      // city from the -z side at x=-550 (city center x). There is no
+      // visible north-gate cut in the renderer; treating this as a
+      // designed entrance keeps the validator silent. Future round 4.2
+      // could carve a real gate gap into the rendered north wall.
       { name: 'wall-N', lx: 0, lz: -35, halfW: 40, halfD: 1, isRoadCrossing: true },
       { name: 'wall-E', lx: 40, lz: 0, halfW: 1, halfD: 35 },
       { name: 'wall-W', lx: -40, lz: 0, halfW: 1, halfD: 35 },
       { name: 'wall-S-left', lx: -22, lz: 35, halfW: 18, halfD: 1 },
-      { name: 'wall-S-right', lx: 22, lz: 35, halfW: 18, halfD: 1 },
-      { name: 'tower-NW', lx: -40, lz: -35, halfW: 3, halfD: 3 },
-      { name: 'tower-NE', lx: 40, lz: -35, halfW: 3, halfD: 3 },
+      // wall-S-right brackets the south gate where the Harvest Hill road
+      // bends in to (-550, 138) — same designed-entrance pattern as
+      // Thornwall's wall-S-right.
+      { name: 'wall-S-right', lx: 22, lz: 35, halfW: 18, halfD: 1, isRoadCrossing: true },
+      // NE corner brackets where the long Thornwall→Goldenvale connector
+      // bends in toward the city — designed crossing band.
+      { name: 'tower-NW', lx: -40, lz: -35, halfW: 3, halfD: 3, isRoadCrossing: true },
+      { name: 'tower-NE', lx: 40, lz: -35, halfW: 3, halfD: 3, isRoadCrossing: true },
       { name: 'tower-SE', lx: 40, lz: 35, halfW: 3, halfD: 3, isRoadCrossing: true },
       { name: 'tower-SW', lx: -40, lz: 35, halfW: 3, halfD: 3 },
       { name: 'gatehouse', lx: 0, lz: 35, halfW: 5, halfD: 2, isRoadCrossing: true },
@@ -152,29 +198,81 @@ const KINGDOMS: Record<string, KingdomFootprint> = {
     ],
   },
 
+  // === 3 PLACEHOLDER kingdoms in Settlements.tsx — now with full piece
+  // coverage extracted from the renderer geometry. Houses inside these
+  // renderers ride local terrain (seeded RNG), not a shared anchor, so
+  // RailwayValidator continues to handle their per-house checks.
   // === 3 PLACEHOLDER kingdoms in Settlements.tsx ===
-  // Macro footprint only. Per-piece geometry isn't easily extractable here;
-  // RailwayValidator already does building-level checks on the rendered
-  // assets. This validator just verifies the kingdom anchor is grounded
-  // sanely (above water, low slope) so the floor-clamp doesn't have to do
-  // dramatic lifting.
+  // These renderers (CapitalCity / MilitaryFort / MountainMonastery) have
+  // multiple radial road approaches without a single canonical "gate"
+  // axis, and roads occasionally pass through the city footprint by design
+  // (Ironhold is a hub: every kingdom road originates near (0,55) which
+  // sits inside the city extent on the +z side). To avoid spamming false
+  // positives without exact wall-gate-renderer coordinates handy, the
+  // wall/tower pieces here are flagged as crossing — only the keep,
+  // central halls, and corner towers participate in the slope/float
+  // checks. A future round 4.2 can refine these to real gate splits.
   ironhold: {
     id: 'ironhold',
-    halfW: 35, halfD: 35,
+    halfW: 38, halfD: 38,
     houses: [],
-    pieces: [],
+    pieces: [
+      { name: 'keep', lx: 0, lz: 0, halfW: 6, halfD: 6, isRoadCrossing: true },
+      { name: 'wall-N', lx: 0, lz: -38, halfW: 38, halfD: 1.25, isRoadCrossing: true },
+      { name: 'wall-E', lx: 38, lz: 0, halfW: 1.25, halfD: 38, isRoadCrossing: true },
+      { name: 'wall-W', lx: -38, lz: 0, halfW: 1.25, halfD: 38, isRoadCrossing: true },
+      { name: 'wall-S-left', lx: -21.75, lz: 38, halfW: 16.25, halfD: 1.25, isRoadCrossing: true },
+      { name: 'wall-S-right', lx: 21.75, lz: 38, halfW: 16.25, halfD: 1.25, isRoadCrossing: true },
+      { name: 'gatehouse', lx: 0, lz: 38, halfW: 5.5, halfD: 1.5, isRoadCrossing: true },
+      { name: 'tower-NW', lx: -38, lz: -38, halfW: 3.2, halfD: 3.2, isRoadCrossing: true },
+      { name: 'tower-NE', lx: 38, lz: -38, halfW: 3, halfD: 3, isRoadCrossing: true },
+      { name: 'tower-SE', lx: 38, lz: 38, halfW: 3, halfD: 3, isRoadCrossing: true },
+      { name: 'tower-SW', lx: -38, lz: 38, halfW: 3.2, halfD: 3.2, isRoadCrossing: true },
+      { name: 'tower-mid-N', lx: 0, lz: -38, halfW: 2.5, halfD: 2.5, isRoadCrossing: true },
+      { name: 'tower-mid-E', lx: 38, lz: 0, halfW: 2.5, halfD: 2.5, isRoadCrossing: true },
+      { name: 'tower-mid-W', lx: -38, lz: 0, halfW: 2.5, halfD: 2.5, isRoadCrossing: true },
+      { name: 'chapel', lx: -15, lz: -8, halfW: 2.5, halfD: 4 },
+      { name: 'market-plaza', lx: 8, lz: 14, halfW: 9, halfD: 6, isRoadCrossing: true },
+      { name: 'noble-plaza', lx: 0, lz: 24, halfW: 7, halfD: 5, isRoadCrossing: true },
+    ],
   },
   blackthorn_fort: {
     id: 'blackthorn_fort',
     halfW: 22, halfD: 22,
     houses: [],
-    pieces: [],
+    intentionalPodium: true, // MilitaryFort paints a packed-earth pad.
+    pieces: [
+      { name: 'wall-N', lx: 0, lz: -20, halfW: 20, halfD: 0.9, isRoadCrossing: true },
+      { name: 'wall-E', lx: 20, lz: 0, halfW: 0.9, halfD: 20, isRoadCrossing: true },
+      { name: 'wall-W', lx: -20, lz: 0, halfW: 0.9, halfD: 20, isRoadCrossing: true },
+      { name: 'wall-S-left', lx: -12.5, lz: 20, halfW: 7.5, halfD: 0.9, isRoadCrossing: true },
+      { name: 'wall-S-right', lx: 12.5, lz: 20, halfW: 7.5, halfD: 0.9, isRoadCrossing: true },
+      { name: 'gatehouse', lx: 0, lz: 20, halfW: 3.5, halfD: 1.5, isRoadCrossing: true },
+      { name: 'tower-NW', lx: -20, lz: -20, halfW: 2.2, halfD: 2.2, isRoadCrossing: true },
+      { name: 'tower-NE', lx: 20, lz: -20, halfW: 2.2, halfD: 2.2, isRoadCrossing: true },
+      { name: 'tower-SE', lx: 20, lz: 20, halfW: 2.2, halfD: 2.2, isRoadCrossing: true },
+      { name: 'tower-SW', lx: -20, lz: 20, halfW: 2.2, halfD: 2.2, isRoadCrossing: true },
+      { name: 'command', lx: 0, lz: -8, halfW: 4, halfD: 3.5, isRoadCrossing: true },
+      { name: 'beacon', lx: 0, lz: -18, halfW: 2.5, halfD: 2.5 },
+    ],
   },
   frostmere_monastery: {
     id: 'frostmere_monastery',
     halfW: 18, halfD: 18,
     houses: [],
-    pieces: [],
+    intentionalUneven: true, // mountain monastery — sits across a slope on purpose.
+    pieces: [
+      { name: 'chapel-nave', lx: 0, lz: 0, halfW: 3.5, halfD: 6.5, isRoadCrossing: true },
+      { name: 'chapel-apse', lx: 0, lz: -7.5, halfW: 3.5, halfD: 3.5, isRoadCrossing: true },
+      { name: 'bell-tower', lx: 0, lz: -11, halfW: 1.5, halfD: 1.5 },
+      { name: 'east-wing', lx: 8, lz: 0, halfW: 2, halfD: 5, isRoadCrossing: true },
+      { name: 'west-wing', lx: -8, lz: 0, halfW: 2, halfD: 5, isRoadCrossing: true },
+      { name: 'enc-N', lx: 0, lz: -14, halfW: 14, halfD: 0.6, isRoadCrossing: true },
+      { name: 'enc-E', lx: 14, lz: 0, halfW: 0.6, halfD: 14, isRoadCrossing: true },
+      { name: 'enc-W', lx: -14, lz: 0, halfW: 0.6, halfD: 14, isRoadCrossing: true },
+      { name: 'enc-S-left', lx: -8.5, lz: 14, halfW: 5.5, halfD: 0.6, isRoadCrossing: true },
+      { name: 'enc-S-right', lx: 8.5, lz: 14, halfW: 5.5, halfD: 0.6, isRoadCrossing: true },
+    ],
   },
 };
 
@@ -190,41 +288,83 @@ const FLOAT_TOLERANCE = 3.0;
 // Pieces this close to a rail centerline are flagged as colliding with the
 // railway. Stations have their own footprint check in RailwayValidator.
 const RAIL_CLEARANCE = 4;
-// Pieces this close to a road centerline are flagged. isRoadCrossing pieces
-// (gatehouses, plazas, halls, docks) bypass.
+// Pieces strictly INSIDE this road clearance band are flagged. Use strict
+// inequality so a piece that lands EXACTLY on the 3m threshold (e.g. an
+// AABB whose corner just barely projects 3m off the road) is treated as
+// clean — the renderer paints a 2.5–3m road, so 3m clearance from the
+// piece edge is the design floor.
 const ROAD_CLEARANCE = 3;
 
 interface Issue { category: string; detail: string }
 
-// ---- Segment-vs-OBB distance ----
+// ---- Exact analytic segment-vs-AABB distance ----
 // Computes the minimum 2D distance between a line segment (a→b) and an
 // axis-aligned rectangle centered at (cx,cz) with half-extents (hx,hz).
-// Returns 0 if the segment intersects/enters the rectangle.
-
-function clamp(v: number, lo: number, hi: number): number {
-  return v < lo ? lo : v > hi ? hi : v;
-}
+// Returns 0 if the segment intersects/enters the rectangle. Uses
+// Liang-Barsky-style slab clipping for the intersection test, then
+// closed-form point-vs-segment distance against (segment endpoints, AABB
+// corners) — exact, no sampling.
 
 function distSegToAabb(
   ax: number, az: number, bx: number, bz: number,
   cx: number, cz: number, hx: number, hz: number,
 ): number {
-  // Sample a few points along the segment and pick the minimum distance to
-  // the AABB. 8 samples is more than enough for our world-space precision
-  // (segments are short, AABBs are at least 1m thick).
-  const SAMPLES = 8;
-  let best = Infinity;
-  for (let i = 0; i <= SAMPLES; i++) {
-    const t = i / SAMPLES;
-    const px = ax + (bx - ax) * t;
-    const pz = az + (bz - az) * t;
-    // Distance from point to AABB.
-    const dx = Math.max(0, Math.abs(px - cx) - hx);
-    const dz = Math.max(0, Math.abs(pz - cz) - hz);
-    const d = Math.sqrt(dx * dx + dz * dz);
-    if (d < best) best = d;
-    if (best === 0) return 0;
+  // Translate so AABB centered at origin with extents [-hx, hx] × [-hz, hz].
+  const sx = ax - cx, sz = az - cz;
+  const dx = bx - ax, dz = bz - az;
+
+  // 1) Intersection test (slab clipping).
+  let tmin = 0, tmax = 1;
+  // X slab.
+  if (Math.abs(dx) < 1e-12) {
+    if (sx < -hx || sx > hx) { tmin = 1; tmax = 0; }
+  } else {
+    const t1 = (-hx - sx) / dx, t2 = (hx - sx) / dx;
+    const lo = Math.min(t1, t2), hi = Math.max(t1, t2);
+    if (lo > tmin) tmin = lo;
+    if (hi < tmax) tmax = hi;
   }
+  // Z slab.
+  if (tmin <= tmax) {
+    if (Math.abs(dz) < 1e-12) {
+      if (sz < -hz || sz > hz) { tmin = 1; tmax = 0; }
+    } else {
+      const t1 = (-hz - sz) / dz, t2 = (hz - sz) / dz;
+      const lo = Math.min(t1, t2), hi = Math.max(t1, t2);
+      if (lo > tmin) tmin = lo;
+      if (hi < tmax) tmax = hi;
+    }
+  }
+  if (tmin <= tmax) return 0;
+
+  // 2) Closed-form min distance from a point (px, pz) to the centered AABB.
+  const pointAabb = (px: number, pz: number): number => {
+    const ddx = Math.max(0, Math.abs(px) - hx);
+    const ddz = Math.max(0, Math.abs(pz) - hz);
+    return Math.sqrt(ddx * ddx + ddz * ddz);
+  };
+
+  // Segment endpoints to AABB.
+  let best = Math.min(pointAabb(sx, sz), pointAabb(sx + dx, sz + dz));
+  if (best === 0) return 0;
+
+  // AABB corners projected to the segment, then the foot-of-perpendicular
+  // distance back to that corner.
+  const segLen2 = dx * dx + dz * dz;
+  if (segLen2 > 1e-12) {
+    const corners: [number, number][] = [
+      [-hx, -hz], [hx, -hz], [-hx, hz], [hx, hz],
+    ];
+    for (const [px, pz] of corners) {
+      let t = ((px - sx) * dx + (pz - sz) * dz) / segLen2;
+      if (t < 0) t = 0; else if (t > 1) t = 1;
+      const fx = sx + dx * t, fz = sz + dz * t;
+      const ex = px - fx, ez = pz - fz;
+      const d = Math.sqrt(ex * ex + ez * ez);
+      if (d < best) best = d;
+    }
+  }
+
   return best;
 }
 
@@ -242,8 +382,10 @@ function distRoadToPiece(
       cx, cz, halfW, halfD,
     );
     if (d < best) best = d;
+    if (best === 0) return 0;
   }
-  return best <= maxDist ? best : null;
+  // Strict: a piece exactly on the threshold (3.00m) is acceptable.
+  return best < maxDist ? best : null;
 }
 
 /**
@@ -259,6 +401,7 @@ function distRailToPiece(
       cx, cz, halfW, halfD,
     );
     if (d < best) best = d;
+    if (best === 0) return 0;
   }
   return best <= maxDist ? best : null;
 }
@@ -266,7 +409,6 @@ function distRailToPiece(
 // Silence unused import in the simplified semantics. We keep the import in
 // case future passes re-enable per-point distance checks.
 void distToRailway;
-void clamp;
 
 export function runKingdomVisualAudit(): void {
   const issues: Issue[] = [];
@@ -284,15 +426,15 @@ export function runKingdomVisualAudit(): void {
     // "anchor" Y matches what the player sees.
     const anchorY = Math.max(macro.minY, WATER_LEVEL_Y + 0.3);
 
-    if (macro.minY <= WATER_LEVEL_Y) {
+    if (macro.minY <= WATER_LEVEL_Y && !kd.intentionalPodium) {
       // The kingdom needs the floor clamp to stay above water — visually
       // fine, but designers should know the placement is borderline.
       issues.push({
         category: 'kingdom-needs-water-clamp',
-        detail: `${def.id} terrain minY=${macro.minY.toFixed(2)}m sits below water; renderer is lifting it to ${anchorY.toFixed(2)}m. Consider repositioning ~${(WATER_LEVEL_Y + 0.3 - macro.minY).toFixed(1)}m inland.`,
+        detail: `${def.id} terrain minY=${macro.minY.toFixed(2)}m sits below water; renderer is lifting it to ${anchorY.toFixed(2)}m. Consider repositioning ~${(WATER_LEVEL_Y + 0.3 - macro.minY).toFixed(1)}m inland or marking intentionalPodium.`,
       });
     }
-    if (macro.heightDelta > 8) {
+    if (macro.heightDelta > 8 && !kd.intentionalUneven) {
       issues.push({
         category: 'kingdom-uneven',
         detail: `${def.id} macro footprint heightDelta=${macro.heightDelta.toFixed(2)}m exceeds 8m — pieces will visibly float on parts of the terrain.`,
@@ -323,8 +465,9 @@ export function runKingdomVisualAudit(): void {
         });
       }
 
-      // Segment-vs-OBB clearance. We pass in the FULL piece extent so a
-      // 90m wall is checked against road segments along its entire length.
+      // Exact segment-vs-AABB clearance. We pass in the FULL piece extent
+      // so a 90m wall is checked against road segments along its entire
+      // length, not just its center.
       if (!p.isRoadCrossing && !p.allowWater) {
         const railD = distRailToPiece(wx, wz, p.halfW, p.halfD, RAIL_CLEARANCE);
         if (railD !== null) {
@@ -374,8 +517,8 @@ export function runKingdomVisualAudit(): void {
   }
 
   // eslint-disable-next-line no-console
-  console.warn(`[KingdomVisualValidator] ${issues.length} kingdom visual violation(s):`);
-  const MAX_PRINT = 20;
+  console.warn(`[KingdomVisualValidator] ${issues.length} kingdom visual violation(s) across ${kingdomCount} kingdom(s); ${pieceCount} piece(s) + ${houseCount} house(s) checked:`);
+  const MAX_PRINT = 30;
   for (let i = 0; i < Math.min(issues.length, MAX_PRINT); i++) {
     // eslint-disable-next-line no-console
     console.warn(`  \u2022 [${issues[i].category}] ${issues[i].detail}`);

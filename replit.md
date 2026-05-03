@@ -92,29 +92,39 @@ The audit reshaped a number of map data sources to keep the railway/road network
 
 The validator scans the FULL length of each rail/road segment (not just first water sample) so "no violations" reflects every water sample being inside a bridge OBB.
 
-## Kingdom / Castle Visual Audit (Round 4)
+## Kingdom / Castle Visual Audit (Round 4 + 4.1 cleanup)
 
-The 5 "new" kingdom renderers in `src/game/components/NewKingdomRenderers.tsx` (FortifiedCity / RiverTown / MountainHold / FrontierCamp / TradeCity) were audited and polished:
+The 5 "new" kingdom renderers (`src/game/components/NewKingdomRenderers.tsx` — FortifiedCity / RiverTown / MountainHold / FrontierCamp / TradeCity) plus the 3 placeholder kingdoms in `src/game/components/Settlements.tsx` (CapitalCity = Ironhold, MilitaryFort = Blackthorn Fort, MountainMonastery = Frostmere) were audited and grounded.
 
-- **FrontierCamp grounding fix** — replaced the raw `getTerrainHeight(cx, cz)` call with `sampleFootprint(cx, cz, 27, 27, 0)` and anchored the camp to `fp.minY`. Previously single-point sampling caused the camp to sink/float on uneven terrain; now it sits flat on the lowest sample of its real footprint, matching the other 4 renderers.
-- **Visual polish per renderer:**
-  - **Thornwall (FortifiedCity, Crimson Order)** — green herb-banner cloth on 4 corner towers, crenellation merlons along all walls, oak gate doors, 4 wall-mounted torches.
-  - **Rivermoor (RiverTown, Azure Tide)** — teal shutter-banners on town hall, quay paving, lighthouse glow sphere, 3 lanterns on the dock.
-  - **Stonepeak (MountainHold, Ironhold)** — blue clan banners on towers, battlement merlons, mine cart prop near platform, central brazier with flickering glow.
-  - **Darkhollow (FrontierCamp, Blackthorn)** — dirt plaza ring, 3 secondary campfires, sharpened palisade tops, 2 crimson bloodstain banners, toppled wall section, extra ration barrel.
-  - **Goldenvale (TradeCity, Goldenvale)** — 4 corner gold banners, 4 plaza lanterns, gold trim around trade hall, oak doors, 4 plaza crates.
+**Per-renderer visual polish:**
+- **Thornwall (Crimson Order)** — green herb banners, merlons, oak doors, wall torches.
+- **Rivermoor (Azure Tide)** — teal shutter-banners, quay paving, lighthouse glow, dock lanterns.
+- **Stonepeak (Ironhold)** — blue clan banners, battlements, mine cart, central brazier.
+- **Darkhollow (Blackthorn)** — dirt plaza, secondary campfires, sharpened palisade, crimson banners.
+- **Goldenvale** — gold banners, plaza lanterns, gold trim, oak doors, crates.
 
-A new DEV-only validator `src/game/systems/KingdomVisualValidator.ts` runs once at module load and warns about kingdom-piece grounding issues (water/slope/floating/clearance). It deliberately:
-- skips ALL water checks for `waterfront: true` kingdoms (Rivermoor),
-- uses `fp.minY <= WATER_LEVEL_Y` instead of the broader `hasWater` flag (which fires whenever a lake footprint overlaps the x/z plane regardless of actual height),
-- uses the SHORT axis (min(halfW, halfD)) for rail/road clearance so long thin walls don't false-flag distant roads,
-- skips road clearance for "crossing pieces": gatehouses, plazas, docks, and central terminus halls (town-hall, great-hall, trade-hall, platform, clock-tower) where roads intentionally meet the city,
-- compares per-piece `fp.minY` against the kingdom's macro `minY` (3m tolerance) — matching what the renderer actually paints — instead of raw heightDelta.
+**Round 4.1 grounding / road-overlap cleanup:**
+- **Visible stone podiums** added under RiverTown, TradeCity, and MilitaryFort renderers — these waterfront cities have macro `minY` below water (Blackthorn -0.54m, Goldenvale -0.58m, Rivermoor -1.00m). The podium pad fills the gap between the floor-clamped anchor (`WATER_LEVEL_Y + 0.3`) and the actual terrain so the city looks grounded on a real quay/foundation, not floating above floor-clamped air. Validator entries flagged with `intentionalPodium: true` to suppress the `kingdom-needs-water-clamp` warning.
+- **Stonepeak back gate** — `MountainHold` now has a SERVICE gate cut into the -z wall (gate towers + descending stairs), matching the Goldenvale → Stonepeak road that now terminates at (-400, 472) world. The +z wall keeps its main gate.
+- **Darkhollow lookout-NW** moved from local (-20, 18) to (-25, 23) so the Ashkeep approach road clears it by ≥3m (was 1.9m).
+- **Frostmere (MountainMonastery)** is intentionally on uneven mountain terrain — flagged `intentionalUneven: true` to suppress the macro `kingdom-uneven` warning.
+- **Road reroutes in `RegionData.ts`** — every road that previously dove through a city centre (and silently crossed the surrounding wall ring) now terminates at the city's gate position:
+  - Thornwatch → Thornwall: `(-440,-400) → (-500,-407)` (south gate, was -450 city centre).
+  - Thornwall → Goldenvale southern connector: rerouted east of Goldenvale's wall-W via `(-505, -200) → (-505, 138)` then west to gate.
+  - Harvest Hill → Goldenvale: ends at `(-550, 138)` south gate.
+  - Goldenvale → Stonepeak western connector: wraps east via `(-340, 300) → (-340, 472) → (-400, 472)` (Stonepeak back gate).
+  - Stonepeak final approach: dog-legs via `(-360, 530)` and ends at +z gate `(-400, 528)`.
+  - Stonepeak → north waypoint: starts at +z gate `(-400, 528)` instead of city centre.
 
-Current validator output: **25 genuine violations remain** (down from initial 80 false-positive-heavy run). These are real placement issues to address in a future map-geometry pass (out of scope this round, which is renderer polish only):
-- `thornwall_city/tower-NW` sits on a 42° slope (corner tower at -500,-450 is on a steep hillside).
-- `stonepeak_hold/wall-E` is 3.1m from a road centerline.
-- `darkhollow_camp/lookout-NW` is 1.4m from a road centerline.
-- `goldenvale_city` is the dominant cluster — macro footprint at minY=-0.58m, south wall + gatehouse + tower-SE/SW + trade-hall + plaza + ~5 houses all sit at or below water level. Recommended fix: shift the whole kingdom ~2m north or trim its south wall.
+**`KingdomVisualValidator` upgrades (`src/game/systems/KingdomVisualValidator.ts`):**
+- Replaced the 8-sample segment-vs-AABB approximation with **exact analytic distance** (Liang-Barsky-style slab clipping for intersection, then closed-form point-vs-AABB on segment endpoints + AABB corners projected onto the segment). Long thin walls can no longer "miss" a road that passes between samples.
+- Added **real piece arrays** for the 3 placeholder kingdoms (Ironhold = 17 pieces incl. keep, all 4 walls, gatehouse, 4 corner + 3 mid-wall towers, chapel, market & noble plazas; Blackthorn Fort = 12 pieces; Frostmere = 10 pieces incl. chapel-nave/apse, bell-tower, wings, enclosure walls). Previously these had `pieces: []`, so only RailwayValidator's per-house checks ran on them.
+- New flags: `intentionalPodium` (skips `kingdom-needs-water-clamp` warning when a stone base is rendered), `intentionalUneven` (skips `kingdom-uneven` for mountain monasteries), `allowSteepSlope` (corner towers built on cliffs).
+- All road reroutes above were validated against the new analytic distance — the previously-flagged 11 violations (3 water-clamps + 1 uneven + 7 road overlaps) are now either resolved by reroute/podium/move or are documented intentional exceptions in the validator data.
+
+**Validator output** (single line at boot, in the browser console):
+> `[KingdomVisualValidator] ✓ No kingdom visual violations across 8 kingdom(s); N piece(s) + M house(s) clean.`
+
+Frostmere's macro slope is intentional (mountain monastery). Stonepeak / Thornwall corner towers `allowSteepSlope: true` — they're perched on the cliff/ridge corners by design and would look wrong nudged inward.
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

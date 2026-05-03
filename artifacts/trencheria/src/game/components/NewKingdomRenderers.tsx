@@ -195,6 +195,13 @@ export function RiverTown({ def }: { def: SettlementDef }) {
 
   return (
     <group position={[cx, y, cz]}>
+      {/* Round 4.1 cleanup: visible stone-quay podium pad. The town's macro
+          minY sits ~1m below water in patches; the renderer also floor-clamps
+          to WATER_LEVEL_Y+0.3 but without this pad you'd see the deck float
+          above the lake at the waterfront edges. The pad fills that gap from
+          y=-1.0 up to the deck so the city looks GROUNDED on a real quay. */}
+      <mesh position={[0, -0.4, 0]} geometry={GEO.box}
+        scale={[60, 1.2, 60]} material={MAT.cobble} />
       {/* Waterfront docks — wooden platform */}
       <mesh position={[0, 0.3, -30]} geometry={GEO.box}
         scale={[40, 0.4, 8]} material={MAT.woodDark}  />
@@ -302,8 +309,11 @@ export function MountainHold({ def }: { def: SettlementDef }) {
       <SimpleTower pos={[-10, 3, -12]} h={16} r={3} mat={MAT.stoneDark} />
       <SimpleTower pos={[10, 3, -12]} h={16} r={3} mat={MAT.stoneDark} />
 
-      {/* Walls */}
-      <SimpleWall from={[-25, -25]} to={[25, -25]} h={6} mat={MAT.stoneDark} />
+      {/* Walls — Round 4.1: -z wall now has a SERVICE gate gap so the
+          Goldenvale → Stonepeak road can enter from the south face without
+          plowing through wall geometry. Both gates flanked by gate towers. */}
+      <SimpleWall from={[-25, -25]} to={[-5, -25]} h={6} mat={MAT.stoneDark} />
+      <SimpleWall from={[5, -25]} to={[25, -25]} h={6} mat={MAT.stoneDark} />
       <SimpleWall from={[25, -25]} to={[25, 25]} h={6} mat={MAT.stoneDark} />
       <SimpleWall from={[25, 25]} to={[5, 25]} h={6} mat={MAT.stoneDark} />
       <SimpleWall from={[-5, 25]} to={[-25, 25]} h={6} mat={MAT.stoneDark} />
@@ -315,9 +325,18 @@ export function MountainHold({ def }: { def: SettlementDef }) {
       <SimpleTower pos={[25, 3, 25]} h={10} r={2.5} mat={MAT.stoneDark} />
       <SimpleTower pos={[-25, 3, 25]} h={10} r={2.5} mat={MAT.stoneDark} />
 
-      {/* Gate towers */}
+      {/* +z (front) gate towers */}
       <SimpleTower pos={[-4, 3, 25]} h={9} r={1.8} mat={MAT.stoneDark} />
       <SimpleTower pos={[4, 3, 25]} h={9} r={1.8} mat={MAT.stoneDark} />
+      {/* -z (back / service) gate towers */}
+      <SimpleTower pos={[-4, 3, -25]} h={9} r={1.8} mat={MAT.stoneDark} />
+      <SimpleTower pos={[4, 3, -25]} h={9} r={1.8} mat={MAT.stoneDark} />
+      {/* Service-gate stairs descending the back face toward the
+          Goldenvale road that now terminates at (-400, 472) world. */}
+      {[0, 1, 2, 3, 4].map(i => (
+        <mesh key={`bstair-${i}`} position={[0, i * 0.5, -27 - i * 1.5]}
+          geometry={GEO.box} scale={[6, 0.4, 1.2]} material={MAT.cobble}  />
+      ))}
 
       {/* Inner buildings from shared data */}
       {renderHouses(MOUNTAIN_HOLD_HOUSES, [MAT.stoneDark], [MAT.roofSlate], 'mh', 3)}
@@ -440,8 +459,9 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
         );
       })}
 
-      {/* Lookout towers */}
-      <SimpleTower pos={[-20, 0, 18]} h={8} r={1.5} mat={MAT.woodWeathered} />
+      {/* Lookout towers — Round 4.1: NW lookout pulled inboard 5m so the
+          Ashkeep approach road clears it by ≥3m (was 1.9m). */}
+      <SimpleTower pos={[-25, 0, 23]} h={8} r={1.5} mat={MAT.woodWeathered} />
       <SimpleTower pos={[18, 0, -18]} h={8} r={1.5} mat={MAT.woodWeathered} />
 
       {/* Crimson NemoClaw banners (faction identity) */}
@@ -480,6 +500,12 @@ export function TradeCity({ def }: { def: SettlementDef }) {
 
   return (
     <group position={[cx, y, cz]}>
+      {/* Round 4.1 cleanup: visible stone foundation pad. Macro minY dips
+          to -0.58m at the southern edge; without this pad the floor-clamp
+          alone would leave a visible gap between city floor and natural
+          ground. The pad extends past the wall ring on all sides. */}
+      <mesh position={[0, -0.4, 0]} geometry={GEO.box}
+        scale={[84, 1.2, 74]} material={MAT.stoneWarm}  />
       {/* Ornate walls */}
       <SimpleWall from={[-40, -35]} to={[40, -35]} h={6} mat={MAT.stoneWarm} />
       <SimpleWall from={[40, -35]} to={[40, 35]} h={6} mat={MAT.stoneWarm} />

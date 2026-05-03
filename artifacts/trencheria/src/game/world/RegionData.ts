@@ -294,12 +294,16 @@ export const ROADS: RoadSegment[] = [
   // Ironhold → Thornwall (SW main road, via Western Marches)
   { from: [-155, -125], to: [-280, -240], width: 3.0 },    // Greenmeadow → Western Marches waypoint
   { from: [-280, -240], to: [-440, -400], width: 2.5 },    // Waypoint → Thornwatch outpost
-  { from: [-440, -400], to: [-500, -450], width: 3.0 },    // Thornwatch → Thornwall
+  // Round 4.1 cleanup: terminate at Thornwall south gate (world z=-405) instead
+  // of city centre — was diving NE through wall-E.
+  { from: [-440, -400], to: [-500, -407], width: 3.0 },    // Thornwatch → Thornwall (south gate)
 
   // Ironhold → Goldenvale (W main road)
   { from: [-185, 135], to: [-320, 120], width: 2.5 },      // Ashwood → midpoint
   { from: [-320, 120], to: [-500, 150], width: 2.5 },      // midpoint → Harvest Hill
-  { from: [-500, 150], to: [-550, 100], width: 3.0 },      // Harvest Hill → Goldenvale
+  // Round 4.1 cleanup: end at Goldenvale south gate (world z=138) so the
+  // segment doesn't graze wall-S-right.
+  { from: [-500, 150], to: [-550, 138], width: 3.0 },      // Harvest Hill → Goldenvale (south gate)
 
   // Ironhold → Rivermoor (NE main road, via Frostmere)
   { from: [155, 195], to: [280, 260], width: 2.5 },        // Frostmere → midpoint
@@ -328,23 +332,32 @@ export const ROADS: RoadSegment[] = [
   { from: [-220, 285], to: [-300, 380], width: 2.5 },      // NW climb past river
   { from: [-300, 380], to: [-340, 460], width: 2.5 },      // mountain ascent
   { from: [-340, 460], to: [-360, 510], width: 2.5 },      // around Lake Tarn east-north
-  { from: [-360, 510], to: [-400, 500], width: 3.0 },      // final approach to Stonepeak gate
+  // Round 4.1 cleanup: dog-leg around the NE corner so the road curls
+  // INTO the +z gate face instead of slicing through wall-E.
+  { from: [-360, 510], to: [-360, 530], width: 2.5 },      // approach swing-out (NE)
+  { from: [-360, 530], to: [-400, 528], width: 3.0 },      // final approach to Stonepeak +z gate
 
   // ===== INTER-KINGDOM SECONDARY ROADS =====
-  // Thornwall → Goldenvale (southern connector)
-  { from: [-500, -450], to: [-550, -200], width: 2.0 },    // Thornwall → waypoint
-  { from: [-550, -200], to: [-550, 100], width: 2.0 },     // waypoint → Goldenvale
+  // Thornwall → Goldenvale (southern connector). Round 4.1: terminates at
+  // each city's south gate. Path stays at x=-550 to avoid the small lake
+  // around (-505, 50). The road conceptually enters Goldenvale via the
+  // north wall (no visible gate cut there — wall-N is flagged
+  // isRoadCrossing in the validator since this is a long-standing entrance).
+  { from: [-500, -407], to: [-550, -200], width: 2.0 },    // Thornwall gate → south waypoint
+  { from: [-550, -200], to: [-550, 138], width: 2.0 },     // south waypoint → Goldenvale south gate
 
-  // Goldenvale → Stonepeak (western connector)
-  { from: [-550, 100], to: [-480, 300], width: 2.0 },      // Goldenvale → waypoint
-  { from: [-480, 300], to: [-400, 500], width: 2.0 },      // waypoint → Stonepeak
+  // Goldenvale → Stonepeak (western connector). Round 4.1: terminates at
+  // Stonepeak's NEW back (-z) service gate (-400, 472).
+  { from: [-550, 138], to: [-480, 300], width: 2.0 },      // Goldenvale gate → mountain waypoint
+  { from: [-480, 300], to: [-400, 472], width: 2.0 },      // waypoint → Stonepeak back gate
 
   // Rivermoor → Darkhollow (eastern connector)
   { from: [450, 350], to: [520, 100], width: 2.0 },        // Rivermoor → waypoint
   { from: [520, 100], to: [550, -400], width: 2.0 },       // waypoint → Darkhollow
 
-  // Stonepeak → Rivermoor (northern connector)
-  { from: [-400, 500], to: [0, 550], width: 2.0 },         // Stonepeak → north waypoint
+  // Stonepeak → Rivermoor (northern connector) — Round 4.1: exits the +z
+  // gate at z=528 instead of starting inside the wall ring.
+  { from: [-400, 528], to: [0, 550], width: 2.0 },         // Stonepeak +z gate → north waypoint
   { from: [0, 550], to: [450, 350], width: 2.0 },          // north waypoint → Rivermoor
 ];
 

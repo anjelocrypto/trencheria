@@ -842,6 +842,12 @@ function MilitaryFort({ def }: { def: SettlementDef }) {
 
   return (
     <group position={[cx, y, cz]}>
+      {/* Round 4.1 cleanup: visible packed-earth podium under the fort.
+          Blackthorn's macro minY is -0.54m; the pad grounds the wall ring
+          to the surrounding terrain so it doesn't appear to float after
+          the floor-clamp lifts the anchor to WATER_LEVEL_Y+0.3. */}
+      <mesh position={[0, -0.4, 0]} geometry={GEO.box}
+        scale={[46, 1.2, 46]} material={MAT.cobble} />
       {/* Stone wall perimeter — square fort */}
       <Wall from={[-20, 0, -20]} to={[20, 0, -20]} h={5} thickness={1.8} battlements />
       <Wall from={[20, 0, -20]} to={[20, 0, 20]} h={5} thickness={1.8} battlements />
