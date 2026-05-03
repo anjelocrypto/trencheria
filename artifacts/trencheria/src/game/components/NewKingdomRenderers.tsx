@@ -186,101 +186,235 @@ export function FortifiedCity({ def }: { def: SettlementDef }) {
   );
 }
 
-// ========== RIVER TOWN (Rivermoor) ==========
+// ========== RIVER TOWN (Rivermoor — Octopus kingdom) ==========
+//
+// REDESIGN: replaces the old 60×60×1.2 dark cobble podium with explicit
+// waterfront pieces (pale-stone quay wall, retaining returns, stairs, wooden
+// boardwalk + side piers on visible pilings) so Rivermoor reads as a real
+// river port, not a black slab. Layout puts the inhabited deck on the +z
+// (inland) half; the -z half opens to the water with docks, boats, lighthouse.
+//
+// Grounding: the kingdom anchor is still floor-clamped to WATER_LEVEL_Y+0.3
+// (terrain minY at the lake edge dips below water by patches), but no single
+// hidden mega-box hides that. Each visible piece is sized & coloured for the
+// quay aesthetic.
 export function RiverTown({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  // Anchor to lowest corner of the ±25 wall ring so the town deck never floats.
   const fp = sampleFootprint(cx, cz, 25, 25, 0);
   const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
 
   return (
     <group position={[cx, y, cz]}>
-      {/* Round 4.1 cleanup: visible stone-quay podium pad. The town's macro
-          minY sits ~1m below water in patches; the renderer also floor-clamps
-          to WATER_LEVEL_Y+0.3 but without this pad you'd see the deck float
-          above the lake at the waterfront edges. The pad fills that gap from
-          y=-1.0 up to the deck so the city looks GROUNDED on a real quay. */}
-      <mesh position={[0, -0.4, 0]} geometry={GEO.box}
-        scale={[60, 1.2, 60]} material={MAT.cobble} />
-      {/* Waterfront docks — wooden platform */}
-      <mesh position={[0, 0.3, -30]} geometry={GEO.box}
-        scale={[40, 0.4, 8]} material={MAT.woodDark}  />
-      {/* Dock posts */}
-      {[-18, -10, -2, 6, 14].map((xOff, i) => (
-        <mesh key={`dock-${i}`} position={[xOff, -0.5, -34]}
-          geometry={GEO.box} scale={[0.3, 2, 0.3]} material={MAT.timber}  />
+      {/* === INLAND DECK === pale, thin foundation only over the inhabited
+          half (z ≥ -12). Replaces the old dark 60×60 box. */}
+      <mesh position={[0, 0.05, 8]} geometry={GEO.box}
+        scale={[44, 0.3, 36]} material={MAT.stoneLight} />
+      {/* Deck bevel/trim so the edges read as intentional masonry */}
+      <mesh position={[0, 0.22, -10]} geometry={GEO.box}
+        scale={[46, 0.12, 0.5]} material={MAT.stoneWarm} />
+      <mesh position={[0, 0.22, 26]} geometry={GEO.box}
+        scale={[46, 0.12, 0.5]} material={MAT.stoneWarm} />
+      <mesh position={[-23, 0.22, 8]} geometry={GEO.box}
+        scale={[0.5, 0.12, 36]} material={MAT.stoneWarm} />
+      <mesh position={[23, 0.22, 8]} geometry={GEO.box}
+        scale={[0.5, 0.12, 36]} material={MAT.stoneWarm} />
+
+      {/* === WATERFRONT QUAY WALL === pale retaining wall facing the river. */}
+      <mesh position={[0, -0.1, -14]} geometry={GEO.box}
+        scale={[46, 1.0, 0.6]} material={MAT.stoneLight} />
+      {/* Quay corner returns (short, light) — anchor the deck visually */}
+      <mesh position={[-23, -0.1, -10]} geometry={GEO.box}
+        scale={[0.6, 1.0, 8]} material={MAT.stoneLight} />
+      <mesh position={[23, -0.1, -10]} geometry={GEO.box}
+        scale={[0.6, 1.0, 8]} material={MAT.stoneLight} />
+
+      {/* === STAIRS down from deck to boardwalk === */}
+      {[0, 1, 2].map(i => (
+        <mesh key={`qstair-${i}`} position={[0, 0.05 - i * 0.18, -15 - i * 0.6]}
+          geometry={GEO.box} scale={[6, 0.15, 0.7]} material={MAT.stoneWarm} />
       ))}
 
-      {/* Town hall — prominent */}
-      <SimpleHouse pos={[0, 0, 0]} rot={0} w={8} d={10} h={5}
-        mat={MAT.stoneWarm} roofMat={MAT.roofTile} />
-      {/* Clock tower */}
-      <mesh position={[0, 10, -5]} geometry={GEO.box}
-        scale={[3, 6, 3]} material={MAT.stoneLight}  />
-      <mesh position={[0, 14, -5]} geometry={GEO.cone8}
-        scale={[2.2, 3, 2.2]} material={MAT.roofSlate}  />
+      {/* === BOARDWALK + SIDE PIERS === light wood, sits over water on pilings */}
+      <mesh position={[0, -0.05, -22]} geometry={GEO.box}
+        scale={[36, 0.25, 6]} material={MAT.woodLight} />
+      <mesh position={[-14, -0.05, -30]} geometry={GEO.box}
+        scale={[5, 0.25, 14]} material={MAT.woodLight} />
+      <mesh position={[14, -0.05, -30]} geometry={GEO.box}
+        scale={[5, 0.25, 14]} material={MAT.woodLight} />
 
-      {/* Houses from shared data */}
-      {renderHouses(RIVER_TOWN_HOUSES, [MAT.daub, MAT.plasterWarm], [MAT.roofThatch, MAT.roofTile], 'rt')}
+      {/* Visible stilts under the piers (timber, in the water) */}
+      {[
+        [-16, -36], [-12, -36], [-12, -30], [-16, -30],
+        [12, -36], [16, -36], [12, -30], [16, -30],
+        [-10, -24], [0, -24], [10, -24],
+      ].map(([px, pz], i) => (
+        <mesh key={`piling-${i}`} position={[px, -0.8, pz]}
+          geometry={GEO.cyl8} scale={[0.25, 1.6, 0.25]} material={MAT.timber} />
+      ))}
 
-      {/* Market stalls near dock */}
-      {[-8, -2, 4, 10].map((xOff, i) => (
-        <group key={`stall-${i}`} position={[xOff, 0, -22]}>
+      {/* === TOWN HALL + CLOCK TOWER === central, prominent, faces plaza */}
+      <SimpleHouse pos={[0, 0.2, 4]} rot={0} w={9} d={11} h={5}
+        mat={MAT.plasterWarm} roofMat={MAT.roofTile} />
+      <mesh position={[0, 7.2, 10]} geometry={GEO.box}
+        scale={[3, 8, 3]} material={MAT.stoneLight} />
+      <mesh position={[0, 11.7, 10]} geometry={GEO.cone8}
+        scale={[2.4, 3.5, 2.4]} material={MAT.roofSlate} />
+      {/* Clock face */}
+      <mesh position={[0, 9.5, 11.55]} geometry={GEO.box}
+        scale={[1.2, 1.2, 0.05]} material={MAT.stoneWarm} />
+
+      {/* === CENTRAL PLAZA === circular cobble inset + fountain */}
+      <mesh position={[0, 0.22, 16]} geometry={GEO.cyl8}
+        scale={[6, 0.06, 6]} material={MAT.cobble} />
+      <mesh position={[0, 0.55, 16]} geometry={GEO.cyl8}
+        scale={[1.4, 0.6, 1.4]} material={MAT.stoneLight} />
+      <mesh position={[0, 1.2, 16]} geometry={GEO.cyl8}
+        scale={[0.4, 0.8, 0.4]} material={MAT.stoneWarm} />
+
+      {/* === HOUSES === waterfront on stilts; inland on deck */}
+      {RIVER_TOWN_HOUSES.map((h, i) => {
+        const isWaterfront = h.z < -10;
+        const houseY = isWaterfront ? 0.6 : 0.2;
+        return (
+          <group key={`rt-${i}`}>
+            {isWaterfront && [
+              [-h.w * 0.4, -h.d * 0.4],
+              [h.w * 0.4, -h.d * 0.4],
+              [-h.w * 0.4, h.d * 0.4],
+              [h.w * 0.4, h.d * 0.4],
+            ].map(([sx, sz], si) => (
+              <mesh key={`stilt-${i}-${si}`} position={[h.x + sx, -0.2, h.z + sz]}
+                geometry={GEO.box} scale={[0.25, 1.4, 0.25]} material={MAT.timber} />
+            ))}
+            <SimpleHouse pos={[h.x, houseY, h.z]} rot={h.rot}
+              w={h.w} d={h.d} h={h.h}
+              mat={[MAT.daub, MAT.plasterWarm][h.matIndex % 2]}
+              roofMat={[MAT.roofThatch, MAT.roofTile][h.roofMatIndex % 2]} />
+          </group>
+        );
+      })}
+
+      {/* === CANAL === thin water channel cutting from waterfront inland,
+          with stone banks and a wooden bridge with railings */}
+      <mesh position={[-12, 0.18, 0]} geometry={GEO.box}
+        scale={[3, 0.08, 22]} material={MAT.shutter} />
+      <mesh position={[-13.7, 0.32, 0]} geometry={GEO.box}
+        scale={[0.4, 0.4, 22]} material={MAT.stoneLight} />
+      <mesh position={[-10.3, 0.32, 0]} geometry={GEO.box}
+        scale={[0.4, 0.4, 22]} material={MAT.stoneLight} />
+      <mesh position={[-12, 0.55, 6]} geometry={GEO.box}
+        scale={[5, 0.18, 2.2]} material={MAT.woodLight} />
+      <mesh position={[-12, 0.95, 7.05]} geometry={GEO.box}
+        scale={[5, 0.5, 0.08]} material={MAT.fence} />
+      <mesh position={[-12, 0.95, 4.95]} geometry={GEO.box}
+        scale={[5, 0.5, 0.08]} material={MAT.fence} />
+
+      {/* === MARKET STALLS along boardwalk === striped teal awnings */}
+      {[-12, -4, 4, 12].map((xOff, i) => (
+        <group key={`stall-${i}`} position={[xOff, 0.08, -20]}>
           <mesh position={[0, 0.85, 0]} geometry={GEO.box}
-            scale={[1.8, 0.08, 1]} material={MAT.woodLight}  />
-          <mesh position={[0, 2, 0]} rotation={[0.12, 0, 0]} geometry={GEO.box}
-            scale={[2, 0.04, 1.2]} material={MAT.tent}  />
+            scale={[2, 0.08, 1.2]} material={MAT.woodLight} />
+          <mesh position={[0, 1.95, 0]} rotation={[0.15, 0, 0]} geometry={GEO.box}
+            scale={[2.3, 0.04, 1.4]} material={i % 2 === 0 ? MAT.shutter : MAT.tent} />
+          <mesh position={[-1, 1.0, -0.5]} geometry={GEO.box}
+            scale={[0.08, 2, 0.08]} material={MAT.timber} />
+          <mesh position={[1, 1.0, -0.5]} geometry={GEO.box}
+            scale={[0.08, 2, 0.08]} material={MAT.timber} />
         </group>
       ))}
 
-      {/* Fishing boats */}
-      {[-15, 5].map((xOff, i) => (
-        <mesh key={`boat-${i}`} position={[xOff, -0.3, -36]} rotation={[0, 0.3, 0]}
-          geometry={GEO.box} scale={[1.5, 0.4, 3.5]} material={MAT.woodWeathered}  />
+      {/* === BARRELS / FISH CRATES on the docks === */}
+      {[
+        [-18, -23], [-17, -22], [16, -22], [18, -24],
+        [-6, -25], [6, -25],
+      ].map(([bx, bz], i) => (
+        <mesh key={`barrel-${i}`} position={[bx, 0.6, bz]}
+          geometry={GEO.cyl8} scale={[0.55, 1.1, 0.55]} material={MAT.woodWeathered} />
+      ))}
+      {[
+        [-14, -25], [14, -25], [-2, -23], [2, -23],
+      ].map(([bx, bz], i) => (
+        <mesh key={`crate-${i}`} position={[bx, 0.5, bz]}
+          geometry={GEO.box} scale={[1.2, 1.0, 1.2]} material={MAT.woodLight} />
+      ))}
+      {/* Coiled ropes */}
+      {[[-10, -22], [10, -22]].map(([rx, rz], i) => (
+        <mesh key={`rope-${i}`} position={[rx, 0.18, rz]}
+          geometry={GEO.cyl8} scale={[0.5, 0.18, 0.5]} material={MAT.tent} />
       ))}
 
-      {/* Low wooden fence perimeter */}
-      <mesh position={[0, 0.35, 30]} geometry={GEO.box}
-        scale={[60, 0.7, 0.12]} material={MAT.fence}  />
-      <mesh position={[-30, 0.35, 0]} geometry={GEO.box}
-        scale={[0.12, 0.7, 60]} material={MAT.fence}  />
-      <mesh position={[30, 0.35, 0]} geometry={GEO.box}
-        scale={[0.12, 0.7, 60]} material={MAT.fence}  />
-
-      {/* Lighthouse */}
-      <mesh position={[25, 5, -28]} geometry={GEO.cyl8}
-        scale={[1.5, 10, 1.5]} material={MAT.stoneWarm}  />
-      <mesh position={[25, 11, -28]} geometry={GEO.cone8}
-        scale={[2, 2, 2]} material={MAT.roofSlate}  />
-      <mesh position={[25, 12.5, -28]} geometry={GEO.box}
-        scale={[0.3, 0.3, 0.3]} material={MAT.lantern} />
-      {/* Lighthouse glow */}
-      <mesh position={[25, 12.5, -28]} geometry={GEO.sphere8}
-        scale={[1.2, 1.2, 1.2]} material={MAT.fireGlow} />
-
-      {/* Quay paving extending the dock front */}
-      <mesh position={[0, 0.05, -25]} geometry={GEO.box}
-        scale={[44, 0.1, 6]} material={MAT.cobble} />
-
-      {/* Teal Octopus banners along the waterfront */}
-      {[[-18, -25], [18, -25], [-25, -10], [25, -10]].map(([bx, bz], i) => (
-        <group key={`tban-${i}`} position={[bx, 0, bz]}>
-          <mesh position={[0, 2.3, 0]} geometry={GEO.box}
-            scale={[0.08, 4.6, 0.08]} material={MAT.timber} />
-          <mesh position={[0.35, 3.6, 0]} geometry={GEO.box}
-            scale={[0.65, 1.0, 0.04]} material={MAT.shutter} />
+      {/* === FISHING BOATS at the piers === teal furled sails */}
+      {[
+        [-14, -38, 0.1], [14, -38, -0.15], [-3, -28, 0.4],
+      ].map(([bx, bz, br], i) => (
+        <group key={`boat-${i}`} position={[bx, -0.25, bz]} rotation={[0, br, 0]}>
+          <mesh position={[0, 0, 0]} geometry={GEO.box}
+            scale={[1.8, 0.5, 4.2]} material={MAT.woodWeathered} />
+          <mesh position={[0, 1.8, 0.3]} geometry={GEO.box}
+            scale={[0.1, 3.6, 0.1]} material={MAT.timber} />
+          <mesh position={[0, 2.5, 0.3]} geometry={GEO.box}
+            scale={[0.15, 1.8, 0.15]} material={MAT.shutter} />
         </group>
       ))}
 
-      {/* Quay lanterns */}
-      {[-12, 0, 12].map((lx, i) => (
-        <group key={`qlamp-${i}`} position={[lx, 0, -23]}>
-          <mesh position={[0, 1.2, 0]} geometry={GEO.box}
-            scale={[0.12, 2.4, 0.12]} material={MAT.timber} />
+      {/* === LIGHTHOUSE === at the end of the east pier (over water) */}
+      <mesh position={[18, 4.5, -36]} geometry={GEO.cyl8}
+        scale={[1.6, 9, 1.6]} material={MAT.stoneLight} />
+      <mesh position={[18, 7, -36]} geometry={GEO.cyl8}
+        scale={[1.65, 0.5, 1.65]} material={MAT.shutter} />
+      <mesh position={[18, 9.8, -36]} geometry={GEO.cone8}
+        scale={[2, 2.2, 2]} material={MAT.roofSlate} />
+      <mesh position={[18, 11.4, -36]} geometry={GEO.box}
+        scale={[0.4, 0.4, 0.4]} material={MAT.lantern} />
+      <mesh position={[18, 11.4, -36]} geometry={GEO.sphere8}
+        scale={[1.4, 1.4, 1.4]} material={MAT.fireGlow} />
+
+      {/* === TEAL OCTOPUS BANNERS along deck edges === */}
+      {[
+        [-20, -12], [-10, -12], [10, -12], [20, -12],
+        [-22, 4], [22, 4], [-22, 20], [22, 20],
+      ].map(([bx, bz], i) => (
+        <group key={`tban-${i}`} position={[bx, 0.2, bz]}>
           <mesh position={[0, 2.6, 0]} geometry={GEO.box}
-            scale={[0.35, 0.35, 0.35]} material={MAT.lantern} />
+            scale={[0.1, 5.2, 0.1]} material={MAT.timber} />
+          <mesh position={[0.4, 4.0, 0]} geometry={GEO.box}
+            scale={[0.75, 1.4, 0.04]} material={MAT.shutter} />
+          <mesh position={[0.4, 3.25, 0]} geometry={GEO.cone4}
+            scale={[0.75, 0.4, 0.04]} material={MAT.shutter} />
         </group>
       ))}
+
+      {/* === QUAY LANTERNS along waterfront + at pier tips === */}
+      {[-18, -6, 6, 18].map((lx, i) => (
+        <group key={`qlamp-${i}`} position={[lx, 0.2, -13]}>
+          <mesh position={[0, 1.4, 0]} geometry={GEO.box}
+            scale={[0.14, 2.8, 0.14]} material={MAT.timber} />
+          <mesh position={[0, 2.95, 0]} geometry={GEO.box}
+            scale={[0.4, 0.4, 0.4]} material={MAT.lantern} />
+          <mesh position={[0, 2.95, 0]} geometry={GEO.sphere8}
+            scale={[0.55, 0.55, 0.55]} material={MAT.fireGlow} />
+        </group>
+      ))}
+      {[[-14, -36], [14, -36]].map(([lx, lz], i) => (
+        <group key={`plamp-${i}`} position={[lx, 0.2, lz]}>
+          <mesh position={[0, 1.4, 0]} geometry={GEO.box}
+            scale={[0.14, 2.8, 0.14]} material={MAT.timber} />
+          <mesh position={[0, 2.95, 0]} geometry={GEO.box}
+            scale={[0.4, 0.4, 0.4]} material={MAT.lantern} />
+        </group>
+      ))}
+
+      {/* === PATH FROM LAND === cobble strip entering from +z (inland) */}
+      <mesh position={[0, 0.21, 28]} geometry={GEO.box}
+        scale={[5, 0.05, 8]} material={MAT.cobble} />
+
+      {/* === LOW WOODEN FENCE on inland sides only === */}
+      <mesh position={[0, 0.55, 26.3]} geometry={GEO.box}
+        scale={[44, 0.7, 0.12]} material={MAT.fence} />
+      <mesh position={[-23.3, 0.55, 8]} geometry={GEO.box}
+        scale={[0.12, 0.7, 36]} material={MAT.fence} />
+      <mesh position={[23.3, 0.55, 8]} geometry={GEO.box}
+        scale={[0.12, 0.7, 36]} material={MAT.fence} />
     </group>
   );
 }

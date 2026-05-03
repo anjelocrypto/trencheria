@@ -1,0 +1,85 @@
+Please fix the Octopus / Rivermoor kingdom visual bug. The screenshot shows black/dark slabs/shadows on the ground and in the air around the Octopus kingdom, and the city layout looks bad.
+
+Important: this is not a SQL/auth/domain task. Do not touch Supabase, auth, wallet, clan wars, DNS, or database files.
+
+Focus only on Rivermoor / Octopus kingdom visuals.
+
+Files to inspect:
+- artifacts/trencheria/src/game/components/NewKingdomRenderers.tsx
+- artifacts/trencheria/src/game/world/KingdomBuildingData.ts
+- artifacts/trencheria/src/game/world/SettlementPieces.ts
+- artifacts/trencheria/src/game/world/WaterData.ts
+- artifacts/trencheria/src/game/world/RegionData.ts
+- artifacts/trencheria/src/game/systems/KingdomVisualValidator.ts
+
+Problem found:
+In `RiverTown`, there is a giant podium mesh:
+
+<mesh position={[0, -0.4, 0]} geometry={GEO.box}
+  scale={[60, 1.2, 60]} material={MAT.cobble} />
+
+This creates a huge dark block under the Octopus kingdom. In-game it looks like black slabs/shadows/floating geometry. The city is also floor-clamped above water with:
+
+const y = Math.max(fp.minY, WATER_LEVEL_Y + 0.3);
+
+That avoids sinking, but it makes the whole town sit on an artificial block instead of a natural waterfront foundation.
+
+Please redesign Rivermoor / Octopus kingdom properly:
+
+1. Remove or replace the giant 60x60x1.2 dark podium.
+   - Do not use one huge box under the entire city.
+   - Replace it with smaller, intentional waterfront pieces: quay stones, piers, boardwalks, dock supports, retaining walls, stairs, and shoreline platforms.
+
+2. Make the Octopus kingdom structure much better.
+   - It should feel like a cool river/ocean kingdom, not random houses on a slab.
+   - Add a clear central plaza/town hall.
+   - Add canals or water channels.
+   - Add a proper dock district.
+   - Add small bridges/boardwalks.
+   - Add teal/blue Octopus banners.
+   - Add lanterns, ropes, barrels, boats, fish crates, market stands.
+   - Add a lighthouse/quay tower that actually fits the waterfront.
+   - Add a clean path from land into the city.
+
+3. Fix grounding properly.
+   - Do not rely only on global floor-clamp.
+   - Ground buildings/pieces individually or by smaller districts.
+   - Waterfront buildings may use stilts/pilings.
+   - Inland houses should sit on terrain/stone pads, not float above a hidden water slab.
+   - Dock pieces can sit over water, but houses/town hall should not look suspended.
+
+4. Fix black/dark visual artifacts.
+   - Remove exposed black underside/side faces.
+   - Use lighter quay/cobble material for visible waterfront foundation.
+   - Avoid large vertical dark box faces.
+   - Add bevel/trim/edge pieces so foundations look intentional.
+   - Check shadows: no giant dark shadow blocks, no floating black geometry.
+
+5. Improve materials.
+   - `MAT.cobble` is too dark when used as a huge slab.
+   - Add a Rivermoor-specific quay material or use lighter stone.
+   - Add color variation: wet stone, teal cloth, warm plaster, wood docks.
+   - Keep performance safe with shared materials/geometries.
+
+6. Improve validator.
+   - `KingdomVisualValidator` currently allows `intentionalPodium` for Rivermoor, which can hide this visual problem.
+   - Add checks for “oversized podium / exposed block foundation”.
+   - Rivermoor should pass validator because it is visually correct, not because warnings are suppressed.
+   - Only dock/quay pieces should be allowed over water. Houses and town hall should still be checked.
+
+7. Take screenshots after fix.
+   - Same angle as the user screenshot.
+   - Front gate / town center.
+   - Waterfront/docks.
+   - From minimap side / hill side.
+   - Day and evening if possible.
+
+8. Verification:
+   - KingdomVisualValidator still clean.
+   - RailwayValidator still clean.
+   - Build passes.
+   - Browser console has no runtime errors.
+   - No black slabs, no floating platforms, no exposed giant podium, no buildings in water unless intentionally on stilts/docks.
+
+Goal:
+Make Octopus / Rivermoor feel like a premium waterfront kingdom: clean, cool, readable, faction-themed, and visually polished. Do not just hide the warning. Actually fix the scene.

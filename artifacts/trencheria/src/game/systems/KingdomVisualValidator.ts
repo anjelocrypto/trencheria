@@ -54,6 +54,10 @@ interface KingdomPiece {
   /** Pieces that sit on the road terminus by design (gatehouses, central
    *  halls, plazas). Skips road-clearance check. */
   isRoadCrossing?: boolean;
+  /** Intentionally-large stone platform (e.g. Stonepeak's mountain platform,
+   *  Darkhollow's ruined plaza). Suppresses the oversized-foundation check
+   *  that catches accidental mega-podiums like the old 60×60 Rivermoor slab. */
+  isLargeFoundation?: boolean;
 }
 
 interface KingdomFootprint {
@@ -111,14 +115,39 @@ const KINGDOMS: Record<string, KingdomFootprint> = {
     id: 'rivermoor_city',
     halfW: 25, halfD: 25,
     houses: RIVER_TOWN_HOUSES,
-    intentionalPodium: true, // RiverTown paints a stone quay base below the deck.
+    // The lake-edge terrain dips below water by patches; the renderer
+    // floor-clamps the kingdom anchor and now paints an explicit pale-stone
+    // quay wall + retaining returns over the visible waterfront edge instead
+    // of a hidden 60×60 mega-podium. The flag still suppresses the macro
+    // water-clamp informational warning since the visual is intentional.
+    intentionalPodium: true,
     pieces: [
-      { name: 'town-hall', lx: 0, lz: 0, halfW: 4, halfD: 5, isRoadCrossing: true },
-      { name: 'clock-tower', lx: 0, lz: -5, halfW: 1.5, halfD: 1.5, isRoadCrossing: true },
-      // Lighthouse + dock are intentionally over the river/quay edge.
-      { name: 'lighthouse', lx: 25, lz: -28, halfW: 1.5, halfD: 1.5, allowWater: true },
-      { name: 'dock', lx: 0, lz: -30, halfW: 20, halfD: 4, allowWater: true },
-      { name: 'fence-N', lx: 0, lz: 30, halfW: 30, halfD: 1 },
+      // Inland deck (pale stone, thin) — visible foundation under plaza/houses.
+      // Sized 44×36 = 1584 m² — under the 2000 m² oversized threshold.
+      { name: 'inland-deck', lx: 0, lz: 8, halfW: 22, halfD: 18, isRoadCrossing: true },
+      // Waterfront quay wall — pale stone retaining wall facing the river.
+      { name: 'quay-wall-N', lx: 0, lz: -14, halfW: 23, halfD: 0.3, allowWater: true },
+      { name: 'quay-return-W', lx: -23, lz: -10, halfW: 0.3, halfD: 4, allowWater: true },
+      { name: 'quay-return-E', lx: 23, lz: -10, halfW: 0.3, halfD: 4, allowWater: true },
+      // Town hall + clock tower — central, faces plaza.
+      { name: 'town-hall', lx: 0, lz: 4, halfW: 4.5, halfD: 5.5, isRoadCrossing: true },
+      { name: 'clock-tower', lx: 0, lz: 10, halfW: 1.5, halfD: 1.5, isRoadCrossing: true },
+      // Plaza inset + fountain.
+      { name: 'plaza', lx: 0, lz: 16, halfW: 6, halfD: 6, isRoadCrossing: true },
+      // Boardwalk + side piers (over water — explicit waterfront pieces).
+      { name: 'boardwalk', lx: 0, lz: -22, halfW: 18, halfD: 3, allowWater: true },
+      { name: 'pier-W', lx: -14, lz: -30, halfW: 2.5, halfD: 7, allowWater: true },
+      { name: 'pier-E', lx: 14, lz: -30, halfW: 2.5, halfD: 7, allowWater: true },
+      { name: 'lighthouse', lx: 18, lz: -36, halfW: 1.6, halfD: 1.6, allowWater: true },
+      // Canal cuts inland (water channel) + bridge.
+      { name: 'canal', lx: -12, lz: 0, halfW: 1.5, halfD: 11, allowWater: true },
+      { name: 'canal-bridge', lx: -12, lz: 6, halfW: 2.5, halfD: 1.1, isRoadCrossing: true },
+      // Inland fence perimeter (waterfront stays open to the river).
+      { name: 'fence-N', lx: 0, lz: 26.3, halfW: 22, halfD: 0.1 },
+      // fence-W is crossed by a road approach on the west side — a gate gap
+       // exists by design at the road terminus.
+       { name: 'fence-W', lx: -23.3, lz: 8, halfW: 0.1, halfD: 18, isRoadCrossing: true },
+      { name: 'fence-E', lx: 23.3, lz: 8, halfW: 0.1, halfD: 18 },
     ],
   },
   stonepeak_hold: {
@@ -126,7 +155,7 @@ const KINGDOMS: Record<string, KingdomFootprint> = {
     halfW: 25, halfD: 25,
     houses: MOUNTAIN_HOLD_HOUSES,
     pieces: [
-      { name: 'platform', lx: 0, lz: 0, halfW: 25, halfD: 25, isRoadCrossing: true },
+      { name: 'platform', lx: 0, lz: 0, halfW: 25, halfD: 25, isRoadCrossing: true, isLargeFoundation: true },
       { name: 'great-hall', lx: 0, lz: 0, halfW: 8, halfD: 10, isRoadCrossing: true },
       // North wall split: back service gate + flanking wall fragments.
       // The wall-N-* pieces flank the new back gate where the Goldenvale
@@ -154,7 +183,7 @@ const KINGDOMS: Record<string, KingdomFootprint> = {
     halfW: 27, halfD: 27,
     houses: FRONTIER_CAMP_HOUSES,
     pieces: [
-      { name: 'plaza', lx: 0, lz: 0, halfW: 27, halfD: 27, isRoadCrossing: true },
+      { name: 'plaza', lx: 0, lz: 0, halfW: 27, halfD: 27, isRoadCrossing: true, isLargeFoundation: true },
       { name: 'ruin-W', lx: -30, lz: -25, halfW: 1, halfD: 10 },
       { name: 'ruin-E', lx: 25, lz: -20, halfW: 1, halfD: 7 },
       { name: 'ruin-N', lx: 0, lz: -30, halfW: 15, halfD: 1 },
@@ -462,6 +491,19 @@ export function runKingdomVisualAudit(): void {
         issues.push({
           category: 'piece-terrain-clip',
           detail: `${def.id}/${p.name} ground at +${floatGap.toFixed(2)}m above kingdom base — terrain may clip the structure`,
+        });
+      }
+
+      // Oversized-foundation check: catches accidental mega-podiums (e.g.
+      // Rivermoor's old 60×60 dark cobble slab) that hide visual problems.
+      // Walls (one half-extent ≤ 1) are excluded; truly intentional large
+      // platforms (Stonepeak, Darkhollow) opt in via `isLargeFoundation`.
+      const isWallish = p.halfW <= 1 || p.halfD <= 1;
+      const pieceArea = 4 * p.halfW * p.halfD; // m²
+      if (pieceArea > 2000 && !isWallish && !p.isLargeFoundation) {
+        issues.push({
+          category: 'piece-oversized-foundation',
+          detail: `${def.id}/${p.name} foundation area=${pieceArea.toFixed(0)}m² exceeds 2000m² — break it into smaller intentional pieces, or mark isLargeFoundation if it's a deliberate platform.`,
         });
       }
 
