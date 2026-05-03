@@ -29,16 +29,16 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Stone base platform */}
           <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-            scale={[2.5, 0.3, 2.5]} material={MAT.cobble} castShadow />
+            scale={[2.5, 0.3, 2.5]} material={MAT.cobble}  />
           {/* Main stone */}
           <mesh position={[0, 1.2, 0]} geometry={GEO.box}
-            scale={[0.7, 1.8, 0.35]} material={MAT.stoneWarm} castShadow />
+            scale={[0.7, 1.8, 0.35]} material={MAT.stoneWarm}  />
           {/* Cross / top piece */}
           <mesh position={[0, 2.4, 0]} geometry={GEO.cone4}
-            scale={[0.4, 0.6, 0.4]} material={MAT.stone} castShadow />
+            scale={[0.4, 0.6, 0.4]} material={MAT.stone}  />
           {/* Offering bowl */}
           <mesh position={[0.8, 0.4, 0]} geometry={GEO.cyl8}
-            scale={[0.2, 0.15, 0.2]} material={MAT.stoneDark} castShadow />
+            scale={[0.2, 0.15, 0.2]} material={MAT.stoneDark}  />
           {/* Candle */}
           <mesh position={[-0.5, 0.45, 0.3]} geometry={GEO.box}
             scale={[0.06, 0.2, 0.06]} material={MAT.cloth} />
@@ -51,12 +51,12 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]} rotation={[0, Math.sin(px) * 2, Math.sin(pz) * 0.12]}>
           {/* Wagon body */}
           <mesh position={[0, 0.5, 0]} geometry={GEO.box}
-            scale={[1.5, 0.5, 3]} material={MAT.woodDark} castShadow />
+            scale={[1.5, 0.5, 3]} material={MAT.woodDark}  />
           {/* Sides */}
           <mesh position={[-0.7, 0.85, 0]} geometry={GEO.box}
-            scale={[0.08, 0.4, 2.8]} material={MAT.woodWeathered} castShadow />
+            scale={[0.08, 0.4, 2.8]} material={MAT.woodWeathered}  />
           <mesh position={[0.7, 0.85, 0]} geometry={GEO.box}
-            scale={[0.08, 0.4, 2.8]} material={MAT.woodWeathered} castShadow />
+            scale={[0.08, 0.4, 2.8]} material={MAT.woodWeathered}  />
           {/* Shafts */}
           <mesh position={[-0.5, 0.35, -2]} geometry={GEO.box}
             scale={[0.06, 0.06, 1.5]} material={MAT.woodDark} />
@@ -64,14 +64,14 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
             scale={[0.06, 0.06, 1.5]} material={MAT.woodDark} />
           {/* Wheel shapes */}
           <mesh position={[-0.8, 0.35, 0.7]} geometry={GEO.cyl8}
-            scale={[0.3, 0.06, 0.3]} material={MAT.timber} castShadow />
+            scale={[0.3, 0.06, 0.3]} material={MAT.timber}  />
           <mesh position={[0.8, 0.35, 0.7]} geometry={GEO.cyl8}
-            scale={[0.3, 0.06, 0.3]} material={MAT.timber} castShadow />
+            scale={[0.3, 0.06, 0.3]} material={MAT.timber}  />
           {/* Spilled cargo */}
           <mesh position={[1.5, 0.2, 0.5]} geometry={GEO.box}
-            scale={[0.4, 0.4, 0.4]} material={MAT.barrel} castShadow />
+            scale={[0.4, 0.4, 0.4]} material={MAT.barrel}  />
           <mesh position={[1.2, 0.15, -0.3]} rotation={[0.3, 0.5, 0]} geometry={GEO.box}
-            scale={[0.3, 0.3, 0.3]} material={MAT.woodDark} castShadow />
+            scale={[0.3, 0.3, 0.3]} material={MAT.woodDark}  />
         </group>
       );
     case 'bridge':
@@ -79,17 +79,17 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Bridge deck */}
           <mesh position={[0, 1, 0]} geometry={GEO.box}
-            scale={[5, 0.4, 2.2]} material={MAT.stoneDark} castShadow />
+            scale={[5, 0.4, 2.2]} material={MAT.stoneDark}  />
           {/* Railings */}
           <mesh position={[-2.2, 1.5, 0]} geometry={GEO.box}
-            scale={[0.3, 1.2, 2.2]} material={MAT.stone} castShadow />
+            scale={[0.3, 1.2, 2.2]} material={MAT.stone}  />
           <mesh position={[2.2, 1.5, 0]} geometry={GEO.box}
-            scale={[0.3, 1.2, 2.2]} material={MAT.stone} castShadow />
+            scale={[0.3, 1.2, 2.2]} material={MAT.stone}  />
           {/* Support pillars */}
           <mesh position={[-1, 0.3, 0]} geometry={GEO.box}
-            scale={[0.6, 1, 0.6]} material={MAT.cobble} castShadow />
+            scale={[0.6, 1, 0.6]} material={MAT.cobble}  />
           <mesh position={[1, 0.3, 0]} geometry={GEO.box}
-            scale={[0.6, 1, 0.6]} material={MAT.cobble} castShadow />
+            scale={[0.6, 1, 0.6]} material={MAT.cobble}  />
         </group>
       );
     case 'graveyard':
@@ -101,14 +101,14 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
             <group key={i} position={[(i % 4) * 1.5 - 2.25, 0, Math.floor(i / 4) * 2.5 - 1.25]}
               rotation={[0, 0, Math.sin(i * 3.7) * 0.1]}>
               <mesh position={[0, 0.45, 0]} geometry={GEO.box}
-                scale={[0.5, 0.9, 0.12]} material={MAT.grave} castShadow />
+                scale={[0.5, 0.9, 0.12]} material={MAT.grave}  />
             </group>
           ))}
           {/* Dead tree */}
           <mesh position={[3, 1.5, -2]} geometry={GEO.box}
-            scale={[0.15, 3, 0.15]} material={MAT.timber} castShadow />
+            scale={[0.15, 3, 0.15]} material={MAT.timber}  />
           <mesh position={[3.3, 2.8, -2]} rotation={[0, 0, 0.5]} geometry={GEO.box}
-            scale={[0.08, 1.2, 0.08]} material={MAT.timber} castShadow />
+            scale={[0.08, 1.2, 0.08]} material={MAT.timber}  />
         </group>
       );
     case 'hunter_camp':
@@ -116,24 +116,24 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Tent */}
           <mesh position={[0, 0.9, 0]} geometry={GEO.cone6}
-            scale={[1.8, 1.8, 1.8]} material={MAT.tent} castShadow />
+            scale={[1.8, 1.8, 1.8]} material={MAT.tent}  />
           {/* Drying rack */}
           <group position={[2.5, 0, 0]}>
             <mesh position={[-0.5, 0.8, 0]} geometry={GEO.box}
-              scale={[0.08, 1.6, 0.08]} material={MAT.timber} castShadow />
+              scale={[0.08, 1.6, 0.08]} material={MAT.timber}  />
             <mesh position={[0.5, 0.8, 0]} geometry={GEO.box}
-              scale={[0.08, 1.6, 0.08]} material={MAT.timber} castShadow />
+              scale={[0.08, 1.6, 0.08]} material={MAT.timber}  />
             <mesh position={[0, 1.5, 0]} geometry={GEO.box}
-              scale={[1.2, 0.06, 0.06]} material={MAT.timber} castShadow />
+              scale={[1.2, 0.06, 0.06]} material={MAT.timber}  />
             {/* Hanging pelts */}
             <mesh position={[0, 1.1, 0]} geometry={GEO.box}
-              scale={[0.5, 0.6, 0.04]} material={MAT.leather} castShadow />
+              scale={[0.5, 0.6, 0.04]} material={MAT.leather}  />
           </group>
           {/* Fire ring */}
           {[0, 1, 2, 3, 4, 5].map(i => {
             const a = (i / 6) * Math.PI * 2;
             return <mesh key={i} position={[Math.cos(a) * 0.45 + 2.5, 0.08, Math.sin(a) * 0.45 + 2]}
-              geometry={GEO.box} scale={[0.18, 0.14, 0.18]} material={MAT.stoneDark} castShadow />;
+              geometry={GEO.box} scale={[0.18, 0.14, 0.18]} material={MAT.stoneDark}  />;
           })}
           <mesh position={[2.5, 0.2, 2]} geometry={GEO.box}
             scale={[0.12, 0.2, 0.12]} material={MAT.fire} />
@@ -144,18 +144,18 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Foundation */}
           <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-            scale={[5, 0.3, 4]} material={MAT.cobble} castShadow />
+            scale={[5, 0.3, 4]} material={MAT.cobble}  />
           {/* Remaining walls */}
           <mesh position={[-2.3, 1, 0]} geometry={GEO.box}
-            scale={[0.4, 2, 3.5]} material={MAT.stoneRuin} castShadow />
+            scale={[0.4, 2, 3.5]} material={MAT.stoneRuin}  />
           <mesh position={[0, 1.3, -1.8]} geometry={GEO.box}
-            scale={[4.2, 2.6, 0.4]} material={MAT.stoneRuin} castShadow />
+            scale={[4.2, 2.6, 0.4]} material={MAT.stoneRuin}  />
           {/* Collapsed wall piece */}
           <mesh position={[1.5, 0.3, 1.5]} rotation={[0.3, 0.2, 0.5]} geometry={GEO.box}
-            scale={[2, 1, 0.35]} material={MAT.stoneRuin} castShadow />
+            scale={[2, 1, 0.35]} material={MAT.stoneRuin}  />
           {/* Debris */}
           <mesh position={[0.5, 0.15, 0.5]} geometry={GEO.box}
-            scale={[0.6, 0.3, 0.5]} material={MAT.stoneRuin} castShadow />
+            scale={[0.6, 0.3, 0.5]} material={MAT.stoneRuin}  />
         </group>
       );
     case 'watchtower':
@@ -163,26 +163,26 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Tower */}
           <mesh position={[0, 5, 0]} geometry={GEO.box}
-            scale={[2.5, 10, 2.5]} material={MAT.woodDark} castShadow />
+            scale={[2.5, 10, 2.5]} material={MAT.woodDark}  />
           {/* Platform */}
           <mesh position={[0, 10.3, 0]} geometry={GEO.box}
-            scale={[3.5, 0.25, 3.5]} material={MAT.woodDark} castShadow />
+            scale={[3.5, 0.25, 3.5]} material={MAT.woodDark}  />
           {/* Railing */}
           {[[-1.6, 0], [1.6, 0], [0, -1.6], [0, 1.6]].map(([rx, rz], i) => (
             <mesh key={i} position={[rx, 11, rz]} geometry={GEO.box}
-              scale={[i < 2 ? 0.08 : 3.2, 1.2, i < 2 ? 3.2 : 0.08]} material={MAT.timber} castShadow />
+              scale={[i < 2 ? 0.08 : 3.2, 1.2, i < 2 ? 3.2 : 0.08]} material={MAT.timber}  />
           ))}
           {/* Signal pole */}
           <mesh position={[0, 12.5, 0]} geometry={GEO.box}
-            scale={[0.1, 3, 0.1]} material={MAT.timber} castShadow />
+            scale={[0.1, 3, 0.1]} material={MAT.timber}  />
           {/* Brazier on top */}
           <mesh position={[0, 14.2, 0]} geometry={GEO.box}
-            scale={[0.3, 0.25, 0.3]} material={MAT.iron} castShadow />
+            scale={[0.3, 0.25, 0.3]} material={MAT.iron}  />
           <mesh position={[0, 14.5, 0]} geometry={GEO.box}
             scale={[0.15, 0.15, 0.15]} material={MAT.fire} />
           {/* Ladder */}
           <mesh position={[1.3, 5, 0]} geometry={GEO.box}
-            scale={[0.06, 10, 0.5]} material={MAT.timber} castShadow />
+            scale={[0.06, 10, 0.5]} material={MAT.timber}  />
         </group>
       );
     case 'cave':
@@ -190,9 +190,9 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Rock mass */}
           <mesh position={[0, 1.5, -0.5]} geometry={GEO.box}
-            scale={[4, 3, 2.5]} material={MAT.stoneDark} castShadow />
+            scale={[4, 3, 2.5]} material={MAT.stoneDark}  />
           <mesh position={[1, 2, -1]} geometry={GEO.box}
-            scale={[2.5, 2, 2]} material={MAT.stoneDark} castShadow />
+            scale={[2.5, 2, 2]} material={MAT.stoneDark}  />
           {/* Cave opening */}
           <mesh position={[0, 0.8, 0.8]} geometry={GEO.box}
             scale={[1.8, 1.6, 0.3]} material={MAT.dark} />
@@ -208,12 +208,12 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
       return (
         <group position={[px, y, pz]}>
           <mesh position={[0, 2.5, 0]} geometry={GEO.box}
-            scale={[0.2, 5, 0.2]} material={MAT.timber} castShadow />
+            scale={[0.2, 5, 0.2]} material={MAT.timber}  />
           <mesh position={[0, 4.5, 0]} geometry={GEO.box}
-            scale={[2, 0.12, 2]} material={MAT.woodDark} castShadow />
+            scale={[2, 0.12, 2]} material={MAT.woodDark}  />
           {/* Small roof */}
           <mesh position={[0, 5.3, 0]} geometry={GEO.cone4}
-            scale={[1.5, 1.2, 1.5]} material={MAT.roofThatch} castShadow />
+            scale={[1.5, 1.2, 1.5]} material={MAT.roofThatch}  />
         </group>
       );
     case 'inn':
@@ -221,10 +221,10 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Foundation */}
           <mesh position={[0, 0.2, 0]} geometry={GEO.box}
-            scale={[7, 0.4, 6]} material={MAT.cobble} castShadow />
+            scale={[7, 0.4, 6]} material={MAT.cobble}  />
           {/* Main structure */}
           <mesh position={[0, 2.2, 0]} geometry={GEO.box}
-            scale={[6.5, 3.5, 5.5]} material={MAT.plasterWarm} castShadow />
+            scale={[6.5, 3.5, 5.5]} material={MAT.plasterWarm}  />
           {/* Timber framing */}
           <mesh position={[0, 2.2, 2.76]} geometry={GEO.box}
             scale={[6.5, 0.12, 0.06]} material={MAT.timber} />
@@ -234,18 +234,18 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
             scale={[6.5, 0.12, 0.06]} material={MAT.timber} />
           {/* Roof */}
           <mesh position={[0, 5, 0]} geometry={GEO.cone4}
-            scale={[5, 2.8, 4.5]} material={MAT.roofTile} castShadow />
+            scale={[5, 2.8, 4.5]} material={MAT.roofTile}  />
           {/* Door */}
           <mesh position={[0, 1, 2.76]} geometry={GEO.box}
-            scale={[1, 1.8, 0.08]} material={MAT.door} castShadow />
+            scale={[1, 1.8, 0.08]} material={MAT.door}  />
           {/* Sign */}
           <mesh position={[-2.5, 3.2, 2.8]} geometry={GEO.box}
-            scale={[0.08, 2, 0.08]} material={MAT.timber} castShadow />
+            scale={[0.08, 2, 0.08]} material={MAT.timber}  />
           <mesh position={[-2.5, 3.8, 2.8]} geometry={GEO.box}
-            scale={[0.8, 0.5, 0.04]} material={MAT.woodLight} castShadow />
+            scale={[0.8, 0.5, 0.04]} material={MAT.woodLight}  />
           {/* Chimney */}
           <mesh position={[2, 5.5, -1]} geometry={GEO.box}
-            scale={[0.5, 1.5, 0.5]} material={MAT.stoneDark} castShadow />
+            scale={[0.5, 1.5, 0.5]} material={MAT.stoneDark}  />
           {/* Windows */}
           <mesh position={[1.5, 2.5, 2.77]} geometry={GEO.box}
             scale={[0.8, 0.6, 0.06]} material={MAT.dark} />
@@ -253,9 +253,9 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
             scale={[0.8, 0.6, 0.06]} material={MAT.dark} />
           {/* Benches outside */}
           <mesh position={[2, 0.3, 3.2]} geometry={GEO.box}
-            scale={[1.2, 0.08, 0.3]} material={MAT.woodDark} castShadow />
+            scale={[1.2, 0.08, 0.3]} material={MAT.woodDark}  />
           <mesh position={[-2, 0.3, 3.2]} geometry={GEO.box}
-            scale={[1.2, 0.08, 0.3]} material={MAT.woodDark} castShadow />
+            scale={[1.2, 0.08, 0.3]} material={MAT.woodDark}  />
         </group>
       );
     case 'clearing':
@@ -265,11 +265,11 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
             scale={[8, 0.06, 8]} material={MAT.crop} />
           {[[-2, -2], [2, 2], [-3, 1], [1, -3]].map(([sx, sz], i) => (
             <mesh key={i} position={[sx, 0.2, sz]} geometry={GEO.box}
-              scale={[0.8, 0.4, 0.8]} material={MAT.stoneDark} castShadow />
+              scale={[0.8, 0.4, 0.8]} material={MAT.stoneDark}  />
           ))}
           {/* Fallen log */}
           <mesh position={[3, 0.2, -1]} rotation={[0, 0.8, Math.PI / 2]}
-            geometry={GEO.cyl6} scale={[0.2, 3, 0.2]} material={MAT.timber} castShadow />
+            geometry={GEO.cyl6} scale={[0.2, 3, 0.2]} material={MAT.timber}  />
         </group>
       );
     case 'stone_circle':
@@ -277,9 +277,9 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Central altar */}
           <mesh position={[0, 0.3, 0]} geometry={GEO.box}
-            scale={[2, 0.6, 2]} material={MAT.cobble} castShadow />
+            scale={[2, 0.6, 2]} material={MAT.cobble}  />
           <mesh position={[0, 0.8, 0]} geometry={GEO.box}
-            scale={[1, 0.4, 0.6]} material={MAT.stoneDark} castShadow />
+            scale={[1, 0.4, 0.6]} material={MAT.stoneDark}  />
           {/* Standing stones — varied heights */}
           {Array.from({ length: 8 }).map((_, i) => {
             const a = (i / 8) * Math.PI * 2;
@@ -288,7 +288,7 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
             return <mesh key={i}
               position={[Math.cos(a) * 4.5, h / 2, Math.sin(a) * 4.5]}
               rotation={[leaning, 0, Math.cos(i * 1.7) * 0.05]}
-              geometry={GEO.box} scale={[0.7, h, 0.35]} material={MAT.grave} castShadow />;
+              geometry={GEO.box} scale={[0.7, h, 0.35]} material={MAT.grave}  />;
           })}
         </group>
       );
@@ -300,7 +300,7 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
           {/* Reeds */}
           {[[-2, 3], [3, -2], [-3.5, -1]].map(([rx, rz], i) => (
             <mesh key={i} position={[rx, 0.5, rz]} geometry={GEO.box}
-              scale={[0.04, 1, 0.04]} material={MAT.herb} castShadow />
+              scale={[0.04, 1, 0.04]} material={MAT.herb}  />
           ))}
         </group>
       );
@@ -311,13 +311,13 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
             <group key={i} position={[bx, 0, bz]}>
               {/* Charred foundation */}
               <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-                scale={[3, 0.3, 2.5]} material={MAT.cobble} castShadow />
+                scale={[3, 0.3, 2.5]} material={MAT.cobble}  />
               {/* Remaining walls */}
               <mesh position={[0, 0.7, 0]} geometry={GEO.box}
-                scale={[2.8, 1, 2.2]} material={MAT.dark} castShadow />
+                scale={[2.8, 1, 2.2]} material={MAT.dark}  />
               {/* Charred beam */}
               <mesh position={[0.8, 0.8, 0.5]} rotation={[0.2, 0.5, 0.3]} geometry={GEO.box}
-                scale={[0.12, 1.5, 0.12]} material={MAT.dark} castShadow />
+                scale={[0.12, 1.5, 0.12]} material={MAT.dark}  />
             </group>
           ))}
           {/* Ash ground */}
@@ -330,20 +330,20 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Shelter */}
           <mesh position={[0, 1.2, 0]} geometry={GEO.box}
-            scale={[4, 2.4, 3]} material={MAT.woodWeathered} castShadow />
+            scale={[4, 2.4, 3]} material={MAT.woodWeathered}  />
           <mesh position={[0, 2.7, 0]} geometry={GEO.cone4}
-            scale={[3, 1.5, 2.5]} material={MAT.roofThatch} castShadow />
+            scale={[3, 1.5, 2.5]} material={MAT.roofThatch}  />
           {/* Crate stacks */}
           {Array.from({ length: 5 }).map((_, i) => (
             <mesh key={i}
               position={[(i % 2) * 1.2 - 0.6 + 3, 0.3 + Math.floor(i / 3) * 0.5, Math.floor((i % 3) / 2) * 1 - 0.5]}
-              geometry={GEO.box} scale={[0.6, 0.6, 0.6]} material={MAT.woodDark} castShadow />
+              geometry={GEO.box} scale={[0.6, 0.6, 0.6]} material={MAT.woodDark}  />
           ))}
           {/* Barrel */}
           <mesh position={[-2.5, 0.35, 0]} geometry={GEO.cyl8}
-            scale={[0.25, 0.6, 0.25]} material={MAT.barrel} castShadow />
+            scale={[0.25, 0.6, 0.25]} material={MAT.barrel}  />
           <mesh position={[-2.5, 0.35, 0.6]} geometry={GEO.cyl8}
-            scale={[0.25, 0.6, 0.25]} material={MAT.barrel} castShadow />
+            scale={[0.25, 0.6, 0.25]} material={MAT.barrel}  />
         </group>
       );
     case 'crossroads':
@@ -351,25 +351,25 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Signpost */}
           <mesh position={[0, 1.8, 0]} geometry={GEO.box}
-            scale={[0.15, 3.5, 0.15]} material={MAT.timber} castShadow />
+            scale={[0.15, 3.5, 0.15]} material={MAT.timber}  />
           <mesh position={[0.6, 3, 0]} rotation={[0, 0, 0]} geometry={GEO.box}
-            scale={[1.2, 0.25, 0.08]} material={MAT.woodLight} castShadow />
+            scale={[1.2, 0.25, 0.08]} material={MAT.woodLight}  />
           <mesh position={[-0.3, 2.5, 0.1]} rotation={[0, 0.7, 0]} geometry={GEO.box}
-            scale={[1, 0.22, 0.07]} material={MAT.woodLight} castShadow />
+            scale={[1, 0.22, 0.07]} material={MAT.woodLight}  />
           <mesh position={[0.4, 2, 0]} rotation={[0, -0.4, 0]} geometry={GEO.box}
-            scale={[0.8, 0.2, 0.07]} material={MAT.woodLight} castShadow />
+            scale={[0.8, 0.2, 0.07]} material={MAT.woodLight}  />
           {/* Stone base */}
           <mesh position={[0, 0.1, 0]} geometry={GEO.cyl8}
-            scale={[0.5, 0.2, 0.5]} material={MAT.cobble} castShadow />
+            scale={[0.5, 0.2, 0.5]} material={MAT.cobble}  />
         </group>
       );
     case 'milestone':
       return (
         <group position={[px, y, pz]}>
           <mesh position={[0, 0.5, 0]} geometry={GEO.box}
-            scale={[0.4, 1, 0.25]} material={MAT.stoneWarm} castShadow />
+            scale={[0.4, 1, 0.25]} material={MAT.stoneWarm}  />
           <mesh position={[0, 1.1, 0]} geometry={GEO.cone4}
-            scale={[0.25, 0.3, 0.18]} material={MAT.stone} castShadow />
+            scale={[0.25, 0.3, 0.18]} material={MAT.stone}  />
           <mesh position={[0, 0.5, 0.13]} geometry={GEO.box}
             scale={[0.25, 0.3, 0.02]} material={MAT.chalk} />
         </group>
@@ -378,11 +378,11 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
       return (
         <group position={[px, y, pz]}>
           <mesh position={[0, 1.5, 0]} geometry={GEO.box}
-            scale={[0.1, 3, 0.1]} material={MAT.iron} castShadow />
+            scale={[0.1, 3, 0.1]} material={MAT.iron}  />
           <mesh position={[0.3, 2.8, 0]} geometry={GEO.box}
-            scale={[0.5, 0.08, 0.08]} material={MAT.iron} castShadow />
+            scale={[0.5, 0.08, 0.08]} material={MAT.iron}  />
           <mesh position={[0.5, 2.55, 0]} geometry={GEO.box}
-            scale={[0.2, 0.3, 0.2]} material={MAT.iron} castShadow />
+            scale={[0.2, 0.3, 0.2]} material={MAT.iron}  />
           <mesh position={[0.5, 2.55, 0]} geometry={GEO.box}
             scale={[0.08, 0.12, 0.08]} material={MAT.lantern} />
         </group>
@@ -391,11 +391,11 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
       return (
         <group position={[px, y, pz]}>
           <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-            scale={[1.2, 0.3, 1.2]} material={MAT.cobble} castShadow />
+            scale={[1.2, 0.3, 1.2]} material={MAT.cobble}  />
           <mesh position={[0, 1.8, 0]} geometry={GEO.box}
-            scale={[0.15, 3, 0.15]} material={MAT.stoneWarm} castShadow />
+            scale={[0.15, 3, 0.15]} material={MAT.stoneWarm}  />
           <mesh position={[0, 2.8, 0]} geometry={GEO.box}
-            scale={[0.8, 0.12, 0.12]} material={MAT.stoneWarm} castShadow />
+            scale={[0.8, 0.12, 0.12]} material={MAT.stoneWarm}  />
           <mesh position={[0.3, 0.35, 0.5]} geometry={GEO.box}
             scale={[0.06, 0.15, 0.06]} material={MAT.cloth} />
           <mesh position={[0.3, 0.45, 0.5]} geometry={GEO.box}
@@ -407,38 +407,38 @@ function SmallPOIRenderer({ poi, playerPos }: { poi: SmallPOIDef; playerPos: THR
         <group position={[px, y, pz]}>
           {/* Collapsed tent */}
           <mesh position={[0, 0.3, 0]} rotation={[0.15, 0.3, 0.1]} geometry={GEO.box}
-            scale={[2, 0.04, 1.5]} material={MAT.tentDark} castShadow />
+            scale={[2, 0.04, 1.5]} material={MAT.tentDark}  />
           <mesh position={[0.5, 0.5, 0]} geometry={GEO.box}
-            scale={[0.08, 1, 0.08]} material={MAT.timber} castShadow />
+            scale={[0.08, 1, 0.08]} material={MAT.timber}  />
           {/* Cold fire ring */}
           {[0, 1, 2, 3, 4, 5].map(i => {
             const a = (i / 6) * Math.PI * 2;
             return <mesh key={i} position={[Math.cos(a) * 0.4 - 1.5, 0.06, Math.sin(a) * 0.4]}
-              geometry={GEO.box} scale={[0.15, 0.1, 0.15]} material={MAT.stoneDark} castShadow />;
+              geometry={GEO.box} scale={[0.15, 0.1, 0.15]} material={MAT.stoneDark}  />;
           })}
           <mesh position={[-1.5, 0.08, 0]} geometry={GEO.box}
             scale={[0.3, 0.04, 0.3]} material={MAT.charred} />
           {/* Discarded items */}
           <mesh position={[1.5, 0.1, 0.8]} geometry={GEO.cyl8}
-            scale={[0.15, 0.3, 0.15]} material={MAT.barrel} castShadow />
+            scale={[0.15, 0.3, 0.15]} material={MAT.barrel}  />
         </group>
       );
     case 'gallows':
       return (
         <group position={[px, y, pz]}>
           <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-            scale={[3, 0.3, 3]} material={MAT.woodDark} castShadow />
+            scale={[3, 0.3, 3]} material={MAT.woodDark}  />
           <mesh position={[0, 2.5, 0]} geometry={GEO.box}
-            scale={[0.2, 5, 0.2]} material={MAT.timber} castShadow />
+            scale={[0.2, 5, 0.2]} material={MAT.timber}  />
           <mesh position={[1, 4.8, 0]} geometry={GEO.box}
-            scale={[2, 0.15, 0.15]} material={MAT.timber} castShadow />
+            scale={[2, 0.15, 0.15]} material={MAT.timber}  />
           <mesh position={[1.5, 4, 0]} geometry={GEO.box}
             scale={[0.02, 0.8, 0.02]} material={MAT.rope} />
           {/* Warning sign */}
           <mesh position={[-1.5, 1.5, 0]} geometry={GEO.box}
-            scale={[0.08, 3, 0.08]} material={MAT.timber} castShadow />
+            scale={[0.08, 3, 0.08]} material={MAT.timber}  />
           <mesh position={[-1.5, 2.8, 0]} geometry={GEO.box}
-            scale={[0.6, 0.4, 0.04]} material={MAT.woodDark} castShadow />
+            scale={[0.6, 0.4, 0.04]} material={MAT.woodDark}  />
         </group>
       );
     default:

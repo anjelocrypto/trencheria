@@ -137,13 +137,13 @@ function LampPost({ x, z, y }: { x: number; z: number; y: number }) {
     <group position={[x, y, z]}>
       {/* Iron post */}
       <mesh position={[0, 1.5, 0]} geometry={GEO.box}
-        scale={[0.1, 3, 0.1]} material={postMat} castShadow />
+        scale={[0.1, 3, 0.1]} material={postMat}  />
       {/* Bracket arm */}
       <mesh position={[0.25, 2.8, 0]} geometry={GEO.box}
         scale={[0.4, 0.07, 0.07]} material={bracketMat} />
       {/* Lantern housing */}
       <mesh position={[0.4, 2.55, 0]} geometry={GEO.box}
-        scale={[0.25, 0.35, 0.25]} material={bracketMat} castShadow />
+        scale={[0.25, 0.35, 0.25]} material={bracketMat}  />
       {/* Glow core — enlarged for visibility */}
       <mesh position={[0.4, 2.55, 0]} geometry={GEO.box}
         scale={[0.22, 0.3, 0.22]}

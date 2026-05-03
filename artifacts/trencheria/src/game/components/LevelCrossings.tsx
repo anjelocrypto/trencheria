@@ -64,7 +64,7 @@ export const LevelCrossings = memo(function LevelCrossings() {
               group is rotated 90° around Y so the X-sign faces the road. */}
           {[-1, 1].map((side) => (
             <group key={side} position={[side * POST_OFFSET, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-              <mesh geometry={postGeo} material={postMat} position={[0, 1.2, 0]} castShadow />
+              <mesh geometry={postGeo} material={postMat} position={[0, 1.2, 0]}  />
               <mesh
                 geometry={signBeamGeo}
                 material={signMat}

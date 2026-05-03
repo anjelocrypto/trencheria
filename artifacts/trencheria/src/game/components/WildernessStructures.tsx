@@ -179,9 +179,9 @@ function WildernessCottage({ pos, rot, w, d }: { pos: [number, number, number]; 
   const h = 2.5 + Math.sin(pos[0] * 0.1) * 0.5;
   return (
     <group position={pos} rotation={[0, rot, 0]}>
-      <mesh position={[0, 0.15, 0]} geometry={GEO.box} scale={[w + 0.3, 0.3, d + 0.3]} material={MAT.cobble} castShadow />
-      <mesh position={[0, h / 2 + 0.3, 0]} geometry={GEO.box} scale={[w, h, d]} material={MAT.plasterDirty} castShadow />
-      <mesh position={[0, h + 0.3 + 0.8, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4} scale={[w * 0.75, 1.6, d * 0.75]} material={MAT.roofThatch} castShadow />
+      <mesh position={[0, 0.15, 0]} geometry={GEO.box} scale={[w + 0.3, 0.3, d + 0.3]} material={MAT.cobble}  />
+      <mesh position={[0, h / 2 + 0.3, 0]} geometry={GEO.box} scale={[w, h, d]} material={MAT.plasterDirty}  />
+      <mesh position={[0, h + 0.3 + 0.8, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4} scale={[w * 0.75, 1.6, d * 0.75]} material={MAT.roofThatch}  />
       <mesh position={[0, 0.8, d / 2 + 0.01]} geometry={GEO.box} scale={[0.7, 1.4, 0.08]} material={MAT.door} />
       <mesh position={[w / 2 + 0.01, h * 0.6, 0]} geometry={GEO.box} scale={[0.05, 0.5, 0.5]} material={MAT.dark} />
     </group>
@@ -191,16 +191,16 @@ function WildernessCottage({ pos, rot, w, d }: { pos: [number, number, number]; 
 function WildernessFarmhouse({ pos, rot, w, d }: { pos: [number, number, number]; rot: number; w: number; d: number }) {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
-      <mesh position={[0, 0.15, 0]} geometry={GEO.box} scale={[w + 0.4, 0.3, d + 0.4]} material={MAT.cobble} castShadow />
-      <mesh position={[0, 1.5, 0]} geometry={GEO.box} scale={[w, 3, d]} material={MAT.daub} castShadow />
+      <mesh position={[0, 0.15, 0]} geometry={GEO.box} scale={[w + 0.4, 0.3, d + 0.4]} material={MAT.cobble}  />
+      <mesh position={[0, 1.5, 0]} geometry={GEO.box} scale={[w, 3, d]} material={MAT.daub}  />
       <mesh position={[0, 1.5, d / 2 + 0.01]} geometry={GEO.box} scale={[w, 0.1, 0.06]} material={MAT.timber} />
       <mesh position={[0, 0.5, d / 2 + 0.01]} geometry={GEO.box} scale={[w, 0.1, 0.06]} material={MAT.timber} />
-      <mesh position={[0, 3 + 0.9, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4} scale={[w * 0.7, 1.8, d * 0.7]} material={MAT.roofTile} castShadow />
+      <mesh position={[0, 3 + 0.9, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4} scale={[w * 0.7, 1.8, d * 0.7]} material={MAT.roofTile}  />
       <mesh position={[0, 0.8, d / 2 + 0.01]} geometry={GEO.box} scale={[0.8, 1.5, 0.08]} material={MAT.door} />
-      <mesh position={[w * 0.3, 4, -d * 0.3]} geometry={GEO.box} scale={[0.4, 1.2, 0.4]} material={MAT.stoneDark} castShadow />
+      <mesh position={[w * 0.3, 4, -d * 0.3]} geometry={GEO.box} scale={[0.4, 1.2, 0.4]} material={MAT.stoneDark}  />
       {[-1, 0, 1].map(i => (
         <mesh key={i} position={[w * 0.7 + 1, 0.3, i * 1.2]} geometry={GEO.box}
-          scale={[0.06, 0.6, 0.06]} material={MAT.fence} castShadow />
+          scale={[0.06, 0.6, 0.06]} material={MAT.fence}  />
       ))}
       <mesh position={[w * 0.7 + 1, 0.5, 0]} geometry={GEO.box} scale={[0.04, 0.04, 2.4]} material={MAT.fence} />
     </group>
@@ -210,11 +210,11 @@ function WildernessFarmhouse({ pos, rot, w, d }: { pos: [number, number, number]
 function WildernessRuin({ pos, rot, w, d }: { pos: [number, number, number]; rot: number; w: number; d: number }) {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
-      <mesh position={[0, 0.1, 0]} geometry={GEO.box} scale={[w + 0.2, 0.2, d + 0.2]} material={MAT.cobble} castShadow />
-      <mesh position={[-w / 2, 0.8, 0]} geometry={GEO.box} scale={[0.3, 1.6, d * 0.8]} material={MAT.stoneRuin} castShadow />
-      <mesh position={[0, 0.6, -d / 2]} geometry={GEO.box} scale={[w * 0.7, 1.2, 0.3]} material={MAT.stoneRuin} castShadow />
+      <mesh position={[0, 0.1, 0]} geometry={GEO.box} scale={[w + 0.2, 0.2, d + 0.2]} material={MAT.cobble}  />
+      <mesh position={[-w / 2, 0.8, 0]} geometry={GEO.box} scale={[0.3, 1.6, d * 0.8]} material={MAT.stoneRuin}  />
+      <mesh position={[0, 0.6, -d / 2]} geometry={GEO.box} scale={[w * 0.7, 1.2, 0.3]} material={MAT.stoneRuin}  />
       <mesh position={[w * 0.3, 0.2, d * 0.3]} rotation={[0.3, 0.4, 0.5]} geometry={GEO.box}
-        scale={[1.5, 0.8, 0.25]} material={MAT.stoneRuin} castShadow />
+        scale={[1.5, 0.8, 0.25]} material={MAT.stoneRuin}  />
     </group>
   );
 }
@@ -222,10 +222,10 @@ function WildernessRuin({ pos, rot, w, d }: { pos: [number, number, number]; rot
 function WildernessShed({ pos, rot }: { pos: [number, number, number]; rot: number }) {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
-      <mesh position={[0, 0.8, 0]} geometry={GEO.box} scale={[2, 1.6, 2.5]} material={MAT.woodWeathered} castShadow />
-      <mesh position={[0, 1.6 + 0.5, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4} scale={[1.5, 1, 1.8]} material={MAT.roofThatch} castShadow />
+      <mesh position={[0, 0.8, 0]} geometry={GEO.box} scale={[2, 1.6, 2.5]} material={MAT.woodWeathered}  />
+      <mesh position={[0, 1.6 + 0.5, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4} scale={[1.5, 1, 1.8]} material={MAT.roofThatch}  />
       <mesh position={[0, 0.6, 1.26]} geometry={GEO.box} scale={[0.6, 1, 0.06]} material={MAT.door} />
-      <mesh position={[1.5, 0.2, 0]} geometry={GEO.box} scale={[0.6, 0.4, 1]} material={MAT.woodDark} castShadow />
+      <mesh position={[1.5, 0.2, 0]} geometry={GEO.box} scale={[0.6, 0.4, 1]} material={MAT.woodDark}  />
     </group>
   );
 }
@@ -233,9 +233,9 @@ function WildernessShed({ pos, rot }: { pos: [number, number, number]; rot: numb
 function WildernessOutpost({ pos, rot }: { pos: [number, number, number]; rot: number }) {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
-      <mesh position={[0, 2, 0]} geometry={GEO.box} scale={[1.8, 4, 1.8]} material={MAT.woodDark} castShadow />
-      <mesh position={[0, 4.2, 0]} geometry={GEO.box} scale={[2.5, 0.15, 2.5]} material={MAT.woodDark} castShadow />
-      <mesh position={[0, 5, 0]} geometry={GEO.cone4} scale={[1.8, 1.2, 1.8]} material={MAT.roofSlate} castShadow />
+      <mesh position={[0, 2, 0]} geometry={GEO.box} scale={[1.8, 4, 1.8]} material={MAT.woodDark}  />
+      <mesh position={[0, 4.2, 0]} geometry={GEO.box} scale={[2.5, 0.15, 2.5]} material={MAT.woodDark}  />
+      <mesh position={[0, 5, 0]} geometry={GEO.cone4} scale={[1.8, 1.2, 1.8]} material={MAT.roofSlate}  />
       <mesh position={[0, 6, 0]} geometry={GEO.box} scale={[0.06, 1.5, 0.06]} material={MAT.timber} />
       <mesh position={[0.2, 5.8, 0]} geometry={GEO.box} scale={[0.4, 0.6, 0.02]} material={MAT.banner} />
     </group>
@@ -245,11 +245,11 @@ function WildernessOutpost({ pos, rot }: { pos: [number, number, number]; rot: n
 function WildernessCamp({ pos, rot }: { pos: [number, number, number]; rot: number }) {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
-      <mesh position={[0, 0.7, 0]} geometry={GEO.cone6} scale={[1.2, 1.4, 1.2]} material={MAT.tentRagged} castShadow />
+      <mesh position={[0, 0.7, 0]} geometry={GEO.cone6} scale={[1.2, 1.4, 1.2]} material={MAT.tentRagged}  />
       {[0, 1, 2, 3, 4, 5].map(i => {
         const a = (i / 6) * Math.PI * 2;
         return <mesh key={i} position={[Math.cos(a) * 0.6 + 1.5, 0.06, Math.sin(a) * 0.6]}
-          geometry={GEO.box} scale={[0.15, 0.12, 0.15]} material={MAT.stoneDark} castShadow />;
+          geometry={GEO.box} scale={[0.15, 0.12, 0.15]} material={MAT.stoneDark}  />;
       })}
       <mesh position={[1.5, 0.15, 0]} geometry={GEO.box} scale={[0.1, 0.15, 0.1]} material={MAT.fire} />
       <mesh position={[-1.2, 0.05, 0.5]} geometry={GEO.box} scale={[0.5, 0.08, 1.2]} material={MAT.leather} />
@@ -260,13 +260,13 @@ function WildernessCamp({ pos, rot }: { pos: [number, number, number]; rot: numb
 function WildernessShrineHut({ pos, rot }: { pos: [number, number, number]; rot: number }) {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
-      <mesh position={[0, 0.1, 0]} geometry={GEO.box} scale={[2, 0.2, 2]} material={MAT.cobble} castShadow />
-      <mesh position={[0, 0.8, 0]} geometry={GEO.box} scale={[0.5, 1.2, 0.3]} material={MAT.stoneWarm} castShadow />
-      <mesh position={[0, 1.6, 0]} geometry={GEO.cone4} scale={[0.3, 0.4, 0.3]} material={MAT.stone} castShadow />
+      <mesh position={[0, 0.1, 0]} geometry={GEO.box} scale={[2, 0.2, 2]} material={MAT.cobble}  />
+      <mesh position={[0, 0.8, 0]} geometry={GEO.box} scale={[0.5, 1.2, 0.3]} material={MAT.stoneWarm}  />
+      <mesh position={[0, 1.6, 0]} geometry={GEO.cone4} scale={[0.3, 0.4, 0.3]} material={MAT.stone}  />
       {[[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]].map(([px, pz], i) => (
-        <mesh key={i} position={[px, 1, pz]} geometry={GEO.box} scale={[0.06, 2, 0.06]} material={MAT.timber} castShadow />
+        <mesh key={i} position={[px, 1, pz]} geometry={GEO.box} scale={[0.06, 2, 0.06]} material={MAT.timber}  />
       ))}
-      <mesh position={[0, 2.1, 0]} geometry={GEO.cone4} scale={[1.2, 0.8, 1.2]} material={MAT.roofThatch} castShadow />
+      <mesh position={[0, 2.1, 0]} geometry={GEO.cone4} scale={[1.2, 0.8, 1.2]} material={MAT.roofThatch}  />
     </group>
   );
 }

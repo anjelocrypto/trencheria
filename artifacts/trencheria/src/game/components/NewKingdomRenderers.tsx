@@ -24,11 +24,11 @@ function SimpleHouse({ pos, rot, w, d, h, mat, roofMat }: {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
       <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-        scale={[w + 0.3, 0.3, d + 0.3]} material={MAT.cobble} castShadow />
+        scale={[w + 0.3, 0.3, d + 0.3]} material={MAT.cobble}  />
       <mesh position={[0, h / 2 + 0.3, 0]} geometry={GEO.box}
-        scale={[w, h, d]} material={mat} castShadow />
+        scale={[w, h, d]} material={mat}  />
       <mesh position={[0, h + 0.3 + h * 0.35, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4}
-        scale={[w * 0.72, h * 0.7, d * 0.72]} material={roofMat} castShadow />
+        scale={[w * 0.72, h * 0.7, d * 0.72]} material={roofMat}  />
       <mesh position={[0, 0.7, d / 2 + 0.02]} geometry={GEO.box}
         scale={[0.8, 1.3, 0.06]} material={MAT.door} />
     </group>
@@ -47,14 +47,14 @@ function SimpleWall({ from, to, h, mat }: {
   return (
     <group>
       <mesh position={[cx, h / 2, cz]} rotation={[0, angle, 0]}
-        geometry={GEO.box} scale={[2, h, len]} material={wallMat} castShadow />
+        geometry={GEO.box} scale={[2, h, len]} material={wallMat}  />
       {len > 5 && Array.from({ length: Math.floor(len / 3) }).map((_, i) => {
         const t = (i + 0.5) / Math.floor(len / 3);
         return (
           <mesh key={i}
             position={[from[0] + dx * t, h + 0.3, from[1] + dz * t]}
             rotation={[0, angle, 0]}
-            geometry={GEO.box} scale={[2.2, 0.6, 1]} material={wallMat} castShadow />
+            geometry={GEO.box} scale={[2.2, 0.6, 1]} material={wallMat}  />
         );
       })}
     </group>
@@ -67,9 +67,9 @@ function SimpleTower({ pos, h, r, mat }: {
   return (
     <group position={pos}>
       <mesh position={[0, h / 2, 0]} geometry={GEO.towerGeo}
-        scale={[r, h, r]} material={mat || MAT.stone} castShadow />
+        scale={[r, h, r]} material={mat || MAT.stone}  />
       <mesh position={[0, h + 1.5, 0]} geometry={GEO.cone8}
-        scale={[r * 1.2, 3, r * 1.2]} material={MAT.roofSlate} castShadow />
+        scale={[r * 1.2, 3, r * 1.2]} material={MAT.roofSlate}  />
     </group>
   );
 }
@@ -118,29 +118,29 @@ export function FortifiedCity({ def }: { def: SettlementDef }) {
       <SimpleTower pos={[5, 0, 45]} h={11} r={2} />
       {/* Gate archway */}
       <mesh position={[0, 7, 45]} geometry={GEO.box}
-        scale={[12, 3, 3.5]} material={MAT.stone} castShadow />
+        scale={[12, 3, 3.5]} material={MAT.stone}  />
       <mesh position={[0, 4, 45]} geometry={GEO.box}
         scale={[6, 5, 3.5]} material={MAT.dark} />
 
       {/* Central citadel */}
       <mesh position={[0, 8, -10]} geometry={GEO.box}
-        scale={[14, 16, 14]} material={MAT.stoneDark} castShadow />
+        scale={[14, 16, 14]} material={MAT.stoneDark}  />
       <mesh position={[0, 18, -10]} geometry={GEO.cone4}
-        scale={[10, 6, 10]} material={MAT.roofSlate} castShadow />
+        scale={[10, 6, 10]} material={MAT.roofSlate}  />
       {/* Banner */}
       <mesh position={[0, 22, -10]} geometry={GEO.box}
         scale={[0.1, 3, 0.1]} material={MAT.timber} />
       <mesh position={[0.5, 23, -10]} geometry={GEO.box}
-        scale={[0.8, 1.2, 0.04]} material={MAT.banner} castShadow />
+        scale={[0.8, 1.2, 0.04]} material={MAT.banner}  />
 
       {/* Houses from shared data */}
       {renderHouses(FORTIFIED_CITY_HOUSES, [MAT.stone, MAT.stoneWarm], [MAT.roofSlate], 'fc')}
 
       {/* Smithy */}
       <mesh position={[-25, 1.2, 5]} geometry={GEO.box}
-        scale={[4, 2.4, 3.5]} material={MAT.stoneDark} castShadow />
+        scale={[4, 2.4, 3.5]} material={MAT.stoneDark}  />
       <mesh position={[-25, 2.8, 5]} geometry={GEO.box}
-        scale={[0.5, 1, 0.5]} material={MAT.stoneDark} castShadow />
+        scale={[0.5, 1, 0.5]} material={MAT.stoneDark}  />
 
       {/* Training yard paving */}
       <mesh position={[20, 0.04, -20]} geometry={GEO.box}
@@ -154,7 +154,7 @@ export function FortifiedCity({ def }: { def: SettlementDef }) {
 
       {/* Well */}
       <mesh position={[10, 0.35, 25]} geometry={GEO.cyl8}
-        scale={[0.7, 0.7, 0.7]} material={MAT.cobble} castShadow />
+        scale={[0.7, 0.7, 0.7]} material={MAT.cobble}  />
     </group>
   );
 }
@@ -170,11 +170,11 @@ export function RiverTown({ def }: { def: SettlementDef }) {
     <group position={[cx, y, cz]}>
       {/* Waterfront docks — wooden platform */}
       <mesh position={[0, 0.3, -30]} geometry={GEO.box}
-        scale={[40, 0.4, 8]} material={MAT.woodDark} castShadow />
+        scale={[40, 0.4, 8]} material={MAT.woodDark}  />
       {/* Dock posts */}
       {[-18, -10, -2, 6, 14].map((xOff, i) => (
         <mesh key={`dock-${i}`} position={[xOff, -0.5, -34]}
-          geometry={GEO.box} scale={[0.3, 2, 0.3]} material={MAT.timber} castShadow />
+          geometry={GEO.box} scale={[0.3, 2, 0.3]} material={MAT.timber}  />
       ))}
 
       {/* Town hall — prominent */}
@@ -182,9 +182,9 @@ export function RiverTown({ def }: { def: SettlementDef }) {
         mat={MAT.stoneWarm} roofMat={MAT.roofTile} />
       {/* Clock tower */}
       <mesh position={[0, 10, -5]} geometry={GEO.box}
-        scale={[3, 6, 3]} material={MAT.stoneLight} castShadow />
+        scale={[3, 6, 3]} material={MAT.stoneLight}  />
       <mesh position={[0, 14, -5]} geometry={GEO.cone8}
-        scale={[2.2, 3, 2.2]} material={MAT.roofSlate} castShadow />
+        scale={[2.2, 3, 2.2]} material={MAT.roofSlate}  />
 
       {/* Houses from shared data */}
       {renderHouses(RIVER_TOWN_HOUSES, [MAT.daub, MAT.plasterWarm], [MAT.roofThatch, MAT.roofTile], 'rt')}
@@ -193,31 +193,31 @@ export function RiverTown({ def }: { def: SettlementDef }) {
       {[-8, -2, 4, 10].map((xOff, i) => (
         <group key={`stall-${i}`} position={[xOff, 0, -22]}>
           <mesh position={[0, 0.85, 0]} geometry={GEO.box}
-            scale={[1.8, 0.08, 1]} material={MAT.woodLight} castShadow />
+            scale={[1.8, 0.08, 1]} material={MAT.woodLight}  />
           <mesh position={[0, 2, 0]} rotation={[0.12, 0, 0]} geometry={GEO.box}
-            scale={[2, 0.04, 1.2]} material={MAT.tent} castShadow />
+            scale={[2, 0.04, 1.2]} material={MAT.tent}  />
         </group>
       ))}
 
       {/* Fishing boats */}
       {[-15, 5].map((xOff, i) => (
         <mesh key={`boat-${i}`} position={[xOff, -0.3, -36]} rotation={[0, 0.3, 0]}
-          geometry={GEO.box} scale={[1.5, 0.4, 3.5]} material={MAT.woodWeathered} castShadow />
+          geometry={GEO.box} scale={[1.5, 0.4, 3.5]} material={MAT.woodWeathered}  />
       ))}
 
       {/* Low wooden fence perimeter */}
       <mesh position={[0, 0.35, 30]} geometry={GEO.box}
-        scale={[60, 0.7, 0.12]} material={MAT.fence} castShadow />
+        scale={[60, 0.7, 0.12]} material={MAT.fence}  />
       <mesh position={[-30, 0.35, 0]} geometry={GEO.box}
-        scale={[0.12, 0.7, 60]} material={MAT.fence} castShadow />
+        scale={[0.12, 0.7, 60]} material={MAT.fence}  />
       <mesh position={[30, 0.35, 0]} geometry={GEO.box}
-        scale={[0.12, 0.7, 60]} material={MAT.fence} castShadow />
+        scale={[0.12, 0.7, 60]} material={MAT.fence}  />
 
       {/* Lighthouse */}
       <mesh position={[25, 5, -28]} geometry={GEO.cyl8}
-        scale={[1.5, 10, 1.5]} material={MAT.stoneWarm} castShadow />
+        scale={[1.5, 10, 1.5]} material={MAT.stoneWarm}  />
       <mesh position={[25, 11, -28]} geometry={GEO.cone8}
-        scale={[2, 2, 2]} material={MAT.roofSlate} castShadow />
+        scale={[2, 2, 2]} material={MAT.roofSlate}  />
       <mesh position={[25, 12.5, -28]} geometry={GEO.box}
         scale={[0.3, 0.3, 0.3]} material={MAT.lantern} />
     </group>
@@ -236,13 +236,13 @@ export function MountainHold({ def }: { def: SettlementDef }) {
     <group position={[cx, y, cz]}>
       {/* Massive stone platform */}
       <mesh position={[0, 1.5, 0]} geometry={GEO.box}
-        scale={[50, 3, 50]} material={MAT.cobble} castShadow />
+        scale={[50, 3, 50]} material={MAT.cobble}  />
 
       {/* Great Hall — carved stone */}
       <mesh position={[0, 7, 0]} geometry={GEO.box}
-        scale={[16, 10, 20]} material={MAT.stoneDark} castShadow />
+        scale={[16, 10, 20]} material={MAT.stoneDark}  />
       <mesh position={[0, 13, 0]} geometry={GEO.cone4}
-        scale={[12, 5, 15]} material={MAT.roofSlate} castShadow />
+        scale={[12, 5, 15]} material={MAT.roofSlate}  />
 
       {/* Flanking towers */}
       <SimpleTower pos={[-10, 3, -12]} h={16} r={3} mat={MAT.stoneDark} />
@@ -272,12 +272,12 @@ export function MountainHold({ def }: { def: SettlementDef }) {
       <mesh position={[-20, 4, -5]} geometry={GEO.box}
         scale={[3, 3, 2]} material={MAT.dark} />
       <mesh position={[-20, 5.8, -5]} geometry={GEO.box}
-        scale={[4, 0.5, 2.5]} material={MAT.stoneDark} castShadow />
+        scale={[4, 0.5, 2.5]} material={MAT.stoneDark}  />
 
       {/* Stairs approach */}
       {[0, 1, 2, 3, 4, 5].map(i => (
         <mesh key={`stair-${i}`} position={[0, i * 0.5, 27 + i * 1.5]}
-          geometry={GEO.box} scale={[6, 0.4, 1.2]} material={MAT.cobble} castShadow />
+          geometry={GEO.box} scale={[6, 0.4, 1.2]} material={MAT.cobble}  />
       ))}
     </group>
   );
@@ -292,11 +292,11 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
     <group position={[cx, y, cz]}>
       {/* Ruined grand wall fragments */}
       <mesh position={[-30, 3, -25]} geometry={GEO.box}
-        scale={[2, 6, 20]} material={MAT.stoneRuin} castShadow />
+        scale={[2, 6, 20]} material={MAT.stoneRuin}  />
       <mesh position={[25, 2, -20]} geometry={GEO.box}
-        scale={[2, 4, 15]} material={MAT.stoneRuin} castShadow />
+        scale={[2, 4, 15]} material={MAT.stoneRuin}  />
       <mesh position={[0, 2.5, -30]} geometry={GEO.box}
-        scale={[30, 5, 2]} material={MAT.stoneRuin} castShadow />
+        scale={[30, 5, 2]} material={MAT.stoneRuin}  />
 
       {/* Houses from shared data */}
       {renderHouses(FRONTIER_CAMP_HOUSES, [MAT.stoneRuin, MAT.woodWeathered], [MAT.tentRagged, MAT.roofThatch], 'front')}
@@ -308,7 +308,7 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
         const a = (i / 8) * Math.PI * 2;
         return <mesh key={`fr-${i}`}
           position={[Math.cos(a) * 1, 0.1, Math.sin(a) * 1]}
-          geometry={GEO.box} scale={[0.25, 0.2, 0.25]} material={MAT.stoneDark} castShadow />;
+          geometry={GEO.box} scale={[0.25, 0.2, 0.25]} material={MAT.stoneDark}  />;
       })}
       <mesh position={[0, 0.4, 0]} geometry={GEO.box}
         scale={[0.3, 0.5, 0.3]} material={MAT.fire} />
@@ -323,7 +323,7 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
         const pz = Math.sin(a) * 25;
         return (
           <mesh key={`pal-${i}`} position={[px, 1.2, pz]} rotation={[0, -a, 0]}
-            geometry={GEO.box} scale={[0.3, 2.4, 0.7]} material={MAT.palisade} castShadow />
+            geometry={GEO.box} scale={[0.3, 2.4, 0.7]} material={MAT.palisade}  />
         );
       })}
 
@@ -333,9 +333,9 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
 
       {/* Supply piles */}
       <mesh position={[8, 0.25, 8]} geometry={GEO.box}
-        scale={[2, 0.5, 1.5]} material={MAT.woodDark} castShadow />
+        scale={[2, 0.5, 1.5]} material={MAT.woodDark}  />
       <mesh position={[-10, 0.3, -5]} geometry={GEO.cyl8}
-        scale={[0.25, 0.5, 0.25]} material={MAT.barrel} castShadow />
+        scale={[0.25, 0.5, 0.25]} material={MAT.barrel}  />
 
       {/* Gate approach */}
       {[0, 1, 2].map(i => (
@@ -371,15 +371,15 @@ export function TradeCity({ def }: { def: SettlementDef }) {
       <SimpleTower pos={[-4, 0, 35]} h={9} r={1.8} mat={MAT.stoneWarm} />
       <SimpleTower pos={[4, 0, 35]} h={9} r={1.8} mat={MAT.stoneWarm} />
       <mesh position={[0, 6, 35]} geometry={GEO.box}
-        scale={[10, 2.5, 3]} material={MAT.stoneWarm} castShadow />
+        scale={[10, 2.5, 3]} material={MAT.stoneWarm}  />
       <mesh position={[0, 3.5, 35]} geometry={GEO.box}
         scale={[5, 4, 3.5]} material={MAT.dark} />
 
       {/* Grand trade hall */}
       <mesh position={[0, 5, -10]} geometry={GEO.box}
-        scale={[14, 10, 12]} material={MAT.plasterWarm} castShadow />
+        scale={[14, 10, 12]} material={MAT.plasterWarm}  />
       <mesh position={[0, 11.5, -10]} geometry={GEO.cone4}
-        scale={[10, 5, 9]} material={MAT.roofTile} castShadow />
+        scale={[10, 5, 9]} material={MAT.roofTile}  />
       {/* Gold trim on trade hall */}
       <mesh position={[0, 10, -4.01]} geometry={GEO.box}
         scale={[14, 0.15, 0.05]} material={MAT.goldTrim} />
@@ -391,9 +391,9 @@ export function TradeCity({ def }: { def: SettlementDef }) {
       {[-10, -4, 2, 8].map((xOff, i) => (
         <group key={`ms-${i}`} position={[xOff, 0, 8]}>
           <mesh position={[0, 0.85, 0]} geometry={GEO.box}
-            scale={[2, 0.08, 1.2]} material={MAT.woodLight} castShadow />
+            scale={[2, 0.08, 1.2]} material={MAT.woodLight}  />
           <mesh position={[0, 2.1, 0]} rotation={[0.12, 0, 0]} geometry={GEO.box}
-            scale={[2.2, 0.04, 1.5]} material={MAT.tent} castShadow />
+            scale={[2.2, 0.04, 1.5]} material={MAT.tent}  />
         </group>
       ))}
 
@@ -402,9 +402,9 @@ export function TradeCity({ def }: { def: SettlementDef }) {
 
       {/* Fountain in market center */}
       <mesh position={[0, 0.5, 12]} geometry={GEO.cyl8}
-        scale={[1.5, 1, 1.5]} material={MAT.stoneLight} castShadow />
+        scale={[1.5, 1, 1.5]} material={MAT.stoneLight}  />
       <mesh position={[0, 1.2, 12]} geometry={GEO.cyl8}
-        scale={[0.3, 0.8, 0.3]} material={MAT.stoneLight} castShadow />
+        scale={[0.3, 0.8, 0.3]} material={MAT.stoneLight}  />
       <mesh position={[0, 0.6, 12]} geometry={GEO.cyl8}
         scale={[1.2, 0.3, 1.2]} material={MAT.water} />
 
@@ -418,9 +418,9 @@ export function TradeCity({ def }: { def: SettlementDef }) {
       {[-3, 3].map((xOff, i) => (
         <group key={`ban-${i}`} position={[xOff, 0, 34]}>
           <mesh position={[0, 3, 0]} geometry={GEO.box}
-            scale={[0.08, 6, 0.08]} material={MAT.timber} castShadow />
+            scale={[0.08, 6, 0.08]} material={MAT.timber}  />
           <mesh position={[0.4, 5, 0]} geometry={GEO.box}
-            scale={[0.7, 1.1, 0.03]} material={MAT.bannerGold} castShadow />
+            scale={[0.7, 1.1, 0.03]} material={MAT.bannerGold}  />
         </group>
       ))}
     </group>

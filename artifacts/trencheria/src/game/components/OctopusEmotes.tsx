@@ -61,7 +61,7 @@ export function OctopusEmotes({ activeEmote, activeEmoteId, stateRef, onEmoteEnd
   const dName = useMemo(() => getClipName(dC, /dance/i), [dC]);
 
   useEffect(() => {
-    danceGltf.scene.traverse(c => { if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+    danceGltf.scene.traverse(c => { if ((c as THREE.Mesh).isMesh) { c.castShadow = false; c.receiveShadow = true; } });
   }, [danceGltf.scene]);
 
   useEffect(() => { if (danceRef.current) danceRef.current.visible = false; }, []);

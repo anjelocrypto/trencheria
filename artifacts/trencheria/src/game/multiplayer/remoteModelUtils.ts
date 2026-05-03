@@ -85,7 +85,7 @@ export function cloneScene(scene: THREE.Group): THREE.Group {
 export function enableMeshShadows(scene: THREE.Object3D) {
   scene.traverse((child) => {
     if (!(child as THREE.Mesh).isMesh) return;
-    child.castShadow = true;
+    child.castShadow = false;
     child.receiveShadow = true;
   });
 }

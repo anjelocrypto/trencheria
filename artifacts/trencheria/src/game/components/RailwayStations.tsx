@@ -65,13 +65,13 @@ function StationLamp({ x, z, height = 2.8 }: { x: number; z: number; height?: nu
     <group position={[x, 0, z]}>
       {/* Iron post */}
       <mesh geometry={GEO.cyl8} scale={[0.06, height, 0.06]}
-        position={[0, height / 2, 0]} material={lampPostMat} castShadow />
+        position={[0, height / 2, 0]} material={lampPostMat}  />
       {/* Bracket arm */}
       <mesh geometry={GEO.box} scale={[0.35, 0.06, 0.06]}
         position={[0.2, height - 0.15, 0]} material={lampPostMat} />
       {/* Lantern housing */}
       <mesh geometry={GEO.box} scale={[0.22, 0.32, 0.22]}
-        position={[0.35, height - 0.35, 0]} material={lampHousingMat} castShadow />
+        position={[0.35, height - 0.35, 0]} material={lampHousingMat}  />
       {/* Glow */}
       <mesh geometry={GEO.box} scale={[0.18, 0.26, 0.18]}
         position={[0.35, height - 0.35, 0]} material={lampGlowMat} />
@@ -88,7 +88,7 @@ function Bench({ x, z, rotY = 0, length = 1.2 }: { x: number; z: number; rotY?: 
     <group position={[x, 0, z]} rotation={[0, rotY, 0]}>
       {/* Seat */}
       <mesh geometry={GEO.box} scale={[length, 0.08, 0.35]}
-        position={[0, 0.42, 0]} material={MAT.woodLight} castShadow />
+        position={[0, 0.42, 0]} material={MAT.woodLight}  />
       {/* Legs */}
       {[-length / 2 + 0.1, length / 2 - 0.1].map((lx, i) => (
         <mesh key={i} geometry={GEO.box} scale={[0.08, 0.4, 0.3]}
@@ -104,7 +104,7 @@ function Crate({ x, z, scale = 1 }: { x: number; z: number; scale?: number }) {
   return (
     <group position={[x, 0, z]}>
       <mesh geometry={GEO.box} scale={[0.6 * s, 0.5 * s, 0.5 * s]}
-        position={[0, 0.25 * s, 0]} material={crateMat} castShadow />
+        position={[0, 0.25 * s, 0]} material={crateMat}  />
       {/* Cross brace */}
       <mesh geometry={GEO.box} scale={[0.62 * s, 0.06, 0.06]}
         position={[0, 0.35 * s, 0.26 * s]} material={MAT.woodDark} />
@@ -116,7 +116,7 @@ function Crate({ x, z, scale = 1 }: { x: number; z: number; scale?: number }) {
 function Barrel({ x, z }: { x: number; z: number }) {
   return (
     <mesh geometry={GEO.cyl8} scale={[0.25, 0.55, 0.25]}
-      position={[x, 0.275, z]} material={barrelMat} castShadow />
+      position={[x, 0.275, z]} material={barrelMat}  />
   );
 }
 
@@ -125,9 +125,9 @@ function StationSign({ x, z }: { x: number; z: number }) {
   return (
     <group position={[x, 0, z]}>
       <mesh geometry={GEO.cyl8} scale={[0.05, 2.2, 0.05]}
-        position={[0, 1.1, 0]} material={MAT.woodDark} castShadow />
+        position={[0, 1.1, 0]} material={MAT.woodDark}  />
       <mesh geometry={GEO.box} scale={[2.2, 0.55, 0.08]}
-        position={[0, 2.35, 0]} material={signBoardMat} castShadow />
+        position={[0, 2.35, 0]} material={signBoardMat}  />
       {/* Sign trim */}
       <mesh geometry={GEO.box} scale={[2.3, 0.06, 0.1]}
         position={[0, 2.65, 0]} material={MAT.woodDark} />
@@ -143,7 +143,7 @@ function BannerPole({ x, z, color = 'red' }: { x: number; z: number; color?: str
   return (
     <group position={[x, 0, z]}>
       <mesh geometry={GEO.cyl8} scale={[0.05, 3.5, 0.05]}
-        position={[0, 1.75, 0]} material={MAT.woodDark} castShadow />
+        position={[0, 1.75, 0]} material={MAT.woodDark}  />
       {/* Finial */}
       <mesh geometry={GEO.sphere8} scale={[0.08, 0.08, 0.08]}
         position={[0, 3.55, 0]} material={MAT.goldTrim} />
@@ -165,18 +165,18 @@ function Shelter({
     <group>
       {/* Back wall */}
       <mesh geometry={GEO.box} scale={[w, h, 0.2]}
-        position={[0, h / 2, -l / 2]} material={MAT.timber} castShadow />
+        position={[0, h / 2, -l / 2]} material={MAT.timber}  />
 
       {/* Side walls — half height for open feel */}
       <mesh geometry={GEO.box} scale={[0.18, h * 0.6, l]}
-        position={[-w / 2, h * 0.3, 0]} material={MAT.timber} castShadow />
+        position={[-w / 2, h * 0.3, 0]} material={MAT.timber}  />
       <mesh geometry={GEO.box} scale={[0.18, h * 0.6, l]}
-        position={[w / 2, h * 0.3, 0]} material={MAT.timber} castShadow />
+        position={[w / 2, h * 0.3, 0]} material={MAT.timber}  />
 
       {/* Front posts */}
       {posts && [-w / 2 + postInset, w / 2 - postInset].map((xp, i) => (
         <mesh key={`fp-${i}`} geometry={GEO.box} scale={[0.15, h + 0.15, 0.15]}
-          position={[xp, (h + 0.15) / 2, l / 2 - 0.1]} material={MAT.woodDark} castShadow />
+          position={[xp, (h + 0.15) / 2, l / 2 - 0.1]} material={MAT.woodDark}  />
       ))}
 
       {/* Cross beam */}
@@ -185,10 +185,10 @@ function Shelter({
 
       {/* Roof — peaked with overhang */}
       <mesh geometry={GEO.box} scale={[w + roofOverhang, 0.15, l + roofOverhang]}
-        position={[0, h + 0.08, 0]} material={roofMat} castShadow />
+        position={[0, h + 0.08, 0]} material={roofMat}  />
       {/* Ridge beam */}
       <mesh geometry={GEO.box} scale={[w + roofOverhang + 0.1, 0.08, 0.2]}
-        position={[0, h + 0.2, 0]} material={roofTrimMat} castShadow />
+        position={[0, h + 0.2, 0]} material={roofTrimMat}  />
 
       {/* Timber knee braces (decorative) */}
       {[-w / 2 + postInset, w / 2 - postInset].map((xp, i) => (
@@ -208,7 +208,7 @@ function Platform({ w, l }: { w: number; l: number }) {
     <group>
       {/* Main platform body */}
       <mesh geometry={GEO.box} scale={[w, 0.5, l]}
-        position={[0, 0.25, 0]} material={platformMat} castShadow receiveShadow />
+        position={[0, 0.25, 0]} material={platformMat}  receiveShadow />
       {/* Edge trim — darker stone lip */}
       <mesh geometry={GEO.box} scale={[w + 0.2, 0.12, l + 0.2]}
         position={[0, 0.52, 0]} material={platformEdgeMat} receiveShadow />
@@ -283,7 +283,7 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
       {/* ===== CLOCK TOWER — at platform centre ===== */}
       <group position={[0, 0.55, 0]}>
         <mesh geometry={GEO.box} scale={[2, 5, 2]}
-          position={[0, 2.5, 0]} material={MAT.stoneWarm} castShadow />
+          position={[0, 2.5, 0]} material={MAT.stoneWarm}  />
         {/* Tower windows on two faces */}
         <mesh geometry={GEO.box} scale={[0.35, 0.55, 0.05]}
           position={[0, 4, 1.01]} material={MAT.stainedGlass} />
@@ -292,7 +292,7 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
         {/* Peaked slate roof */}
         <mesh geometry={GEO.cone4} scale={[1.6, 2.2, 1.6]}
           position={[0, 6.1, 0]} rotation={[0, Math.PI / 4, 0]}
-          material={MAT.roofSlate} castShadow />
+          material={MAT.roofSlate}  />
         {/* Clock face */}
         <mesh geometry={GEO.cyl12} scale={[0.5, 0.04, 0.5]}
           position={[0, 4.2, 1.02]} rotation={[Math.PI / 2, 0, 0]}
@@ -315,13 +315,13 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
       {[-1.2, 1.2].map((xp, i) => (
         <group key={`arch-${i}`} position={[xp, 0, platL / 2 + 1.8]}>
           <mesh geometry={GEO.box} scale={[0.45, 3, 0.45]}
-            position={[0, 1.5, 0]} material={MAT.stoneWarm} castShadow />
+            position={[0, 1.5, 0]} material={MAT.stoneWarm}  />
           <mesh geometry={GEO.sphere8} scale={[0.22, 0.22, 0.22]}
             position={[0, 3.05, 0]} material={MAT.stoneLight} />
         </group>
       ))}
       <mesh geometry={GEO.box} scale={[4, 0.3, 0.35]}
-        position={[0, 3.05, platL / 2 + 1.8]} material={MAT.stoneWarm} castShadow />
+        position={[0, 3.05, platL / 2 + 1.8]} material={MAT.stoneWarm}  />
 
       {/* ===== STATION SIGN ===== */}
       <StationSign x={0} z={platL / 2 + 0.5} />
@@ -348,11 +348,11 @@ const IronholdCentralStation = memo(function IronholdCentralStation({ station }:
       {/* ===== DECORATIVE FENCE POSTS at platform ends ===== */}
       {[-platL / 2 + 0.3, platL / 2 - 0.3].map((zp, i) => (
         <mesh key={`fence-${i}`} geometry={GEO.box} scale={[0.1, 0.8, 0.1]}
-          position={[platW / 2 - 0.4, 0.95, zp]} material={MAT.fence} castShadow />
+          position={[platW / 2 - 0.4, 0.95, zp]} material={MAT.fence}  />
       ))}
       {[-platL / 2 + 0.3, platL / 2 - 0.3].map((zp, i) => (
         <mesh key={`fence2-${i}`} geometry={GEO.box} scale={[0.1, 0.8, 0.1]}
-          position={[-(platW / 2 - 0.4), 0.95, zp]} material={MAT.fence} castShadow />
+          position={[-(platW / 2 - 0.4), 0.95, zp]} material={MAT.fence}  />
       ))}
     </group>
   );
@@ -454,7 +454,7 @@ const StationRenderer = memo(function StationRenderer({ station }: { station: Ra
       {/* ===== ALL STATIONS: decorative fence posts at platform ends ===== */}
       {[-platL / 2 + 0.3, platL / 2 - 0.3].map((zp, i) => (
         <mesh key={`fence-${i}`} geometry={GEO.box} scale={[0.1, 0.8, 0.1]}
-          position={[lampSide, 0.95, zp]} material={MAT.fence} castShadow />
+          position={[lampSide, 0.95, zp]} material={MAT.fence}  />
       ))}
     </group>
   );

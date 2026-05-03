@@ -9,6 +9,7 @@ import chillhouseJumpUrl from '@/assets/chillhousejump.glb?url';
 import chillhouseGetHitUrl from '@/assets/chillhousegethit.glb?url';
 import chillhouseFightUrl from '@/assets/chillhousefight.glb?url';
 import { ChillhouseEmotes } from './ChillhouseEmotes';
+import { devLog } from '../utils/devLog';
 
 interface ChillhouseGLBModelProps {
   moveSpeedRef: React.MutableRefObject<number>;
@@ -253,7 +254,7 @@ export function ChillhouseGLBModel({ moveSpeedRef, controllerHalfHeight, isGroun
 
   useEffect(() => {
     [idleGltf.scene, walkGltf.scene, runGltf.scene, jumpGltf.scene, getHitGltf.scene, fightGltf.scene].forEach(enableMeshShadows);
-    console.log('[Chillhouse] Clip names — idle:', idleClipName, 'walk:', walkClipName, 'run:', runClipName, 'jump:', jumpClipName, 'hit:', hitClipName, 'fight:', fightClipName);
+    devLog('[Chillhouse] Clip names — idle:', idleClipName, 'walk:', walkClipName, 'run:', runClipName, 'jump:', jumpClipName, 'hit:', hitClipName, 'fight:', fightClipName);
   }, [idleGltf.scene, walkGltf.scene, runGltf.scene, jumpGltf.scene, getHitGltf.scene, fightGltf.scene, idleClipName, walkClipName, runClipName, jumpClipName, hitClipName, fightClipName]);
 
   useEffect(() => {

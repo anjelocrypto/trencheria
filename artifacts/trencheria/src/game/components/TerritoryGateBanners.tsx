@@ -39,22 +39,22 @@ function GateBanner({ x, z, color, isClaimed, clanName }: {
   return (
     <group position={[x, terrainY, z]}>
       {/* Left pole */}
-      <mesh position={[-1.2, POLE_H / 2, 0]} castShadow>
+      <mesh position={[-1.2, POLE_H / 2, 0]} >
         <cylinderGeometry args={[0.05, 0.07, POLE_H, 6]} />
         <meshStandardMaterial color="#3a2a15" roughness={0.9} />
       </mesh>
       {/* Right pole */}
-      <mesh position={[1.2, POLE_H / 2, 0]} castShadow>
+      <mesh position={[1.2, POLE_H / 2, 0]} >
         <cylinderGeometry args={[0.05, 0.07, POLE_H, 6]} />
         <meshStandardMaterial color="#3a2a15" roughness={0.9} />
       </mesh>
       {/* Cross bar */}
-      <mesh position={[0, POLE_H - 0.15, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <mesh position={[0, POLE_H - 0.15, 0]} rotation={[0, 0, Math.PI / 2]} >
         <cylinderGeometry args={[0.04, 0.04, 2.4, 6]} />
         <meshStandardMaterial color="#3a2a15" roughness={0.9} />
       </mesh>
       {/* Banner hanging from cross bar */}
-      <mesh position={[0, POLE_H - 1.2, 0.02]} castShadow>
+      <mesh position={[0, POLE_H - 1.2, 0.02]} >
         <planeGeometry args={[2.0, 1.8]} />
         <meshStandardMaterial
           color={isClaimed ? colorObj : neutralColor}
@@ -66,7 +66,7 @@ function GateBanner({ x, z, color, isClaimed, clanName }: {
       </mesh>
       {/* Pole cap ornaments */}
       {[-1.2, 1.2].map((px, i) => (
-        <mesh key={i} position={[px, POLE_H + 0.1, 0]} castShadow>
+        <mesh key={i} position={[px, POLE_H + 0.1, 0]} >
           <sphereGeometry args={[0.08, 6, 6]} />
           <meshStandardMaterial
             color={isClaimed ? colorObj : neutralColor}

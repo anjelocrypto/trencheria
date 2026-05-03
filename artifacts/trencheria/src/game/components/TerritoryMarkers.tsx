@@ -44,13 +44,13 @@ function TerritoryBanner({ territory }: { territory: TerritoryInfo }) {
   return (
     <group position={[territory.center_x, terrainY, territory.center_z]}>
       {/* Pole */}
-      <mesh position={[0, POLE_HEIGHT / 2, 0]} castShadow>
+      <mesh position={[0, POLE_HEIGHT / 2, 0]} >
         <cylinderGeometry args={[0.06, 0.08, POLE_HEIGHT, 6]} />
         <meshStandardMaterial color="#4a3520" roughness={0.9} />
       </mesh>
 
       {/* Banner cloth */}
-      <mesh position={[BANNER_WIDTH / 2 + 0.06, POLE_HEIGHT - BANNER_HEIGHT / 2 - 0.3, 0]} castShadow>
+      <mesh position={[BANNER_WIDTH / 2 + 0.06, POLE_HEIGHT - BANNER_HEIGHT / 2 - 0.3, 0]} >
         <planeGeometry args={[BANNER_WIDTH, BANNER_HEIGHT]} />
         <meshStandardMaterial
           color={isClaimed ? colorObj : neutralColor}
@@ -62,7 +62,7 @@ function TerritoryBanner({ territory }: { territory: TerritoryInfo }) {
       </mesh>
 
       {/* Pole cap ornament */}
-      <mesh position={[0, POLE_HEIGHT + 0.15, 0]} castShadow>
+      <mesh position={[0, POLE_HEIGHT + 0.15, 0]} >
         <sphereGeometry args={[0.12, 8, 8]} />
         <meshStandardMaterial
           color={isContested ? warColor : isClaimed ? colorObj : neutralColor}

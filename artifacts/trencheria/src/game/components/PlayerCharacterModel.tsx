@@ -311,11 +311,11 @@ export function PlayerGLBModel({ moveSpeedRef, controllerHalfHeight, isGroundedR
   useEffect(() => {
     if (auditLoggedRef.current) return;
     auditLoggedRef.current = true;
-    console.groupCollapsed('[Character Audit] GLB integration');
+    if (import.meta.env.DEV) console.groupCollapsed('[Character Audit] GLB integration');
     devLog('Idle:', idleNorm, 'Walk:', walkNorm, 'Jump:', jumpNorm);
     devLog('PushupEnter:', pushupEnterNorm, 'PushupLoop:', pushupLoopNorm, 'PushupExit:', pushupExitNorm);
     devLog('Clips - walk:', walkClipName, 'jump:', jumpClipName, 'pushupEnter:', pushupEnterClipName, 'pushupLoop:', pushupLoopClipName, 'pushupExit:', pushupExitClipName);
-    console.groupEnd();
+    if (import.meta.env.DEV) console.groupEnd();
   }, [idleNorm, walkNorm, jumpNorm, pushupEnterNorm, pushupLoopNorm, pushupExitNorm, walkClipName, jumpClipName, pushupEnterClipName, pushupLoopClipName, pushupExitClipName]);
 
   // Initial visibility

@@ -19,6 +19,11 @@ export type QualityTier = 'low' | 'medium' | 'high';
 
 const STORAGE_KEY = 'trencheria.quality';
 const ADAPTIVE_KEY = 'trencheria.quality.autoDropped';
+// Browser StorageEvent only fires in OTHER tabs/windows — not the same
+// document. We dispatch this CustomEvent in addition so subscribers in
+// THIS tab (GameScene, Atmosphere, SettingsPanel) all update live when
+// the user clicks a quality button.
+const SAME_TAB_EVENT = 'trencheria-quality-change';
 
 function detectDefaultTier(): QualityTier {
   if (typeof window === 'undefined') return 'high';
@@ -107,6 +112,7 @@ export function tryAdaptiveDrop(): QualityTier | null {
     window.localStorage.setItem(STORAGE_KEY, next);
     window.sessionStorage.setItem(ADAPTIVE_KEY, '1');
     window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: next }));
+    window.dispatchEvent(new CustomEvent(SAME_TAB_EVENT, { detail: next }));
     return next;
   } catch {
     return null;
@@ -116,7 +122,8 @@ export function tryAdaptiveDrop(): QualityTier | null {
 export function useQualitySettings(): QualitySettingsValue {
   const [tier, setTierState] = useState<QualityTier>(() => readStoredTier());
 
-  // Cross-tab + adaptive fallback sync
+  // Cross-tab sync via StorageEvent + same-tab sync via CustomEvent so all
+  // hook consumers in this document update when ANY of them calls setTier.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const onStorage = (e: StorageEvent) => {
@@ -124,14 +131,24 @@ export function useQualitySettings(): QualitySettingsValue {
       const v = e.newValue;
       if (v === 'low' || v === 'medium' || v === 'high') setTierState(v);
     };
+    const onSameTab = (e: Event) => {
+      const v = (e as CustomEvent<QualityTier>).detail;
+      if (v === 'low' || v === 'medium' || v === 'high') setTierState(v);
+    };
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener(SAME_TAB_EVENT, onSameTab as EventListener);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(SAME_TAB_EVENT, onSameTab as EventListener);
+    };
   }, []);
 
   const setTier = useCallback((t: QualityTier) => {
     setTierState(t);
     try {
       window.localStorage.setItem(STORAGE_KEY, t);
+      // Notify all in-document subscribers (GameScene, Atmosphere, etc.)
+      window.dispatchEvent(new CustomEvent(SAME_TAB_EVENT, { detail: t }));
     } catch {
       /* ignore */
     }

@@ -43,12 +43,12 @@ export function PlaceholderCharacterModel({
   return (
     <group ref={groupRef}>
       {/* Body */}
-      <mesh position={[0, 0.9, 0]} castShadow>
+      <mesh position={[0, 0.9, 0]} >
         <capsuleGeometry args={[0.35, 1.0, 6, 12]} />
         <meshStandardMaterial color={factionColor} roughness={0.6} metalness={0.2} />
       </mesh>
       {/* Head */}
-      <mesh position={[0, 1.8, 0]} castShadow>
+      <mesh position={[0, 1.8, 0]} >
         <sphereGeometry args={[0.25, 12, 12]} />
         <meshStandardMaterial color={factionColor} roughness={0.5} metalness={0.3} />
       </mesh>
@@ -63,11 +63,11 @@ export function PlaceholderCharacterModel({
       </mesh>
       {/* Faction icon floating above */}
       {/* Arms */}
-      <mesh position={[0.45, 0.9, 0]} castShadow>
+      <mesh position={[0.45, 0.9, 0]} >
         <capsuleGeometry args={[0.1, 0.5, 4, 8]} />
         <meshStandardMaterial color={factionColor} roughness={0.7} />
       </mesh>
-      <mesh position={[-0.45, 0.9, 0]} castShadow>
+      <mesh position={[-0.45, 0.9, 0]} >
         <capsuleGeometry args={[0.1, 0.5, 4, 8]} />
         <meshStandardMaterial color={factionColor} roughness={0.7} />
       </mesh>

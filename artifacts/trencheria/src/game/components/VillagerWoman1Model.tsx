@@ -38,7 +38,7 @@ function cloneAndNormalize(scene: THREE.Group): THREE.Group {
     if ((mesh as THREE.SkinnedMesh).isSkinnedMesh) {
       (mesh as THREE.SkinnedMesh).frustumCulled = false;
     }
-    mesh.castShadow = true;
+    mesh.castShadow = false;
     mesh.receiveShadow = true;
   });
   cloned.updateMatrixWorld(true);

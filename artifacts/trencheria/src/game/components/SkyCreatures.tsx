@@ -192,7 +192,7 @@ function DragonRenderer({ dragon, playerPos }: { dragon: DragonDef; playerPos: T
 
   return (
     <group ref={groupRef}>
-      <mesh geometry={dragonBodyGeo} material={dragonMat} castShadow />
+      <mesh geometry={dragonBodyGeo} material={dragonMat}  />
       <mesh position={[-2, 0.1, 0]} geometry={dragonWingGeo} material={dragonWingMat} />
       <mesh position={[2, 0.1, 0]} geometry={dragonWingGeo} material={dragonWingMat} />
       <mesh position={[0, 0, 1.8]} geometry={dragonTailGeo} material={dragonAccent} />

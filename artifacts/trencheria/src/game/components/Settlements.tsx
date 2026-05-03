@@ -40,26 +40,26 @@ function House({ pos, rot, w, d, h, style, chimney, shed }: {
     <group position={pos} rotation={[0, rot, 0]}>
       {/* Foundation */}
       <mesh position={[0, 0.2, 0]} geometry={GEO.box}
-        scale={[w + 0.5, 0.4, d + 0.5]} material={baseMat} castShadow />
+        scale={[w + 0.5, 0.4, d + 0.5]} material={baseMat}  />
       {/* Walls */}
       <mesh position={[0, h / 2 + 0.4, 0]} geometry={GEO.box}
-        scale={[w, h, d]} material={wallMat} castShadow />
+        scale={[w, h, d]} material={wallMat}  />
       {/* Half-timber beams */}
       {isTimber && (
         <>
           <mesh position={[0, h + 0.4, d / 2 + 0.01]} geometry={GEO.box}
-            scale={[w, 0.12, 0.06]} material={MAT.timber} castShadow />
+            scale={[w, 0.12, 0.06]} material={MAT.timber}  />
           <mesh position={[0, 0.5, d / 2 + 0.01]} geometry={GEO.box}
-            scale={[w, 0.12, 0.06]} material={MAT.timber} castShadow />
+            scale={[w, 0.12, 0.06]} material={MAT.timber}  />
           <mesh position={[0, h * 0.5 + 0.4, d / 2 + 0.01]} geometry={GEO.box}
-            scale={[w, 0.1, 0.06]} material={MAT.timber} castShadow />
+            scale={[w, 0.1, 0.06]} material={MAT.timber}  />
           {/* Vertical beams */}
           <mesh position={[-w / 2 + 0.01, h / 2 + 0.4, d / 2 + 0.01]} geometry={GEO.box}
-            scale={[0.1, h, 0.06]} material={MAT.timber} castShadow />
+            scale={[0.1, h, 0.06]} material={MAT.timber}  />
           <mesh position={[w / 2 - 0.01, h / 2 + 0.4, d / 2 + 0.01]} geometry={GEO.box}
-            scale={[0.1, h, 0.06]} material={MAT.timber} castShadow />
+            scale={[0.1, h, 0.06]} material={MAT.timber}  />
           <mesh position={[0, h / 2 + 0.4, d / 2 + 0.01]} geometry={GEO.box}
-            scale={[0.1, h, 0.06]} material={MAT.timber} castShadow />
+            scale={[0.1, h, 0.06]} material={MAT.timber}  />
           {/* Cross braces */}
           <mesh position={[-w / 4, h * 0.5 + 0.4, d / 2 + 0.02]} rotation={[0, 0, 0.6]} geometry={GEO.box}
             scale={[0.06, h * 0.4, 0.04]} material={MAT.timber} />
@@ -71,7 +71,7 @@ function House({ pos, rot, w, d, h, style, chimney, shed }: {
       {roofMat && (
         <>
           <mesh position={[0, h + 0.4 + roofH / 2, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4}
-            scale={[(w + roofOverhang) * 0.72, roofH, (d + roofOverhang) * 0.72]} material={roofMat} castShadow />
+            scale={[(w + roofOverhang) * 0.72, roofH, (d + roofOverhang) * 0.72]} material={roofMat}  />
           {/* Ridge beam */}
           <mesh position={[0, h + 0.4 + roofH + 0.05, 0]} geometry={GEO.box}
             scale={[0.1, 0.1, d * 0.5]} material={MAT.timber} />
@@ -79,13 +79,13 @@ function House({ pos, rot, w, d, h, style, chimney, shed }: {
       )}
       {/* Door with frame */}
       <mesh position={[0, 0.3, d / 2 + 0.02]} geometry={GEO.box}
-        scale={[1.1, 0.1, 0.12]} material={MAT.doorFrame} castShadow />
+        scale={[1.1, 0.1, 0.12]} material={MAT.doorFrame}  />
       <mesh position={[-0.55, h * 0.35 + 0.4, d / 2 + 0.02]} geometry={GEO.box}
-        scale={[0.1, h * 0.55, 0.1]} material={MAT.doorFrame} castShadow />
+        scale={[0.1, h * 0.55, 0.1]} material={MAT.doorFrame}  />
       <mesh position={[0.55, h * 0.35 + 0.4, d / 2 + 0.02]} geometry={GEO.box}
-        scale={[0.1, h * 0.55, 0.1]} material={MAT.doorFrame} castShadow />
+        scale={[0.1, h * 0.55, 0.1]} material={MAT.doorFrame}  />
       <mesh position={[0, h * 0.35 + 0.4, d / 2 + 0.03]} geometry={GEO.box}
-        scale={[0.9, h * 0.55, 0.06]} material={MAT.door} castShadow />
+        scale={[0.9, h * 0.55, 0.06]} material={MAT.door}  />
       {/* Windows on sides */}
       {!isRuin && w > 3 && (
         <>
@@ -97,27 +97,27 @@ function House({ pos, rot, w, d, h, style, chimney, shed }: {
             scale={[0.06, 0.5, 0.6]} material={MAT.dark} />
           {/* Shutters */}
           <mesh position={[-w / 2 - 0.03, h * 0.55 + 0.4, -0.38]} geometry={GEO.box}
-            scale={[0.04, 0.5, 0.2]} material={MAT.shutter} castShadow />
+            scale={[0.04, 0.5, 0.2]} material={MAT.shutter}  />
         </>
       )}
       {/* Chimney */}
       {chimney && !isRuin && (
         <group position={[w * 0.3, h + roofH * 0.4, -d * 0.2]}>
           <mesh position={[0, 0.5, 0]} geometry={GEO.box}
-            scale={[0.5, 1.2, 0.5]} material={MAT.stoneDark} castShadow />
+            scale={[0.5, 1.2, 0.5]} material={MAT.stoneDark}  />
           <mesh position={[0, 1.15, 0]} geometry={GEO.box}
-            scale={[0.6, 0.12, 0.6]} material={MAT.cobble} castShadow />
+            scale={[0.6, 0.12, 0.6]} material={MAT.cobble}  />
         </group>
       )}
       {/* Lean-to shed */}
       {shed && !isRuin && (
         <group position={[-w / 2 - 0.8, 0, -d * 0.15]}>
           <mesh position={[0, 0.6, 0]} geometry={GEO.box}
-            scale={[0.12, 1.2, 0.12]} material={MAT.timber} castShadow />
+            scale={[0.12, 1.2, 0.12]} material={MAT.timber}  />
           <mesh position={[0, 0.6, 1.2]} geometry={GEO.box}
-            scale={[0.12, 1.2, 0.12]} material={MAT.timber} castShadow />
+            scale={[0.12, 1.2, 0.12]} material={MAT.timber}  />
           <mesh position={[-0.3, 1.1, 0.6]} rotation={[0, 0, 0.25]} geometry={GEO.box}
-            scale={[1.2, 0.06, 1.6]} material={MAT.woodWeathered} castShadow />
+            scale={[1.2, 0.06, 1.6]} material={MAT.woodWeathered}  />
         </group>
       )}
     </group>
@@ -135,27 +135,27 @@ function Tower({ pos, h, r, roofStyle, mat }: {
     <group position={pos}>
       {/* Tapered body */}
       <mesh position={[0, h / 2, 0]} geometry={GEO.towerGeo}
-        scale={[r, h, r]} material={bodyMat} castShadow />
+        scale={[r, h, r]} material={bodyMat}  />
       {/* Base ring */}
       <mesh position={[0, 0.3, 0]} geometry={GEO.cyl12}
-        scale={[r * 1.15, 0.6, r * 1.15]} material={MAT.cobble} castShadow />
+        scale={[r * 1.15, 0.6, r * 1.15]} material={MAT.cobble}  />
       {roofStyle === 'cone' && (
         <mesh position={[0, h + 1.8, 0]} geometry={GEO.cone8}
-          scale={[r * 1.25, 3.5, r * 1.25]} material={MAT.roofSlate} castShadow />
+          scale={[r * 1.25, 3.5, r * 1.25]} material={MAT.roofSlate}  />
       )}
       {roofStyle === 'flat' && (
         <mesh position={[0, h + 0.25, 0]} geometry={GEO.cyl12}
-          scale={[r * 1.2, 0.5, r * 1.2]} material={MAT.stoneDark} castShadow />
+          scale={[r * 1.2, 0.5, r * 1.2]} material={MAT.stoneDark}  />
       )}
       {roofStyle === 'battlement' && (
         <>
           <mesh position={[0, h + 0.15, 0]} geometry={GEO.cyl12}
-            scale={[r * 1.15, 0.3, r * 1.15]} material={MAT.stoneDark} castShadow />
+            scale={[r * 1.15, 0.3, r * 1.15]} material={MAT.stoneDark}  />
           {/* Merlons */}
           {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
             const a = (i / 8) * Math.PI * 2;
             return <mesh key={i} position={[Math.cos(a) * r * 1.05, h + 0.55, Math.sin(a) * r * 1.05]}
-              geometry={GEO.box} scale={[0.4, 0.5, 0.3]} material={MAT.stone} castShadow />;
+              geometry={GEO.box} scale={[0.4, 0.5, 0.3]} material={MAT.stone}  />;
           })}
         </>
       )}
@@ -165,7 +165,7 @@ function Tower({ pos, h, r, roofStyle, mat }: {
           {[0, 2, 5].map(i => {
             const a = (i / 6) * Math.PI * 2;
             return <mesh key={i} position={[Math.cos(a) * r * 0.7, h + 0.3, Math.sin(a) * r * 0.7]}
-              geometry={GEO.box} scale={[0.5, 0.6 + i * 0.2, 0.4]} material={MAT.stoneRuin} castShadow />;
+              geometry={GEO.box} scale={[0.5, 0.6 + i * 0.2, 0.4]} material={MAT.stoneRuin}  />;
           })}
         </>
       )}
@@ -195,10 +195,10 @@ function Wall({ from, to, h, thickness, battlements, mat }: {
   return (
     <group>
       <mesh position={[cx, cy, cz]} rotation={[0, angle, 0]}
-        geometry={GEO.box} scale={[thickness, h, len]} material={wallMat} castShadow />
+        geometry={GEO.box} scale={[thickness, h, len]} material={wallMat}  />
       {/* Wall base / plinth */}
       <mesh position={[cx, 0.2, cz]} rotation={[0, angle, 0]}
-        geometry={GEO.box} scale={[thickness + 0.3, 0.4, len]} material={MAT.cobble} castShadow />
+        geometry={GEO.box} scale={[thickness + 0.3, 0.4, len]} material={MAT.cobble}  />
       {/* Battlements */}
       {battlements && len > 3 && Array.from({ length: Math.floor(len / 2.5) }).map((_, i) => {
         const t = (i + 0.5) / Math.floor(len / 2.5);
@@ -206,7 +206,7 @@ function Wall({ from, to, h, thickness, battlements, mat }: {
         const mz = from[2] + dz * t;
         return (
           <mesh key={i} position={[mx, cy + h / 2 + 0.3, mz]} rotation={[0, angle, 0]}
-            geometry={GEO.box} scale={[thickness + 0.15, 0.6, 1]} material={wallMat} castShadow />
+            geometry={GEO.box} scale={[thickness + 0.15, 0.6, 1]} material={wallMat}  />
         );
       })}
     </group>
@@ -227,7 +227,7 @@ function Gatehouse({ pos, rot, w, h: height, towerR }: {
       <Tower pos={[gw / 2, 0, 0]} h={gh + 2} r={tr} roofStyle="cone" />
       {/* Connecting arch */}
       <mesh position={[0, gh - 1, 0]} geometry={GEO.box}
-        scale={[gw + 1, 2.5, 3]} material={MAT.stone} castShadow />
+        scale={[gw + 1, 2.5, 3]} material={MAT.stone}  />
       {/* Archway (dark opening) */}
       <mesh position={[0, gh / 2 - 1.5, 0]} geometry={GEO.box}
         scale={[gw - tr * 2, gh - 3, 3.5]} material={MAT.dark} />
@@ -244,19 +244,19 @@ function Well({ pos }: { pos: [number, number, number] }) {
   return (
     <group position={pos}>
       <mesh position={[0, 0.4, 0]} geometry={GEO.cyl8}
-        scale={[0.8, 0.8, 0.8]} material={MAT.cobble} castShadow />
+        scale={[0.8, 0.8, 0.8]} material={MAT.cobble}  />
       {/* Posts */}
       <mesh position={[-0.35, 1.3, 0]} geometry={GEO.box}
-        scale={[0.1, 1.8, 0.1]} material={MAT.timber} castShadow />
+        scale={[0.1, 1.8, 0.1]} material={MAT.timber}  />
       <mesh position={[0.35, 1.3, 0]} geometry={GEO.box}
-        scale={[0.1, 1.8, 0.1]} material={MAT.timber} castShadow />
+        scale={[0.1, 1.8, 0.1]} material={MAT.timber}  />
       {/* Crossbar + bucket */}
       <mesh position={[0, 2.2, 0]} geometry={GEO.box}
-        scale={[0.9, 0.08, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.9, 0.08, 0.08]} material={MAT.timber}  />
       <mesh position={[0.1, 1.5, 0]} geometry={GEO.box}
         scale={[0.01, 0.7, 0.01]} material={MAT.iron} />
       <mesh position={[0.1, 1.1, 0]} geometry={GEO.cyl8}
-        scale={[0.12, 0.15, 0.12]} material={MAT.barrel} castShadow />
+        scale={[0.12, 0.15, 0.12]} material={MAT.barrel}  />
     </group>
   );
 }
@@ -268,27 +268,27 @@ function MarketStall({ pos, rot, goods }: {
     <group position={pos} rotation={[0, rot, 0]}>
       {/* Posts */}
       <mesh position={[-0.9, 1.2, -0.5]} geometry={GEO.box}
-        scale={[0.1, 2.4, 0.1]} material={MAT.timber} castShadow />
+        scale={[0.1, 2.4, 0.1]} material={MAT.timber}  />
       <mesh position={[0.9, 1.2, -0.5]} geometry={GEO.box}
-        scale={[0.1, 2.4, 0.1]} material={MAT.timber} castShadow />
+        scale={[0.1, 2.4, 0.1]} material={MAT.timber}  />
       <mesh position={[-0.9, 0.8, 0.5]} geometry={GEO.box}
-        scale={[0.1, 1.6, 0.1]} material={MAT.timber} castShadow />
+        scale={[0.1, 1.6, 0.1]} material={MAT.timber}  />
       <mesh position={[0.9, 0.8, 0.5]} geometry={GEO.box}
-        scale={[0.1, 1.6, 0.1]} material={MAT.timber} castShadow />
+        scale={[0.1, 1.6, 0.1]} material={MAT.timber}  />
       {/* Counter */}
       <mesh position={[0, 0.9, 0]} geometry={GEO.box}
-        scale={[2, 0.1, 1.2]} material={MAT.woodLight} castShadow />
+        scale={[2, 0.1, 1.2]} material={MAT.woodLight}  />
       {/* Awning */}
       <mesh position={[0, 2.3, 0]} rotation={[0.15, 0, 0]} geometry={GEO.box}
-        scale={[2.2, 0.05, 1.6]} material={MAT.tent} castShadow />
+        scale={[2.2, 0.05, 1.6]} material={MAT.tent}  />
       {/* Goods */}
       {goods === 'crates' && [[-0.4, 0], [0.3, 0.2]].map(([gx, gz], i) => (
         <mesh key={i} position={[gx, 1.05, gz]} geometry={GEO.box}
-          scale={[0.3, 0.25, 0.3]} material={MAT.barrel} castShadow />
+          scale={[0.3, 0.25, 0.3]} material={MAT.barrel}  />
       ))}
       {goods === 'cloth' && (
         <mesh position={[0, 1.05, 0]} geometry={GEO.box}
-          scale={[1.2, 0.15, 0.8]} material={MAT.cloth} castShadow />
+          scale={[1.2, 0.15, 0.8]} material={MAT.cloth}  />
       )}
     </group>
   );
@@ -300,7 +300,7 @@ function Campfire({ pos }: { pos: [number, number, number] }) {
       {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
         const a = (i / 8) * Math.PI * 2;
         return <mesh key={i} position={[Math.cos(a) * 0.5, 0.1, Math.sin(a) * 0.5]}
-          geometry={GEO.box} scale={[0.2, 0.18, 0.2]} material={MAT.stoneDark} castShadow />;
+          geometry={GEO.box} scale={[0.2, 0.18, 0.2]} material={MAT.stoneDark}  />;
       })}
       <mesh position={[0, 0.35, 0]} geometry={GEO.box}
         scale={[0.2, 0.4, 0.2]} material={MAT.fire} />
@@ -308,9 +308,9 @@ function Campfire({ pos }: { pos: [number, number, number] }) {
         scale={[0.1, 0.25, 0.1]} material={MAT.fireGlow} />
       {/* Log seats */}
       <mesh position={[-1, 0.15, 0.3]} rotation={[0, 0.4, 0]} geometry={GEO.cyl6}
-        scale={[0.15, 0.8, 0.15]} material={MAT.woodDark} castShadow />
+        scale={[0.15, 0.8, 0.15]} material={MAT.woodDark}  />
       <mesh position={[0.8, 0.15, -0.5]} rotation={[0, -0.3, 0]} geometry={GEO.cyl6}
-        scale={[0.15, 0.7, 0.15]} material={MAT.woodDark} castShadow />
+        scale={[0.15, 0.7, 0.15]} material={MAT.woodDark}  />
     </group>
   );
 }
@@ -327,9 +327,9 @@ function Fence({ from, to }: { from: [number, number, number]; to: [number, numb
       {/* Rails */}
       <group position={[cx, cy, cz]} rotation={[0, angle, 0]}>
         <mesh position={[0, 0.4, 0]} geometry={GEO.box}
-          scale={[0.06, 0.06, len]} material={MAT.fence} castShadow />
+          scale={[0.06, 0.06, len]} material={MAT.fence}  />
         <mesh position={[0, 0.75, 0]} geometry={GEO.box}
-          scale={[0.05, 0.05, len]} material={MAT.fence} castShadow />
+          scale={[0.05, 0.05, len]} material={MAT.fence}  />
       </group>
       {/* Posts */}
       {Array.from({ length: postCount }).map((_, i) => {
@@ -337,7 +337,7 @@ function Fence({ from, to }: { from: [number, number, number]; to: [number, numb
         return <mesh key={i}
           position={[from[0] + dx * t, cy + 0.45, from[2] + dz * t]}
           geometry={GEO.box} scale={[0.08, 0.9, 0.08]}
-          material={MAT.fence} castShadow />;
+          material={MAT.fence}  />;
       })}
     </group>
   );
@@ -350,7 +350,7 @@ function CropField({ pos, w, d }: { pos: [number, number, number]; w: number; d:
         scale={[w, 0.04, d]} material={MAT.crop} />
       {Array.from({ length: Math.floor(w / 1.2) }).map((_, i) => (
         <mesh key={i} position={[-w / 2 + 0.6 + i * 1.2, 0.3, 0]}
-          geometry={GEO.box} scale={[0.06, 0.5, d * 0.9]} material={MAT.cropGold} castShadow />
+          geometry={GEO.box} scale={[0.06, 0.5, d * 0.9]} material={MAT.cropGold}  />
       ))}
     </group>
   );
@@ -369,7 +369,7 @@ function Palisade({ center, radius, segments, h, gateAngle }: {
     posts.push(
       <group key={i}>
         <mesh position={[x, center[1] + h / 2, z]} rotation={[0, -a, 0]}
-          geometry={GEO.box} scale={[0.3, h, 0.7]} material={MAT.palisade} castShadow />
+          geometry={GEO.box} scale={[0.3, h, 0.7]} material={MAT.palisade}  />
         {/* Sharpened top */}
         <mesh position={[x, center[1] + h + 0.2, z]} rotation={[0, -a, 0]}
           geometry={GEO.cone4} scale={[0.15, 0.5, 0.15]} material={MAT.palisadeSharp} />
@@ -391,7 +391,7 @@ function Barrels({ pos, count }: { pos: [number, number, number]; count: number 
           position={fallen ? [x + 0.3, 0.2, z] : [x, 0.35, z]}
           rotation={fallen ? [0, 0, Math.PI / 2] : [0, 0, 0]}
           geometry={GEO.cyl8} scale={[0.2, 0.5, 0.2]}
-          material={MAT.barrel} castShadow />;
+          material={MAT.barrel}  />;
       })}
     </group>
   );
@@ -406,7 +406,7 @@ function Crates({ pos, count }: { pos: [number, number, number]; count: number }
           position={[(i % 2) * 0.55 - 0.25, 0.25 + Math.floor(i / 3) * 0.45, Math.floor((i % 3) / 2) * 0.5 - 0.2]}
           rotation={[0, i * 0.3, 0]}
           geometry={GEO.box} scale={[0.45, 0.45, 0.45]}
-          material={MAT.woodDark} castShadow />
+          material={MAT.woodDark}  />
       ))}
     </group>
   );
@@ -417,13 +417,13 @@ function TrainingDummy({ pos }: { pos: [number, number, number] }) {
   return (
     <group position={pos}>
       <mesh position={[0, 0.8, 0]} geometry={GEO.box}
-        scale={[0.12, 1.6, 0.12]} material={MAT.timber} castShadow />
+        scale={[0.12, 1.6, 0.12]} material={MAT.timber}  />
       <mesh position={[0, 1.2, 0]} geometry={GEO.box}
-        scale={[0.8, 0.12, 0.12]} material={MAT.timber} castShadow />
+        scale={[0.8, 0.12, 0.12]} material={MAT.timber}  />
       <mesh position={[0, 1.3, 0]} geometry={GEO.box}
-        scale={[0.4, 0.5, 0.15]} material={MAT.hay} castShadow />
+        scale={[0.4, 0.5, 0.15]} material={MAT.hay}  />
       <mesh position={[0, 1.75, 0]} geometry={GEO.cyl8}
-        scale={[0.15, 0.25, 0.15]} material={MAT.hay} castShadow />
+        scale={[0.15, 0.25, 0.15]} material={MAT.hay}  />
     </group>
   );
 }
@@ -433,9 +433,9 @@ function Banner({ pos, color }: { pos: [number, number, number]; color?: THREE.M
   return (
     <group position={pos}>
       <mesh position={[0, 2.5, 0]} geometry={GEO.box}
-        scale={[0.08, 5, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 5, 0.08]} material={MAT.timber}  />
       <mesh position={[0.4, 4.2, 0]} geometry={GEO.box}
-        scale={[0.7, 1.1, 0.03]} material={color || MAT.banner} castShadow />
+        scale={[0.7, 1.1, 0.03]} material={color || MAT.banner}  />
     </group>
   );
 }
@@ -445,9 +445,9 @@ function Brazier({ pos }: { pos: [number, number, number] }) {
   return (
     <group position={pos}>
       <mesh position={[0, 0.6, 0]} geometry={GEO.box}
-        scale={[0.12, 1.2, 0.12]} material={MAT.iron} castShadow />
+        scale={[0.12, 1.2, 0.12]} material={MAT.iron}  />
       <mesh position={[0, 1.3, 0]} geometry={GEO.box}
-        scale={[0.4, 0.35, 0.4]} material={MAT.iron} castShadow />
+        scale={[0.4, 0.35, 0.4]} material={MAT.iron}  />
       <mesh position={[0, 1.55, 0]} geometry={GEO.box}
         scale={[0.2, 0.2, 0.2]} material={MAT.fire} />
     </group>
@@ -500,34 +500,34 @@ function CapitalCity({ def }: { def: SettlementDef }) {
       {/* === CENTRAL KEEP — layered fortress === */}
       {/* Keep base platform */}
       <mesh position={[0, 1, 0]} geometry={GEO.box}
-        scale={[16, 2, 16]} material={MAT.cobble} castShadow />
+        scale={[16, 2, 16]} material={MAT.cobble}  />
       {/* Keep main body */}
       <mesh position={[0, 8, 0]} geometry={GEO.box}
-        scale={[12, 12, 12]} material={MAT.stone} castShadow />
+        scale={[12, 12, 12]} material={MAT.stone}  />
       {/* Keep upper section — slightly narrower */}
       <mesh position={[0, 15.5, 0]} geometry={GEO.box}
-        scale={[10, 3, 10]} material={MAT.stoneLight} castShadow />
+        scale={[10, 3, 10]} material={MAT.stoneLight}  />
       {/* Battlements on keep */}
       {[-4.5, -1.5, 1.5, 4.5].map((x, i) =>
         [-5, 5].map((z, j) => (
           <mesh key={`kb${i}${j}`} position={[x, 17.3, z]} geometry={GEO.box}
-            scale={[1.2, 0.8, 0.6]} material={MAT.stone} castShadow />
+            scale={[1.2, 0.8, 0.6]} material={MAT.stone}  />
         ))
       )}
       {[-5, 5].map((x, i) =>
         [-4.5, -1.5, 1.5, 4.5].map((z, j) => (
           <mesh key={`kbs${i}${j}`} position={[x, 17.3, z]} geometry={GEO.box}
-            scale={[0.6, 0.8, 1.2]} material={MAT.stone} castShadow />
+            scale={[0.6, 0.8, 1.2]} material={MAT.stone}  />
         ))
       )}
       {/* Keep roof */}
       <mesh position={[0, 18.5, 0]} geometry={GEO.cone4}
-        scale={[8, 5, 8]} material={MAT.roofSlate} castShadow />
+        scale={[8, 5, 8]} material={MAT.roofSlate}  />
       {/* Banner pole on keep */}
       <mesh position={[0, 22, 0]} geometry={GEO.box}
-        scale={[0.1, 4, 0.1]} material={MAT.timber} castShadow />
+        scale={[0.1, 4, 0.1]} material={MAT.timber}  />
       <mesh position={[0.5, 23, 0]} geometry={GEO.box}
-        scale={[0.8, 1.4, 0.04]} material={MAT.banner} castShadow />
+        scale={[0.8, 1.4, 0.04]} material={MAT.banner}  />
       {/* Keep windows */}
       {[[-6.01, 8], [-6.01, 12], [6.01, 8], [6.01, 12]].map(([x, yy], i) => (
         <mesh key={`kw${i}`} position={[x, yy, 0]} geometry={GEO.box}
@@ -536,7 +536,7 @@ function CapitalCity({ def }: { def: SettlementDef }) {
       {/* Buttresses */}
       {[[-6, -6], [6, -6], [-6, 6], [6, 6]].map(([bx, bz], i) => (
         <mesh key={`but${i}`} position={[bx, 4, bz]} rotation={[0, Math.atan2(bx, bz), 0]}
-          geometry={GEO.box} scale={[2.5, 8, 1.5]} material={MAT.stoneDark} castShadow />
+          geometry={GEO.box} scale={[2.5, 8, 1.5]} material={MAT.stoneDark}  />
       ))}
 
       {/* === WALLS — with battlements === */}
@@ -569,14 +569,14 @@ function CapitalCity({ def }: { def: SettlementDef }) {
       {/* === CHAPEL === */}
       <group position={[-15, 0, -8]}>
         <mesh position={[0, 3.5, 0]} geometry={GEO.box}
-          scale={[5, 7, 8]} material={MAT.stoneLight} castShadow />
+          scale={[5, 7, 8]} material={MAT.stoneLight}  />
         <mesh position={[0, 8.5, 0]} geometry={GEO.cone4}
-          scale={[3.5, 4, 6]} material={MAT.roofSlate} castShadow />
+          scale={[3.5, 4, 6]} material={MAT.roofSlate}  />
         {/* Bell tower */}
         <mesh position={[0, 8, -4.5]} geometry={GEO.box}
-          scale={[2, 5, 2]} material={MAT.stoneLight} castShadow />
+          scale={[2, 5, 2]} material={MAT.stoneLight}  />
         <mesh position={[0, 11.5, -4.5]} geometry={GEO.cone4}
-          scale={[1.5, 2, 1.5]} material={MAT.roofSlate} castShadow />
+          scale={[1.5, 2, 1.5]} material={MAT.roofSlate}  />
         {/* Arched window */}
         <mesh position={[0, 4.5, 4.01]} geometry={GEO.box}
           scale={[1, 2, 0.1]} material={MAT.dark} />
@@ -598,7 +598,7 @@ function CapitalCity({ def }: { def: SettlementDef }) {
         <TrainingDummy pos={[8, 0, -5]} />
         {/* Weapon rack */}
         <mesh position={[5, 0.8, 0]} geometry={GEO.box}
-          scale={[0.1, 1.6, 1.5]} material={MAT.timber} castShadow />
+          scale={[0.1, 1.6, 1.5]} material={MAT.timber}  />
       </group>
 
       {/* === STABLES === */}
@@ -626,13 +626,13 @@ function CapitalCity({ def }: { def: SettlementDef }) {
       {/* Smithy area */}
       <group position={[-22, 0, 10]}>
         <mesh position={[0, 1, 0]} geometry={GEO.box}
-          scale={[3, 2, 2.5]} material={MAT.stoneDark} castShadow />
+          scale={[3, 2, 2.5]} material={MAT.stoneDark}  />
         <mesh position={[0, 2.3, 0]} geometry={GEO.box}
-          scale={[0.4, 0.8, 0.4]} material={MAT.stoneDark} castShadow />
+          scale={[0.4, 0.8, 0.4]} material={MAT.stoneDark}  />
         <mesh position={[1.8, 0.5, 0]} geometry={GEO.box}
-          scale={[0.3, 1, 0.3]} material={MAT.timber} castShadow />
+          scale={[0.3, 1, 0.3]} material={MAT.timber}  />
         <mesh position={[1.8, 1.1, 0]} geometry={GEO.box}
-          scale={[0.8, 0.08, 0.5]} material={MAT.iron} castShadow />
+          scale={[0.8, 0.08, 0.5]} material={MAT.iron}  />
       </group>
 
       {/* Storage yard */}
@@ -643,17 +643,17 @@ function CapitalCity({ def }: { def: SettlementDef }) {
       {/* Guard post near gate */}
       <group position={[8, 0, 32]}>
         <mesh position={[0, 0.8, 0]} geometry={GEO.box}
-          scale={[0.12, 1.6, 0.12]} material={MAT.timber} castShadow />
+          scale={[0.12, 1.6, 0.12]} material={MAT.timber}  />
         <mesh position={[0, 1.8, 0]} geometry={GEO.box}
-          scale={[0.3, 0.25, 0.3]} material={MAT.iron} castShadow />
+          scale={[0.3, 0.25, 0.3]} material={MAT.iron}  />
         <mesh position={[0, 2, 0]} geometry={GEO.box}
           scale={[0.12, 0.12, 0.12]} material={MAT.lantern} />
       </group>
       <group position={[-8, 0, 32]}>
         <mesh position={[0, 0.8, 0]} geometry={GEO.box}
-          scale={[0.12, 1.6, 0.12]} material={MAT.timber} castShadow />
+          scale={[0.12, 1.6, 0.12]} material={MAT.timber}  />
         <mesh position={[0, 1.8, 0]} geometry={GEO.box}
-          scale={[0.3, 0.25, 0.3]} material={MAT.iron} castShadow />
+          scale={[0.3, 0.25, 0.3]} material={MAT.iron}  />
         <mesh position={[0, 2, 0]} geometry={GEO.box}
           scale={[0.12, 0.12, 0.12]} material={MAT.lantern} />
       </group>
@@ -665,13 +665,13 @@ function CapitalCity({ def }: { def: SettlementDef }) {
       {/* Statue / memorial in noble quarter */}
       <group position={[0, 0, 25]}>
         <mesh position={[0, 0.3, 0]} geometry={GEO.box}
-          scale={[1.5, 0.6, 1.5]} material={MAT.stoneLight} castShadow />
+          scale={[1.5, 0.6, 1.5]} material={MAT.stoneLight}  />
         <mesh position={[0, 1, 0]} geometry={GEO.box}
-          scale={[0.8, 0.4, 0.8]} material={MAT.stoneLight} castShadow />
+          scale={[0.8, 0.4, 0.8]} material={MAT.stoneLight}  />
         <mesh position={[0, 2, 0]} geometry={GEO.box}
-          scale={[0.4, 1.6, 0.3]} material={MAT.stoneDark} castShadow />
+          scale={[0.4, 1.6, 0.3]} material={MAT.stoneDark}  />
         <mesh position={[0, 2.6, 0.15]} geometry={GEO.box}
-          scale={[0.6, 0.08, 0.06]} material={MAT.iron} castShadow />
+          scale={[0.6, 0.08, 0.06]} material={MAT.iron}  />
       </group>
 
       {/* Hanging lanterns along main street */}
@@ -680,7 +680,7 @@ function CapitalCity({ def }: { def: SettlementDef }) {
           <mesh position={[0, 2.5, 0]} geometry={GEO.box}
             scale={[0.06, 0.08, 0.06]} material={MAT.iron} />
           <mesh position={[0, 2.3, 0]} geometry={GEO.box}
-            scale={[0.15, 0.22, 0.15]} material={MAT.iron} castShadow />
+            scale={[0.15, 0.22, 0.15]} material={MAT.iron}  />
           <mesh position={[0, 2.3, 0]} geometry={GEO.box}
             scale={[0.06, 0.1, 0.06]} material={MAT.lantern} />
         </group>
@@ -689,7 +689,7 @@ function CapitalCity({ def }: { def: SettlementDef }) {
       {/* Water trough near stables */}
       <group position={[22, 0, 8]}>
         <mesh position={[0, 0.3, 0]} geometry={GEO.box}
-          scale={[2, 0.6, 0.6]} material={MAT.woodDark} castShadow />
+          scale={[2, 0.6, 0.6]} material={MAT.woodDark}  />
         <mesh position={[0, 0.35, 0]} geometry={GEO.box}
           scale={[1.8, 0.3, 0.4]} material={MAT.water} />
       </group>
@@ -731,16 +731,16 @@ function FarmingVillage({ def }: { def: SettlementDef }) {
       {/* Windmill */}
       <group position={[-18, 0, -20]}>
         <mesh position={[0, 4, 0]} geometry={GEO.cyl8}
-          scale={[2.5, 8, 2.5]} material={MAT.stoneWarm} castShadow />
+          scale={[2.5, 8, 2.5]} material={MAT.stoneWarm}  />
         <mesh position={[0, 9.5, 0]} geometry={GEO.cone8}
-          scale={[2.8, 3, 2.8]} material={MAT.roofThatch} castShadow />
+          scale={[2.8, 3, 2.8]} material={MAT.roofThatch}  />
         {/* Sails */}
         <mesh position={[0, 7, 2.6]} geometry={GEO.box}
-          scale={[0.1, 6, 0.4]} material={MAT.woodLight} castShadow />
+          scale={[0.1, 6, 0.4]} material={MAT.woodLight}  />
         <mesh position={[0, 7, 2.6]} geometry={GEO.box}
-          scale={[6, 0.1, 0.4]} material={MAT.woodLight} castShadow />
+          scale={[6, 0.1, 0.4]} material={MAT.woodLight}  />
         <mesh position={[0, 7, 2.5]} geometry={GEO.box}
-          scale={[0.2, 0.2, 0.2]} material={MAT.timber} castShadow />
+          scale={[0.2, 0.2, 0.2]} material={MAT.timber}  />
       </group>
 
       {/* Crop fields */}
@@ -756,22 +756,22 @@ function FarmingVillage({ def }: { def: SettlementDef }) {
       {/* Hay bales */}
       {[[-5, 10], [8, -5], [-12, 5], [3, 8]].map(([hx, hz], i) => (
         <mesh key={`hay${i}`} position={[hx, 0.35, hz]} geometry={GEO.cyl8}
-          scale={[0.6, 0.7, 0.6]} material={MAT.hay} castShadow />
+          scale={[0.6, 0.7, 0.6]} material={MAT.hay}  />
       ))}
 
       {/* Cart */}
       <group position={[6, 0, 4]}>
         <mesh position={[0, 0.5, 0]} geometry={GEO.box}
-          scale={[1.4, 0.5, 2.5]} material={MAT.woodDark} castShadow />
+          scale={[1.4, 0.5, 2.5]} material={MAT.woodDark}  />
         <mesh position={[-0.75, 0.35, -1.4]} geometry={GEO.box}
-          scale={[0.06, 0.06, 1.2]} material={MAT.woodDark} castShadow />
+          scale={[0.06, 0.06, 1.2]} material={MAT.woodDark}  />
         <mesh position={[0.75, 0.35, -1.4]} geometry={GEO.box}
-          scale={[0.06, 0.06, 1.2]} material={MAT.woodDark} castShadow />
+          scale={[0.06, 0.06, 1.2]} material={MAT.woodDark}  />
         {/* Wheel indicators */}
         <mesh position={[-0.75, 0.35, 0.6]} geometry={GEO.cyl8}
-          scale={[0.3, 0.06, 0.3]} material={MAT.timber} castShadow />
+          scale={[0.3, 0.06, 0.3]} material={MAT.timber}  />
         <mesh position={[0.75, 0.35, 0.6]} geometry={GEO.cyl8}
-          scale={[0.3, 0.06, 0.3]} material={MAT.timber} castShadow />
+          scale={[0.3, 0.06, 0.3]} material={MAT.timber}  />
       </group>
 
       {/* Animal pen */}
@@ -782,9 +782,9 @@ function FarmingVillage({ def }: { def: SettlementDef }) {
 
       {/* Woodpile */}
       <mesh position={[10, 0.3, 14]} geometry={GEO.box}
-        scale={[2, 0.6, 0.8]} material={MAT.timber} castShadow />
+        scale={[2, 0.6, 0.8]} material={MAT.timber}  />
       <mesh position={[10, 0.75, 14]} geometry={GEO.box}
-        scale={[1.6, 0.4, 0.7]} material={MAT.woodDark} castShadow />
+        scale={[1.6, 0.4, 0.7]} material={MAT.woodDark}  />
 
       <Barrels pos={[-4, 0, 6]} count={3} />
 
@@ -792,21 +792,21 @@ function FarmingVillage({ def }: { def: SettlementDef }) {
       {/* Clothesline */}
       <group position={[-10, 0, 8]}>
         <mesh position={[0, 1, 0]} geometry={GEO.box}
-          scale={[0.08, 2, 0.08]} material={MAT.timber} castShadow />
+          scale={[0.08, 2, 0.08]} material={MAT.timber}  />
         <mesh position={[3, 1, 0]} geometry={GEO.box}
-          scale={[0.08, 2, 0.08]} material={MAT.timber} castShadow />
+          scale={[0.08, 2, 0.08]} material={MAT.timber}  />
         <mesh position={[1.5, 1.9, 0]} geometry={GEO.box}
           scale={[3.2, 0.02, 0.02]} material={MAT.rope} />
         {[0.5, 1.5, 2.5].map((cx, i) => (
           <mesh key={`cl${i}`} position={[cx, 1.5, 0.02]} geometry={GEO.box}
-            scale={[0.4, 0.5, 0.02]} material={i % 2 === 0 ? MAT.cloth : MAT.plaster} castShadow />
+            scale={[0.4, 0.5, 0.02]} material={i % 2 === 0 ? MAT.cloth : MAT.plaster}  />
         ))}
       </group>
 
       {/* Water trough */}
       <group position={[20, 0, 8]}>
         <mesh position={[0, 0.25, 0]} geometry={GEO.box}
-          scale={[1.5, 0.5, 0.5]} material={MAT.woodDark} castShadow />
+          scale={[1.5, 0.5, 0.5]} material={MAT.woodDark}  />
         <mesh position={[0, 0.3, 0]} geometry={GEO.box}
           scale={[1.3, 0.25, 0.3]} material={MAT.water} />
       </group>
@@ -814,16 +814,16 @@ function FarmingVillage({ def }: { def: SettlementDef }) {
       {/* Chicken coop / small shed */}
       <group position={[14, 0, -10]}>
         <mesh position={[0, 0.4, 0]} geometry={GEO.box}
-          scale={[1.5, 0.8, 1]} material={MAT.woodWeathered} castShadow />
+          scale={[1.5, 0.8, 1]} material={MAT.woodWeathered}  />
         <mesh position={[0, 0.95, 0]} geometry={GEO.cone4}
-          scale={[1.1, 0.5, 0.8]} material={MAT.roofThatch} castShadow />
+          scale={[1.1, 0.5, 0.8]} material={MAT.roofThatch}  />
       </group>
 
       {/* More hay bales scattered */}
       <mesh position={[-8, 0.25, -6]} geometry={GEO.cyl8}
-        scale={[0.5, 0.5, 0.5]} material={MAT.hay} castShadow />
+        scale={[0.5, 0.5, 0.5]} material={MAT.hay}  />
       <mesh position={[12, 0.25, 10]} geometry={GEO.cyl8}
-        scale={[0.4, 0.5, 0.4]} material={MAT.hay} castShadow />
+        scale={[0.4, 0.5, 0.4]} material={MAT.hay}  />
     </group>
   );
 }
@@ -861,7 +861,7 @@ function MilitaryFort({ def }: { def: SettlementDef }) {
       <House pos={[-10, 0, -10]} rot={0} w={4} d={4} h={2.8} style="stone" />
       {/* Weapon racks */}
       <mesh position={[-6, 0.9, -10]} geometry={GEO.box}
-        scale={[0.1, 1.8, 2]} material={MAT.timber} castShadow />
+        scale={[0.1, 1.8, 2]} material={MAT.timber}  />
 
       {/* Training yard */}
       <mesh position={[8, 0.04, -12]} geometry={GEO.box}
@@ -896,29 +896,29 @@ function MilitaryFort({ def }: { def: SettlementDef }) {
       {/* Stables */}
       <group position={[-14, 0, 10]}>
         <mesh position={[0, 1.2, 0]} geometry={GEO.box}
-          scale={[4, 2.4, 3]} material={MAT.woodWeathered} castShadow />
+          scale={[4, 2.4, 3]} material={MAT.woodWeathered}  />
         <mesh position={[0, 2.7, 0]} geometry={GEO.cone4}
-          scale={[3, 1.5, 2.5]} material={MAT.roofThatch} castShadow />
+          scale={[3, 1.5, 2.5]} material={MAT.roofThatch}  />
       </group>
 
       {/* === MILITARY CHARACTER — siege equipment and defenses === */}
       {/* Ballista / siege engine */}
       <group position={[12, 0, -16]}>
         <mesh position={[0, 0.3, 0]} geometry={GEO.box}
-          scale={[1.5, 0.3, 2]} material={MAT.woodDark} castShadow />
+          scale={[1.5, 0.3, 2]} material={MAT.woodDark}  />
         <mesh position={[0, 0.6, -0.8]} geometry={GEO.box}
-          scale={[0.12, 0.5, 0.12]} material={MAT.timber} castShadow />
+          scale={[0.12, 0.5, 0.12]} material={MAT.timber}  />
         <mesh position={[0, 0.6, 0.8]} geometry={GEO.box}
-          scale={[0.12, 0.5, 0.12]} material={MAT.timber} castShadow />
+          scale={[0.12, 0.5, 0.12]} material={MAT.timber}  />
         <mesh position={[0, 0.9, 0]} rotation={[0.3, 0, 0]} geometry={GEO.box}
-          scale={[0.08, 0.08, 2.5]} material={MAT.timber} castShadow />
+          scale={[0.08, 0.08, 2.5]} material={MAT.timber}  />
       </group>
 
       {/* Defensive stakes outside south wall */}
       {[-8, -4, 4, 8].map((sx, i) => (
         <group key={`stake${i}`} position={[sx, 0, 23]} rotation={[0.3, 0, 0]}>
           <mesh position={[0, 0.5, 0]} geometry={GEO.box}
-            scale={[0.08, 1, 0.08]} material={MAT.palisadeSharp} castShadow />
+            scale={[0.08, 1, 0.08]} material={MAT.palisadeSharp}  />
           <mesh position={[0, 1.1, 0]} geometry={GEO.cone4}
             scale={[0.06, 0.3, 0.06]} material={MAT.palisadeSharp} />
         </group>
@@ -927,11 +927,11 @@ function MilitaryFort({ def }: { def: SettlementDef }) {
       {/* Supply wagon */}
       <group position={[15, 0, 14]}>
         <mesh position={[0, 0.4, 0]} geometry={GEO.box}
-          scale={[1.2, 0.4, 2.2]} material={MAT.woodDark} castShadow />
+          scale={[1.2, 0.4, 2.2]} material={MAT.woodDark}  />
         <mesh position={[-0.65, 0.3, 0.5]} geometry={GEO.cyl8}
-          scale={[0.25, 0.06, 0.25]} material={MAT.timber} castShadow />
+          scale={[0.25, 0.06, 0.25]} material={MAT.timber}  />
         <mesh position={[0.65, 0.3, 0.5]} geometry={GEO.cyl8}
-          scale={[0.25, 0.06, 0.25]} material={MAT.timber} castShadow />
+          scale={[0.25, 0.06, 0.25]} material={MAT.timber}  />
       </group>
 
       {/* Watch fires */}
@@ -943,7 +943,7 @@ function MilitaryFort({ def }: { def: SettlementDef }) {
           <mesh position={[0, 2.5, 0]} geometry={GEO.box}
             scale={[0.06, 0.08, 0.06]} material={MAT.iron} />
           <mesh position={[0, 2.3, 0]} geometry={GEO.box}
-            scale={[0.15, 0.2, 0.15]} material={MAT.iron} castShadow />
+            scale={[0.15, 0.2, 0.15]} material={MAT.iron}  />
           <mesh position={[0, 2.3, 0]} geometry={GEO.box}
             scale={[0.06, 0.1, 0.06]} material={MAT.lantern} />
         </group>
@@ -962,14 +962,14 @@ function RuinedCity({ def }: { def: SettlementDef }) {
       {/* === GRAND ARCH — imposing entrance remnant === */}
       <group position={[0, 0, 25]}>
         <mesh position={[-5, 10, 0]} geometry={GEO.box}
-          scale={[2.5, 20, 2.5]} material={MAT.stoneRuin} castShadow />
+          scale={[2.5, 20, 2.5]} material={MAT.stoneRuin}  />
         <mesh position={[5, 8, 0]} geometry={GEO.box}
-          scale={[2.5, 16, 2.5]} material={MAT.stoneRuin} castShadow />
+          scale={[2.5, 16, 2.5]} material={MAT.stoneRuin}  />
         <mesh position={[0, 19, 0]} geometry={GEO.box}
-          scale={[14, 2.5, 3]} material={MAT.stoneRuin} castShadow />
+          scale={[14, 2.5, 3]} material={MAT.stoneRuin}  />
         {/* Broken upper section */}
         <mesh position={[-5, 21, 0.5]} rotation={[0, 0, 0.1]} geometry={GEO.box}
-          scale={[2, 2, 1.5]} material={MAT.stoneRuin} castShadow />
+          scale={[2, 2, 1.5]} material={MAT.stoneRuin}  />
       </group>
 
       {/* === RUINED BUILDINGS — varied decay levels === */}
@@ -987,7 +987,7 @@ function RuinedCity({ def }: { def: SettlementDef }) {
       <group position={[-15, 0, -5]}>
         {/* Standing wall fragment */}
         <mesh position={[0, 3, 0]} geometry={GEO.box}
-          scale={[8, 6, 1]} material={MAT.stoneRuin} castShadow />
+          scale={[8, 6, 1]} material={MAT.stoneRuin}  />
         {/* Arched windows (holes) */}
         <mesh position={[-2, 3.5, 0]} geometry={GEO.box}
           scale={[1.2, 2.5, 1.1]} material={MAT.dark} />
@@ -995,9 +995,9 @@ function RuinedCity({ def }: { def: SettlementDef }) {
           scale={[1.2, 2.5, 1.1]} material={MAT.dark} />
         {/* Collapsed roof debris */}
         <mesh position={[3, 0.4, 2]} rotation={[0.2, 0.5, 0.3]} geometry={GEO.box}
-          scale={[3, 0.5, 2]} material={MAT.stoneRuin} castShadow />
+          scale={[3, 0.5, 2]} material={MAT.stoneRuin}  />
         <mesh position={[-2, 0.3, 3]} rotation={[-0.1, 0.3, 0.1]} geometry={GEO.box}
-          scale={[2, 0.4, 1.5]} material={MAT.stoneRuin} castShadow />
+          scale={[2, 0.4, 1.5]} material={MAT.stoneRuin}  />
       </group>
 
       {/* === PILLAR CIRCLE — ancient forum === */}
@@ -1009,13 +1009,13 @@ function RuinedCity({ def }: { def: SettlementDef }) {
         return (
           <group key={`p${i}`} position={[Math.cos(angle) * r, 0, Math.sin(angle) * r]}>
             <mesh position={[0, 0.25, 0]} geometry={GEO.box}
-              scale={[1.3, 0.5, 1.3]} material={MAT.stoneRuin} castShadow />
+              scale={[1.3, 0.5, 1.3]} material={MAT.stoneRuin}  />
             {standing ? (
               <mesh position={[0, h / 2 + 0.5, 0]} geometry={GEO.cyl8}
-                scale={[0.5, h, 0.5]} material={MAT.stoneDark} castShadow />
+                scale={[0.5, h, 0.5]} material={MAT.stoneDark}  />
             ) : (
               <mesh position={[1, 0.3, 0.5]} rotation={[0, rng() * 2, Math.PI / 2]}
-                geometry={GEO.cyl8} scale={[0.4, h * 0.6, 0.4]} material={MAT.stoneRuin} castShadow />
+                geometry={GEO.cyl8} scale={[0.4, h * 0.6, 0.4]} material={MAT.stoneRuin}  />
             )}
           </group>
         );
@@ -1023,15 +1023,15 @@ function RuinedCity({ def }: { def: SettlementDef }) {
 
       {/* === CENTRAL ALTAR PLATFORM === */}
       <mesh position={[0, 0.3, 0]} geometry={GEO.box}
-        scale={[10, 0.6, 10]} material={MAT.stoneRuin} castShadow />
+        scale={[10, 0.6, 10]} material={MAT.stoneRuin}  />
       <mesh position={[0, 0.8, 0]} geometry={GEO.box}
-        scale={[6, 0.4, 6]} material={MAT.cobble} castShadow />
+        scale={[6, 0.4, 6]} material={MAT.cobble}  />
       <mesh position={[0, 1.4, 0]} geometry={GEO.box}
-        scale={[3, 0.8, 1.5]} material={MAT.stoneDark} castShadow />
+        scale={[3, 0.8, 1.5]} material={MAT.stoneDark}  />
 
       {/* Fallen column */}
       <mesh position={[8, 0.35, -8]} rotation={[0, 0.5, Math.PI / 2]}
-        geometry={GEO.cyl8} scale={[0.4, 6, 0.4]} material={MAT.stoneRuin} castShadow />
+        geometry={GEO.cyl8} scale={[0.4, 6, 0.4]} material={MAT.stoneRuin}  />
 
       {/* === RUINED TOWER === */}
       <Tower pos={[20, 0, -15]} h={10} r={3} roofStyle="ruin" mat={MAT.stoneRuin} />
@@ -1041,7 +1041,7 @@ function RuinedCity({ def }: { def: SettlementDef }) {
         {[0, 1, 2, 3, 4].map(i => (
           <mesh key={i} position={[0, i * 0.4 + 0.2, i * 0.8]}
             geometry={GEO.box} scale={[3, 0.3, 0.7]}
-            material={i > 2 ? MAT.stoneRuin : MAT.stoneDark} castShadow />
+            material={i > 2 ? MAT.stoneRuin : MAT.stoneDark}  />
         ))}
       </group>
 
@@ -1060,7 +1060,7 @@ function RuinedCity({ def }: { def: SettlementDef }) {
       {/* Grave markers near ruins */}
       {[[15, 10], [17, 12], [14, 13]].map(([gx, gz], i) => (
         <mesh key={`g${i}`} position={[gx, 0.4, gz]} rotation={[0, 0, rng() * 0.15 - 0.07]}
-          geometry={GEO.box} scale={[0.5, 0.8, 0.12]} material={MAT.grave} castShadow />
+          geometry={GEO.box} scale={[0.5, 0.8, 0.12]} material={MAT.grave}  />
       ))}
 
       {/* === MYSTICAL ATMOSPHERE === */}
@@ -1068,7 +1068,7 @@ function RuinedCity({ def }: { def: SettlementDef }) {
       {[[-20, 15], [18, 18], [-12, -20]].map(([ix, iz], i) => (
         <group key={`insc${i}`} position={[ix, 0, iz]}>
           <mesh position={[0, 0.6, 0]} rotation={[0, i * 1.2, 0]} geometry={GEO.box}
-            scale={[1.2, 1.2, 0.2]} material={MAT.stoneDark} castShadow />
+            scale={[1.2, 1.2, 0.2]} material={MAT.stoneDark}  />
           <mesh position={[0, 0.6, 0.11]} rotation={[0, i * 1.2, 0]} geometry={GEO.box}
             scale={[0.8, 0.6, 0.02]} material={MAT.chalk} />
         </group>
@@ -1078,9 +1078,9 @@ function RuinedCity({ def }: { def: SettlementDef }) {
       {[[-8, -18], [25, 5], [-25, 10], [10, -22]].map(([rx, rz], i) => (
         <group key={`rub${i}`} position={[rx, 0, rz]}>
           <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-            scale={[1.5 + rng(), 0.3, 1.5 + rng()]} material={MAT.stoneRuin} castShadow />
+            scale={[1.5 + rng(), 0.3, 1.5 + rng()]} material={MAT.stoneRuin}  />
           <mesh position={[0.3, 0.3, 0.2]} rotation={[0.3, rng(), 0.2]} geometry={GEO.box}
-            scale={[0.5, 0.4, 0.5]} material={MAT.stoneDark} castShadow />
+            scale={[0.5, 0.4, 0.5]} material={MAT.stoneDark}  />
         </group>
       ))}
 
@@ -1089,7 +1089,7 @@ function RuinedCity({ def }: { def: SettlementDef }) {
         const a = (i / 10) * Math.PI * 2;
         return <mesh key={`vine${i}`}
           position={[Math.cos(a) * 9 + 0.3, 1.5, Math.sin(a) * 9]}
-          geometry={GEO.box} scale={[0.3, 3, 0.15]} material={MAT.herb} castShadow />;
+          geometry={GEO.box} scale={[0.3, 3, 0.15]} material={MAT.herb}  />;
       })}
 
       {/* Eerie altar glow */}
@@ -1116,7 +1116,7 @@ function BanditCamp({ def }: { def: SettlementDef }) {
           <group key={`t${i}`} position={[tx, 0, tz]} rotation={[0, rng() * Math.PI * 2, 0]}>
             <mesh position={[0, sz * 0.45, 0]}
               geometry={GEO.cone6} scale={[sz, sz * 0.9, sz]}
-              material={rng() > 0.5 ? MAT.tentRagged : MAT.tentDark} castShadow />
+              material={rng() > 0.5 ? MAT.tentRagged : MAT.tentDark}  />
             {/* Support pole visible through top */}
             <mesh position={[0, sz * 0.7, 0]} geometry={GEO.box}
               scale={[0.06, sz * 0.3, 0.06]} material={MAT.timber} />
@@ -1130,12 +1130,12 @@ function BanditCamp({ def }: { def: SettlementDef }) {
           {/* Four legs */}
           {[[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].map(([px, pz], j) => (
             <mesh key={j} position={[px, 2.5, pz]} geometry={GEO.box}
-              scale={[0.12, 5, 0.12]} material={MAT.timber} castShadow />
+              scale={[0.12, 5, 0.12]} material={MAT.timber}  />
           ))}
           <mesh position={[0, 5, 0]} geometry={GEO.box}
-            scale={[2, 0.1, 2]} material={MAT.woodWeathered} castShadow />
+            scale={[2, 0.1, 2]} material={MAT.woodWeathered}  />
           <mesh position={[0, 5.8, 0]} geometry={GEO.box}
-            scale={[0.1, 1.5, 0.1]} material={MAT.timber} castShadow />
+            scale={[0.1, 1.5, 0.1]} material={MAT.timber}  />
         </group>
       ))}
 
@@ -1147,7 +1147,7 @@ function BanditCamp({ def }: { def: SettlementDef }) {
           <group key={`sk${i}`} position={[Math.cos(a) * r, 0, Math.sin(a) * r]}
             rotation={[0.15 * Math.sin(a), a, 0]}>
             <mesh position={[0, 0.6, 0]} geometry={GEO.box}
-              scale={[0.08, 1.2, 0.08]} material={MAT.palisadeSharp} castShadow />
+              scale={[0.08, 1.2, 0.08]} material={MAT.palisadeSharp}  />
             <mesh position={[0, 1.3, 0]} geometry={GEO.cone4}
               scale={[0.06, 0.3, 0.06]} material={MAT.palisadeSharp} />
           </group>
@@ -1165,7 +1165,7 @@ function BanditCamp({ def }: { def: SettlementDef }) {
         {/* Posts */}
         {[[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]].map(([px, pz], i) => (
           <mesh key={i} position={[px, 0.8, pz]} geometry={GEO.box}
-            scale={[0.06, 1.6, 0.06]} material={MAT.iron} castShadow />
+            scale={[0.06, 1.6, 0.06]} material={MAT.iron}  />
         ))}
         {/* Bars */}
         {[-0.3, 0, 0.3].map((x, i) => (
@@ -1173,7 +1173,7 @@ function BanditCamp({ def }: { def: SettlementDef }) {
             scale={[0.04, 1.6, 0.04]} material={MAT.iron} />
         ))}
         <mesh position={[0, 1.6, 0]} geometry={GEO.box}
-          scale={[1.3, 0.06, 1.3]} material={MAT.iron} castShadow />
+          scale={[1.3, 0.06, 1.3]} material={MAT.iron}  />
       </group>
 
       {/* Campfires */}
@@ -1186,9 +1186,9 @@ function BanditCamp({ def }: { def: SettlementDef }) {
       {/* Execution post / gallows */}
       <group position={[-8, 0, 8]}>
         <mesh position={[0, 2, 0]} geometry={GEO.box}
-          scale={[0.15, 4, 0.15]} material={MAT.timber} castShadow />
+          scale={[0.15, 4, 0.15]} material={MAT.timber}  />
         <mesh position={[0.8, 3.8, 0]} geometry={GEO.box}
-          scale={[1.5, 0.12, 0.12]} material={MAT.timber} castShadow />
+          scale={[1.5, 0.12, 0.12]} material={MAT.timber}  />
         <mesh position={[1.2, 3.2, 0]} geometry={GEO.box}
           scale={[0.02, 0.6, 0.02]} material={MAT.rope} />
       </group>
@@ -1198,9 +1198,9 @@ function BanditCamp({ def }: { def: SettlementDef }) {
       {[[-14, -14], [14, 12], [-10, 15]].map(([wx, wz], i) => (
         <group key={`warn${i}`} position={[wx, 0, wz]}>
           <mesh position={[0, 1, 0]} geometry={GEO.box}
-            scale={[0.08, 2, 0.08]} material={MAT.palisadeSharp} castShadow />
+            scale={[0.08, 2, 0.08]} material={MAT.palisadeSharp}  />
           <mesh position={[0, 2.1, 0]} geometry={GEO.sphere8}
-            scale={[0.12, 0.15, 0.12]} material={MAT.bone} castShadow />
+            scale={[0.12, 0.15, 0.12]} material={MAT.bone}  />
         </group>
       ))}
 
@@ -1213,15 +1213,15 @@ function BanditCamp({ def }: { def: SettlementDef }) {
       {/* Crude weapon racks */}
       <group position={[3, 0, -5]}>
         <mesh position={[0, 0.6, 0]} geometry={GEO.box}
-          scale={[0.08, 1.2, 0.08]} material={MAT.timber} castShadow />
+          scale={[0.08, 1.2, 0.08]} material={MAT.timber}  />
         <mesh position={[0.8, 0.6, 0]} geometry={GEO.box}
-          scale={[0.08, 1.2, 0.08]} material={MAT.timber} castShadow />
+          scale={[0.08, 1.2, 0.08]} material={MAT.timber}  />
         <mesh position={[0.4, 1.1, 0]} geometry={GEO.box}
-          scale={[1, 0.06, 0.06]} material={MAT.timber} castShadow />
+          scale={[1, 0.06, 0.06]} material={MAT.timber}  />
         <mesh position={[0.2, 0.5, 0.05]} rotation={[0, 0, 0.2]} geometry={GEO.box}
-          scale={[0.04, 0.8, 0.04]} material={MAT.ironRusty} castShadow />
+          scale={[0.04, 0.8, 0.04]} material={MAT.ironRusty}  />
         <mesh position={[0.6, 0.5, 0.05]} rotation={[0, 0, -0.15]} geometry={GEO.box}
-          scale={[0.04, 0.9, 0.04]} material={MAT.ironRusty} castShadow />
+          scale={[0.04, 0.9, 0.04]} material={MAT.ironRusty}  />
       </group>
 
       {/* More fire pits */}
@@ -1245,17 +1245,17 @@ function ForestOutpost({ def }: { def: SettlementDef }) {
       {/* Storage shed */}
       <group position={[7, 0, 2]}>
         <mesh position={[0, 1, 0]} geometry={GEO.box}
-          scale={[3, 2, 2.5]} material={MAT.woodWeathered} castShadow />
+          scale={[3, 2, 2.5]} material={MAT.woodWeathered}  />
         <mesh position={[0, 2.3, 0]} geometry={GEO.cone4}
-          scale={[2.2, 1.2, 2]} material={MAT.roofThatch} castShadow />
+          scale={[2.2, 1.2, 2]} material={MAT.roofThatch}  />
       </group>
 
       {/* Shrine stone */}
       <group position={[5, 0, -5]}>
         <mesh position={[0, 0.6, 0]} geometry={GEO.box}
-          scale={[1.5, 1.2, 0.5]} material={MAT.stoneDark} castShadow />
+          scale={[1.5, 1.2, 0.5]} material={MAT.stoneDark}  />
         <mesh position={[0, 1.5, 0]} geometry={GEO.cone4}
-          scale={[0.6, 0.8, 0.4]} material={MAT.stone} castShadow />
+          scale={[0.6, 0.8, 0.4]} material={MAT.stone}  />
         <mesh position={[0, 0.02, 0]} geometry={GEO.box}
           scale={[2.5, 0.04, 2]} material={MAT.cobble} />
       </group>
@@ -1270,33 +1270,33 @@ function ForestOutpost({ def }: { def: SettlementDef }) {
       {/* Drying rack */}
       <group position={[-5, 0, -4]}>
         <mesh position={[-0.6, 1, 0]} geometry={GEO.box}
-          scale={[0.08, 2, 0.08]} material={MAT.timber} castShadow />
+          scale={[0.08, 2, 0.08]} material={MAT.timber}  />
         <mesh position={[0.6, 1, 0]} geometry={GEO.box}
-          scale={[0.08, 2, 0.08]} material={MAT.timber} castShadow />
+          scale={[0.08, 2, 0.08]} material={MAT.timber}  />
         <mesh position={[0, 1.8, 0]} geometry={GEO.box}
-          scale={[1.4, 0.06, 0.06]} material={MAT.timber} castShadow />
+          scale={[1.4, 0.06, 0.06]} material={MAT.timber}  />
       </group>
 
       <Barrels pos={[6, 0, -2]} count={2} />
       {/* Woodpile */}
       <mesh position={[-7, 0.25, -2]} geometry={GEO.box}
-        scale={[1.5, 0.5, 0.6]} material={MAT.timber} castShadow />
+        scale={[1.5, 0.5, 0.6]} material={MAT.timber}  />
 
       {/* === OUTPOST CHARACTER === */}
       {/* Border marker post */}
       <group position={[0, 0, -12]}>
         <mesh position={[0, 1.2, 0]} geometry={GEO.box}
-          scale={[0.12, 2.4, 0.12]} material={MAT.timber} castShadow />
+          scale={[0.12, 2.4, 0.12]} material={MAT.timber}  />
         <mesh position={[0, 2.5, 0]} geometry={GEO.box}
-          scale={[0.5, 0.35, 0.04]} material={MAT.woodLight} castShadow />
+          scale={[0.5, 0.35, 0.04]} material={MAT.woodLight}  />
       </group>
 
       {/* Lantern at entrance */}
       <group position={[1, 0, -8]}>
         <mesh position={[0, 1.5, 0]} geometry={GEO.box}
-          scale={[0.06, 3, 0.06]} material={MAT.iron} castShadow />
+          scale={[0.06, 3, 0.06]} material={MAT.iron}  />
         <mesh position={[0, 2.8, 0]} geometry={GEO.box}
-          scale={[0.15, 0.2, 0.15]} material={MAT.iron} castShadow />
+          scale={[0.15, 0.2, 0.15]} material={MAT.iron}  />
         <mesh position={[0, 2.8, 0]} geometry={GEO.box}
           scale={[0.06, 0.1, 0.06]} material={MAT.lantern} />
       </group>
@@ -1304,9 +1304,9 @@ function ForestOutpost({ def }: { def: SettlementDef }) {
       {/* Firewood supply */}
       <group position={[8, 0, -3]}>
         <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-          scale={[1, 0.3, 0.5]} material={MAT.woodDark} castShadow />
+          scale={[1, 0.3, 0.5]} material={MAT.woodDark}  />
         <mesh position={[0, 0.35, 0]} geometry={GEO.box}
-          scale={[0.8, 0.2, 0.45]} material={MAT.timber} castShadow />
+          scale={[0.8, 0.2, 0.45]} material={MAT.timber}  />
       </group>
     </group>
   );
@@ -1322,22 +1322,22 @@ function MountainMonastery({ def }: { def: SettlementDef }) {
       <group position={[0, 0, 0]}>
         {/* Nave */}
         <mesh position={[0, 3.5, 0]} geometry={GEO.box}
-          scale={[7, 7, 13]} material={MAT.stoneWarm} castShadow />
+          scale={[7, 7, 13]} material={MAT.stoneWarm}  />
         <mesh position={[0, 8.2, 0]} geometry={GEO.cone4}
-          scale={[5, 4.5, 9.5]} material={MAT.roofSlate} castShadow />
+          scale={[5, 4.5, 9.5]} material={MAT.roofSlate}  />
         {/* Apse */}
         <mesh position={[0, 3, -7.5]} geometry={GEO.cyl8}
-          scale={[3.5, 6, 3.5]} material={MAT.stoneWarm} castShadow />
+          scale={[3.5, 6, 3.5]} material={MAT.stoneWarm}  />
         <mesh position={[0, 7, -7.5]} geometry={GEO.cone8}
-          scale={[3.8, 3, 3.8]} material={MAT.roofSlate} castShadow />
+          scale={[3.8, 3, 3.8]} material={MAT.roofSlate}  />
         {/* Rose window */}
         <mesh position={[0, 5.5, 6.51]} geometry={GEO.cyl8}
           scale={[1, 0.1, 1]} material={MAT.dark} />
         {/* Door */}
         <mesh position={[0, 1.5, 6.52]} geometry={GEO.box}
-          scale={[1.5, 3, 0.1]} material={MAT.door} castShadow />
+          scale={[1.5, 3, 0.1]} material={MAT.door}  />
         <mesh position={[0, 3.1, 6.52]} geometry={GEO.box}
-          scale={[1.8, 0.15, 0.12]} material={MAT.stoneDark} castShadow />
+          scale={[1.8, 0.15, 0.12]} material={MAT.stoneDark}  />
         {/* Side windows */}
         {[-1, 1, 3, -3].map((z, i) => (
           <mesh key={`cw${i}`} position={[3.51, 4, z * 1.5]} geometry={GEO.box}
@@ -1348,7 +1348,7 @@ function MountainMonastery({ def }: { def: SettlementDef }) {
       {/* === BELL TOWER === */}
       <group position={[0, 0, -11]}>
         <mesh position={[0, 7, 0]} geometry={GEO.box}
-          scale={[3, 14, 3]} material={MAT.stoneWarm} castShadow />
+          scale={[3, 14, 3]} material={MAT.stoneWarm}  />
         {/* Belfry openings */}
         {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, i) => (
           <mesh key={i} position={[Math.cos(a) * 1.51, 12, Math.sin(a) * 1.51]}
@@ -1356,12 +1356,12 @@ function MountainMonastery({ def }: { def: SettlementDef }) {
             scale={[0.1, 1.5, 0.8]} material={MAT.dark} />
         ))}
         <mesh position={[0, 15.5, 0]} geometry={GEO.cone4}
-          scale={[2.2, 3.5, 2.2]} material={MAT.roofSlate} castShadow />
+          scale={[2.2, 3.5, 2.2]} material={MAT.roofSlate}  />
         {/* Cross */}
         <mesh position={[0, 17.8, 0]} geometry={GEO.box}
-          scale={[0.08, 0.8, 0.08]} material={MAT.iron} castShadow />
+          scale={[0.08, 0.8, 0.08]} material={MAT.iron}  />
         <mesh position={[0, 18, 0]} geometry={GEO.box}
-          scale={[0.4, 0.08, 0.08]} material={MAT.iron} castShadow />
+          scale={[0.4, 0.08, 0.08]} material={MAT.iron}  />
       </group>
 
       {/* === CLOISTER WINGS === */}
@@ -1389,7 +1389,7 @@ function MountainMonastery({ def }: { def: SettlementDef }) {
           scale={[4, 0.08, 4]} material={MAT.herb} />
         {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([gx, gz], i) => (
           <mesh key={i} position={[gx, 0.2, gz]} geometry={GEO.box}
-            scale={[0.8, 0.3, 0.8]} material={MAT.herb} castShadow />
+            scale={[0.8, 0.3, 0.8]} material={MAT.herb}  />
         ))}
       </group>
 
@@ -1398,7 +1398,7 @@ function MountainMonastery({ def }: { def: SettlementDef }) {
         {Array.from({ length: 6 }).map((_, i) => (
           <mesh key={i} position={[(i % 3) * 1.5 - 1.5, 0.4, Math.floor(i / 3) * 2 - 1]}
             rotation={[0, 0, Math.sin(i * 3.7) * 0.08]}
-            geometry={GEO.box} scale={[0.5, 0.8, 0.12]} material={MAT.grave} castShadow />
+            geometry={GEO.box} scale={[0.5, 0.8, 0.12]} material={MAT.grave}  />
         ))}
       </group>
 
@@ -1427,7 +1427,7 @@ function MountainMonastery({ def }: { def: SettlementDef }) {
       <group position={[8, 0, 8]}>
         {[[-1, 0], [0, -1], [1, 0], [0, 1]].map(([sx, sz], i) => (
           <mesh key={`med${i}`} position={[sx, 0.15, sz]} geometry={GEO.box}
-            scale={[0.5, 0.3, 0.5]} material={MAT.stoneWarm} castShadow />
+            scale={[0.5, 0.3, 0.5]} material={MAT.stoneWarm}  />
         ))}
       </group>
 
@@ -1437,14 +1437,14 @@ function MountainMonastery({ def }: { def: SettlementDef }) {
 
       {/* Bell in tower */}
       <mesh position={[0, 12.5, -11]} geometry={GEO.cone8}
-        scale={[0.4, 0.5, 0.4]} material={MAT.goldTrim} castShadow />
+        scale={[0.4, 0.5, 0.4]} material={MAT.goldTrim}  />
 
       {/* Scripture lectern near entrance */}
       <group position={[2, 0, 12]}>
         <mesh position={[0, 0.5, 0]} geometry={GEO.box}
-          scale={[0.1, 1, 0.1]} material={MAT.timber} castShadow />
+          scale={[0.1, 1, 0.1]} material={MAT.timber}  />
         <mesh position={[0, 1, 0]} rotation={[0.3, 0, 0]} geometry={GEO.box}
-          scale={[0.4, 0.02, 0.3]} material={MAT.woodDark} castShadow />
+          scale={[0.4, 0.02, 0.3]} material={MAT.woodDark}  />
       </group>
     </group>
   );
@@ -1471,7 +1471,7 @@ function SmallVillage({ def }: { def: SettlementDef }) {
       <mesh position={[0, 0.03, 0]} geometry={GEO.box}
         scale={[5, 0.06, 5]} material={MAT.cobble} />
       <mesh position={[4, 0.35, -3]} geometry={GEO.cyl8}
-        scale={[0.6, 0.7, 0.6]} material={MAT.hay} castShadow />
+        scale={[0.6, 0.7, 0.6]} material={MAT.hay}  />
       <Barrels pos={[-3, 0, 4]} count={2} />
       {/* Fence around a small garden */}
       <Fence from={[6, 0, 3]} to={[10, 0, 3]} />
@@ -1479,15 +1479,15 @@ function SmallVillage({ def }: { def: SettlementDef }) {
 
       {/* Domestic props */}
       <mesh position={[-5, 0.2, -4]} geometry={GEO.box}
-        scale={[1, 0.4, 0.5]} material={MAT.timber} castShadow />
+        scale={[1, 0.4, 0.5]} material={MAT.timber}  />
       <mesh position={[6, 0.25, 5]} geometry={GEO.cyl8}
-        scale={[0.5, 0.5, 0.5]} material={MAT.hay} castShadow />
+        scale={[0.5, 0.5, 0.5]} material={MAT.hay}  />
       {/* Lantern post */}
       <group position={[1, 0, 3]}>
         <mesh position={[0, 1.2, 0]} geometry={GEO.box}
-          scale={[0.06, 2.4, 0.06]} material={MAT.iron} castShadow />
+          scale={[0.06, 2.4, 0.06]} material={MAT.iron}  />
         <mesh position={[0, 2.3, 0]} geometry={GEO.box}
-          scale={[0.12, 0.18, 0.12]} material={MAT.iron} castShadow />
+          scale={[0.12, 0.18, 0.12]} material={MAT.iron}  />
         <mesh position={[0, 2.3, 0]} geometry={GEO.box}
           scale={[0.05, 0.08, 0.05]} material={MAT.lantern} />
       </group>

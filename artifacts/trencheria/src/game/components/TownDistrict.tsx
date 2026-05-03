@@ -25,10 +25,10 @@ function TownHouse({ pos, rot, w, d, h, style, chimney, shed, sign }: {
     <group position={pos} rotation={[0, rot, 0]}>
       {/* Foundation */}
       <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-        scale={[w + 0.4, 0.3, d + 0.4]} material={MAT.cobble} castShadow />
+        scale={[w + 0.4, 0.3, d + 0.4]} material={MAT.cobble}  />
       {/* Walls */}
       <mesh position={[0, h / 2 + 0.3, 0]} geometry={GEO.box}
-        scale={[w, h, d]} material={wallMat} castShadow />
+        scale={[w, h, d]} material={wallMat}  />
       {/* Timber beams */}
       {isTimber && (
         <>
@@ -44,10 +44,10 @@ function TownHouse({ pos, rot, w, d, h, style, chimney, shed, sign }: {
       )}
       {/* Roof */}
       <mesh position={[0, h + 0.3 + roofH / 2, 0]} rotation={[0, Math.PI / 4, 0]} geometry={GEO.cone4}
-        scale={[(w + 0.5) * 0.72, roofH, (d + 0.5) * 0.72]} material={roofMat} castShadow />
+        scale={[(w + 0.5) * 0.72, roofH, (d + 0.5) * 0.72]} material={roofMat}  />
       {/* Door */}
       <mesh position={[0, 0.6, d / 2 + 0.02]} geometry={GEO.box}
-        scale={[0.8, 1.4, 0.05]} material={MAT.door} castShadow />
+        scale={[0.8, 1.4, 0.05]} material={MAT.door}  />
       {/* Window */}
       {w > 2.5 && (
         <mesh position={[w / 2 + 0.02, h * 0.5 + 0.3, 0]} geometry={GEO.box}
@@ -57,16 +57,16 @@ function TownHouse({ pos, rot, w, d, h, style, chimney, shed, sign }: {
       {chimney && (
         <group position={[w * 0.25, h + roofH * 0.3, -d * 0.15]}>
           <mesh position={[0, 0.4, 0]} geometry={GEO.box}
-            scale={[0.4, 1, 0.4]} material={MAT.stoneDark} castShadow />
+            scale={[0.4, 1, 0.4]} material={MAT.stoneDark}  />
         </group>
       )}
       {/* Lean-to shed */}
       {shed && (
         <group position={[-w / 2 - 0.7, 0, 0]}>
           <mesh position={[0, 0.5, 0]} geometry={GEO.box}
-            scale={[0.1, 1, 0.1]} material={MAT.timber} castShadow />
+            scale={[0.1, 1, 0.1]} material={MAT.timber}  />
           <mesh position={[-0.2, 0.9, 0]} rotation={[0, 0, 0.2]} geometry={GEO.box}
-            scale={[1, 0.05, 1.2]} material={MAT.woodWeathered} castShadow />
+            scale={[1, 0.05, 1.2]} material={MAT.woodWeathered}  />
         </group>
       )}
       {/* Hanging sign for shops */}
@@ -75,7 +75,7 @@ function TownHouse({ pos, rot, w, d, h, style, chimney, shed, sign }: {
           <mesh position={[0, 0, 0]} geometry={GEO.box}
             scale={[0.5, 0.06, 0.06]} material={MAT.iron} />
           <mesh position={[0.3, -0.2, 0]} geometry={GEO.box}
-            scale={[0.5, 0.35, 0.04]} material={MAT.woodLight} castShadow />
+            scale={[0.5, 0.35, 0.04]} material={MAT.woodLight}  />
         </group>
       )}
     </group>
@@ -89,23 +89,23 @@ function MarketStall({ pos, rot, goods }: {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
       <mesh position={[-0.8, 1.1, -0.4]} geometry={GEO.box}
-        scale={[0.08, 2.2, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 2.2, 0.08]} material={MAT.timber}  />
       <mesh position={[0.8, 1.1, -0.4]} geometry={GEO.box}
-        scale={[0.08, 2.2, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 2.2, 0.08]} material={MAT.timber}  />
       <mesh position={[-0.8, 0.7, 0.4]} geometry={GEO.box}
-        scale={[0.08, 1.4, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 1.4, 0.08]} material={MAT.timber}  />
       <mesh position={[0.8, 0.7, 0.4]} geometry={GEO.box}
-        scale={[0.08, 1.4, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 1.4, 0.08]} material={MAT.timber}  />
       {/* Counter */}
       <mesh position={[0, 0.85, 0]} geometry={GEO.box}
-        scale={[1.8, 0.08, 1]} material={MAT.woodLight} castShadow />
+        scale={[1.8, 0.08, 1]} material={MAT.woodLight}  />
       {/* Awning */}
       <mesh position={[0, 2.1, 0]} rotation={[0.12, 0, 0]} geometry={GEO.box}
-        scale={[2, 0.04, 1.4]} material={MAT.tent} castShadow />
+        scale={[2, 0.04, 1.4]} material={MAT.tent}  />
       {/* Goods on counter */}
       {[[-0.3, 0], [0.3, 0.15]].map(([gx, gz], i) => (
         <mesh key={i} position={[gx, 0.98, gz]} geometry={GEO.box}
-          scale={[0.25, 0.2, 0.25]} material={goodsMat} castShadow />
+          scale={[0.25, 0.2, 0.25]} material={goodsMat}  />
       ))}
     </group>
   );
@@ -115,11 +115,11 @@ function LanternPost({ pos }: { pos: [number, number, number] }) {
   return (
     <group position={pos}>
       <mesh position={[0, 1.4, 0]} geometry={GEO.box}
-        scale={[0.08, 2.8, 0.08]} material={MAT.iron} castShadow />
+        scale={[0.08, 2.8, 0.08]} material={MAT.iron}  />
       <mesh position={[0.25, 2.6, 0]} geometry={GEO.box}
         scale={[0.4, 0.06, 0.06]} material={MAT.iron} />
       <mesh position={[0.4, 2.4, 0]} geometry={GEO.box}
-        scale={[0.18, 0.28, 0.18]} material={MAT.iron} castShadow />
+        scale={[0.18, 0.28, 0.18]} material={MAT.iron}  />
       <mesh position={[0.4, 2.4, 0]} geometry={GEO.box}
         scale={[0.08, 0.12, 0.08]} material={MAT.lantern} />
     </group>
@@ -130,11 +130,11 @@ function Well({ pos }: { pos: [number, number, number] }) {
   return (
     <group position={pos}>
       <mesh position={[0, 0.35, 0]} geometry={GEO.cyl8}
-        scale={[0.7, 0.7, 0.7]} material={MAT.cobble} castShadow />
+        scale={[0.7, 0.7, 0.7]} material={MAT.cobble}  />
       <mesh position={[-0.3, 1.2, 0]} geometry={GEO.box}
-        scale={[0.08, 1.6, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 1.6, 0.08]} material={MAT.timber}  />
       <mesh position={[0.3, 1.2, 0]} geometry={GEO.box}
-        scale={[0.08, 1.6, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 1.6, 0.08]} material={MAT.timber}  />
       <mesh position={[0, 2, 0]} geometry={GEO.box}
         scale={[0.8, 0.06, 0.06]} material={MAT.timber} />
     </group>
@@ -145,11 +145,11 @@ function NoticeBoard({ pos, rot }: { pos: [number, number, number]; rot: number 
   return (
     <group position={pos} rotation={[0, rot, 0]}>
       <mesh position={[-0.4, 0.7, 0]} geometry={GEO.box}
-        scale={[0.08, 1.4, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 1.4, 0.08]} material={MAT.timber}  />
       <mesh position={[0.4, 0.7, 0]} geometry={GEO.box}
-        scale={[0.08, 1.4, 0.08]} material={MAT.timber} castShadow />
+        scale={[0.08, 1.4, 0.08]} material={MAT.timber}  />
       <mesh position={[0, 1.3, 0]} geometry={GEO.box}
-        scale={[1, 0.7, 0.06]} material={MAT.woodLight} castShadow />
+        scale={[1, 0.7, 0.06]} material={MAT.woodLight}  />
       {/* Notices pinned */}
       <mesh position={[-0.2, 1.35, 0.035]} geometry={GEO.box}
         scale={[0.25, 0.3, 0.01]} material={MAT.chalk} />
@@ -162,7 +162,7 @@ function NoticeBoard({ pos, rot }: { pos: [number, number, number]; rot: number 
 function HayBale({ pos, rot }: { pos: [number, number, number]; rot?: number }) {
   return (
     <mesh position={pos} rotation={[0, rot || 0, 0]} geometry={GEO.box}
-      scale={[1, 0.6, 0.8]} material={MAT.hay} castShadow />
+      scale={[1, 0.6, 0.8]} material={MAT.hay}  />
   );
 }
 
@@ -171,11 +171,11 @@ function WoodPile({ pos }: { pos: [number, number, number] }) {
     <group position={pos}>
       {[0, 1, 2].map(i => (
         <mesh key={i} position={[i * 0.3 - 0.3, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]}
-          geometry={GEO.cyl6} scale={[0.08, 0.8, 0.08]} material={MAT.woodDark} castShadow />
+          geometry={GEO.cyl6} scale={[0.08, 0.8, 0.08]} material={MAT.woodDark}  />
       ))}
       {[0, 1].map(i => (
         <mesh key={`t${i}`} position={[i * 0.25 - 0.12, 0.28, 0]} rotation={[Math.PI / 2, 0, 0]}
-          geometry={GEO.cyl6} scale={[0.08, 0.7, 0.08]} material={MAT.timber} castShadow />
+          geometry={GEO.cyl6} scale={[0.08, 0.7, 0.08]} material={MAT.timber}  />
       ))}
     </group>
   );
@@ -185,16 +185,16 @@ function Cart({ pos, rot }: { pos: [number, number, number]; rot: number }) {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
       <mesh position={[0, 0.4, 0]} geometry={GEO.box}
-        scale={[1.2, 0.4, 2.2]} material={MAT.woodDark} castShadow />
+        scale={[1.2, 0.4, 2.2]} material={MAT.woodDark}  />
       <mesh position={[-0.55, 0.7, 0]} geometry={GEO.box}
-        scale={[0.06, 0.35, 2]} material={MAT.woodWeathered} castShadow />
+        scale={[0.06, 0.35, 2]} material={MAT.woodWeathered}  />
       <mesh position={[0.55, 0.7, 0]} geometry={GEO.box}
-        scale={[0.06, 0.35, 2]} material={MAT.woodWeathered} castShadow />
+        scale={[0.06, 0.35, 2]} material={MAT.woodWeathered}  />
       {/* Wheels */}
       <mesh position={[-0.65, 0.3, 0.5]} geometry={GEO.cyl8}
-        scale={[0.25, 0.05, 0.25]} material={MAT.timber} castShadow />
+        scale={[0.25, 0.05, 0.25]} material={MAT.timber}  />
       <mesh position={[0.65, 0.3, 0.5]} geometry={GEO.cyl8}
-        scale={[0.25, 0.05, 0.25]} material={MAT.timber} castShadow />
+        scale={[0.25, 0.05, 0.25]} material={MAT.timber}  />
       {/* Shaft */}
       <mesh position={[0.3, 0.3, -1.6]} geometry={GEO.box}
         scale={[0.05, 0.05, 1]} material={MAT.woodDark} />
@@ -208,11 +208,11 @@ function Shrine({ pos }: { pos: [number, number, number] }) {
   return (
     <group position={pos}>
       <mesh position={[0, 0.15, 0]} geometry={GEO.box}
-        scale={[1.8, 0.3, 1.8]} material={MAT.cobble} castShadow />
+        scale={[1.8, 0.3, 1.8]} material={MAT.cobble}  />
       <mesh position={[0, 1, 0]} geometry={GEO.box}
-        scale={[0.5, 1.4, 0.3]} material={MAT.stoneWarm} castShadow />
+        scale={[0.5, 1.4, 0.3]} material={MAT.stoneWarm}  />
       <mesh position={[0, 2, 0]} geometry={GEO.cone4}
-        scale={[0.3, 0.5, 0.3]} material={MAT.stone} castShadow />
+        scale={[0.3, 0.5, 0.3]} material={MAT.stone}  />
     </group>
   );
 }
@@ -220,7 +220,7 @@ function Shrine({ pos }: { pos: [number, number, number] }) {
 function Barrel({ pos }: { pos: [number, number, number] }) {
   return (
     <mesh position={[pos[0], pos[1] + 0.3, pos[2]]} geometry={GEO.cyl8}
-      scale={[0.2, 0.5, 0.2]} material={MAT.barrel} castShadow />
+      scale={[0.2, 0.5, 0.2]} material={MAT.barrel}  />
   );
 }
 
@@ -228,7 +228,7 @@ function WaterTrough({ pos }: { pos: [number, number, number] }) {
   return (
     <group position={pos}>
       <mesh position={[0, 0.25, 0]} geometry={GEO.box}
-        scale={[1.6, 0.5, 0.5]} material={MAT.woodDark} castShadow />
+        scale={[1.6, 0.5, 0.5]} material={MAT.woodDark}  />
       <mesh position={[0, 0.3, 0]} geometry={GEO.box}
         scale={[1.4, 0.25, 0.35]} material={MAT.water} />
     </group>
@@ -239,11 +239,11 @@ function Bench({ pos, rot }: { pos: [number, number, number]; rot: number }) {
   return (
     <group position={pos} rotation={[0, rot, 0]}>
       <mesh position={[0, 0.25, 0]} geometry={GEO.box}
-        scale={[1.2, 0.06, 0.3]} material={MAT.woodDark} castShadow />
+        scale={[1.2, 0.06, 0.3]} material={MAT.woodDark}  />
       <mesh position={[-0.5, 0.12, 0]} geometry={GEO.box}
-        scale={[0.06, 0.25, 0.25]} material={MAT.timber} castShadow />
+        scale={[0.06, 0.25, 0.25]} material={MAT.timber}  />
       <mesh position={[0.5, 0.12, 0]} geometry={GEO.box}
-        scale={[0.06, 0.25, 0.25]} material={MAT.timber} castShadow />
+        scale={[0.06, 0.25, 0.25]} material={MAT.timber}  />
     </group>
   );
 }
@@ -563,7 +563,7 @@ function MarketSquare() {
       <Barrel pos={[15.4, y, 53.4]} />
       <Barrel pos={[29, y, 53]} />
       <mesh position={[29, y + 0.2, 54]} geometry={GEO.box}
-        scale={[0.4, 0.4, 0.4]} material={MAT.woodDark} castShadow />
+        scale={[0.4, 0.4, 0.4]} material={MAT.woodDark}  />
       {/* Benches */}
       <Bench pos={[22, y, 60]} rot={0} />
       <Bench pos={[18, y, 56]} rot={Math.PI / 2} />
@@ -612,33 +612,33 @@ function WorkshopCorner() {
       {/* Blacksmith forge detail */}
       <group position={[-18, y, 68]}>
         <mesh position={[2, 0.5, 0]} geometry={GEO.box}
-          scale={[1.2, 1, 0.8]} material={MAT.stoneDark} castShadow />
+          scale={[1.2, 1, 0.8]} material={MAT.stoneDark}  />
         <mesh position={[2, 1.1, 0]} geometry={GEO.box}
           scale={[0.3, 0.3, 0.3]} material={MAT.fire} />
         {/* Anvil */}
         <mesh position={[3, 0.4, 0.5]} geometry={GEO.box}
-          scale={[0.3, 0.5, 0.2]} material={MAT.iron} castShadow />
+          scale={[0.3, 0.5, 0.2]} material={MAT.iron}  />
         <mesh position={[3, 0.7, 0.5]} geometry={GEO.box}
-          scale={[0.5, 0.12, 0.25]} material={MAT.iron} castShadow />
+          scale={[0.5, 0.12, 0.25]} material={MAT.iron}  />
       </group>
       {/* Stable fence */}
       <group position={[-24, y, 66]}>
         {[0, 1, 2, 3].map(i => (
           <mesh key={i} position={[i * 1.5 - 2.25, 0.4, -3]} geometry={GEO.box}
-            scale={[0.08, 0.8, 0.08]} material={MAT.fence} castShadow />
+            scale={[0.08, 0.8, 0.08]} material={MAT.fence}  />
         ))}
         <mesh position={[0, 0.35, -3]} geometry={GEO.box}
-          scale={[6, 0.06, 0.06]} material={MAT.fence} castShadow />
+          scale={[6, 0.06, 0.06]} material={MAT.fence}  />
         <mesh position={[0, 0.65, -3]} geometry={GEO.box}
-          scale={[6, 0.05, 0.05]} material={MAT.fence} castShadow />
+          scale={[6, 0.05, 0.05]} material={MAT.fence}  />
       </group>
       {/* Storage crates */}
       <mesh position={[-22, y + 0.2, 72]} geometry={GEO.box}
-        scale={[0.5, 0.5, 0.5]} material={MAT.woodDark} castShadow />
+        scale={[0.5, 0.5, 0.5]} material={MAT.woodDark}  />
       <mesh position={[-22.5, y + 0.2, 72.3]} geometry={GEO.box}
-        scale={[0.45, 0.45, 0.45]} material={MAT.barrel} castShadow />
+        scale={[0.45, 0.45, 0.45]} material={MAT.barrel}  />
       <mesh position={[-21.8, y + 0.65, 72.1]} geometry={GEO.box}
-        scale={[0.4, 0.4, 0.4]} material={MAT.woodDark} castShadow />
+        scale={[0.4, 0.4, 0.4]} material={MAT.woodDark}  />
     </group>
   );
 }
