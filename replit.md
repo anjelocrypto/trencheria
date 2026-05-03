@@ -92,4 +92,29 @@ The audit reshaped a number of map data sources to keep the railway/road network
 
 The validator scans the FULL length of each rail/road segment (not just first water sample) so "no violations" reflects every water sample being inside a bridge OBB.
 
+## Kingdom / Castle Visual Audit (Round 4)
+
+The 5 "new" kingdom renderers in `src/game/components/NewKingdomRenderers.tsx` (FortifiedCity / RiverTown / MountainHold / FrontierCamp / TradeCity) were audited and polished:
+
+- **FrontierCamp grounding fix** — replaced the raw `getTerrainHeight(cx, cz)` call with `sampleFootprint(cx, cz, 27, 27, 0)` and anchored the camp to `fp.minY`. Previously single-point sampling caused the camp to sink/float on uneven terrain; now it sits flat on the lowest sample of its real footprint, matching the other 4 renderers.
+- **Visual polish per renderer:**
+  - **Thornwall (FortifiedCity, Crimson Order)** — green herb-banner cloth on 4 corner towers, crenellation merlons along all walls, oak gate doors, 4 wall-mounted torches.
+  - **Rivermoor (RiverTown, Azure Tide)** — teal shutter-banners on town hall, quay paving, lighthouse glow sphere, 3 lanterns on the dock.
+  - **Stonepeak (MountainHold, Ironhold)** — blue clan banners on towers, battlement merlons, mine cart prop near platform, central brazier with flickering glow.
+  - **Darkhollow (FrontierCamp, Blackthorn)** — dirt plaza ring, 3 secondary campfires, sharpened palisade tops, 2 crimson bloodstain banners, toppled wall section, extra ration barrel.
+  - **Goldenvale (TradeCity, Goldenvale)** — 4 corner gold banners, 4 plaza lanterns, gold trim around trade hall, oak doors, 4 plaza crates.
+
+A new DEV-only validator `src/game/systems/KingdomVisualValidator.ts` runs once at module load and warns about kingdom-piece grounding issues (water/slope/floating/clearance). It deliberately:
+- skips ALL water checks for `waterfront: true` kingdoms (Rivermoor),
+- uses `fp.minY <= WATER_LEVEL_Y` instead of the broader `hasWater` flag (which fires whenever a lake footprint overlaps the x/z plane regardless of actual height),
+- uses the SHORT axis (min(halfW, halfD)) for rail/road clearance so long thin walls don't false-flag distant roads,
+- skips road clearance for "crossing pieces": gatehouses, plazas, docks, and central terminus halls (town-hall, great-hall, trade-hall, platform, clock-tower) where roads intentionally meet the city,
+- compares per-piece `fp.minY` against the kingdom's macro `minY` (3m tolerance) — matching what the renderer actually paints — instead of raw heightDelta.
+
+Current validator output: **25 genuine violations remain** (down from initial 80 false-positive-heavy run). These are real placement issues to address in a future map-geometry pass (out of scope this round, which is renderer polish only):
+- `thornwall_city/tower-NW` sits on a 42° slope (corner tower at -500,-450 is on a steep hillside).
+- `stonepeak_hold/wall-E` is 3.1m from a road centerline.
+- `darkhollow_camp/lookout-NW` is 1.4m from a road centerline.
+- `goldenvale_city` is the dominant cluster — macro footprint at minY=-0.58m, south wall + gatehouse + tower-SE/SW + trade-hall + plaza + ~5 houses all sit at or below water level. Recommended fix: shift the whole kingdom ~2m north or trim its south wall.
+
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

@@ -5,7 +5,6 @@
 import * as THREE from 'three';
 import { SettlementDef } from '../world/RegionData';
 import { GEO, MAT } from '../world/SettlementPieces';
-import { getTerrainHeight } from './Terrain';
 import { sampleFootprint } from '../systems/Grounding';
 import {
   FORTIFIED_CITY_HOUSES,
@@ -127,11 +126,39 @@ export function FortifiedCity({ def }: { def: SettlementDef }) {
         scale={[14, 16, 14]} material={MAT.stoneDark}  />
       <mesh position={[0, 18, -10]} geometry={GEO.cone4}
         scale={[10, 6, 10]} material={MAT.roofSlate}  />
-      {/* Banner */}
+      {/* Citadel green-banner crown (Goblin faction) */}
       <mesh position={[0, 22, -10]} geometry={GEO.box}
-        scale={[0.1, 3, 0.1]} material={MAT.timber} />
+        scale={[0.12, 4, 0.12]} material={MAT.timber} />
       <mesh position={[0.5, 23, -10]} geometry={GEO.box}
-        scale={[0.8, 1.2, 0.04]} material={MAT.banner}  />
+        scale={[1.0, 1.4, 0.04]} material={MAT.herb}  />
+      {/* Wall-top crenellation strip facing the gate */}
+      {[-44, -36, -28, -20, -12, 12, 20, 28, 36, 44].map((bx, i) => (
+        <mesh key={`crn-${i}`} position={[bx, 7.7, 45]} geometry={GEO.box}
+          scale={[1.4, 1.0, 1.6]} material={MAT.stoneDark} />
+      ))}
+      {/* Gatehouse doors */}
+      <mesh position={[-2.5, 3, 45]} geometry={GEO.box}
+        scale={[2.5, 5, 0.4]} material={MAT.door} />
+      <mesh position={[2.5, 3, 45]} geometry={GEO.box}
+        scale={[2.5, 5, 0.4]} material={MAT.door} />
+      {/* Gate torches */}
+      {[-4, 4].map((tx, i) => (
+        <group key={`tor-${i}`} position={[tx, 0, 47]}>
+          <mesh position={[0, 1.6, 0]} geometry={GEO.box}
+            scale={[0.12, 3.2, 0.12]} material={MAT.timber} />
+          <mesh position={[0, 3.4, 0]} geometry={GEO.cone8}
+            scale={[0.35, 0.5, 0.35]} material={MAT.fireGlow} />
+        </group>
+      ))}
+      {/* Green faction banners along outer walls */}
+      {[[-30, -45], [30, -45], [-45, 0], [45, 0]].map(([bx, bz], i) => (
+        <group key={`gban-${i}`} position={[bx, 0, bz]}>
+          <mesh position={[0, 8, 0]} geometry={GEO.box}
+            scale={[0.1, 6, 0.1]} material={MAT.timber} />
+          <mesh position={[0.4, 9, 0]} geometry={GEO.box}
+            scale={[0.7, 1.4, 0.04]} material={MAT.herb} />
+        </group>
+      ))}
 
       {/* Houses from shared data */}
       {renderHouses(FORTIFIED_CITY_HOUSES, [MAT.stone, MAT.stoneWarm], [MAT.roofSlate], 'fc')}
@@ -220,6 +247,33 @@ export function RiverTown({ def }: { def: SettlementDef }) {
         scale={[2, 2, 2]} material={MAT.roofSlate}  />
       <mesh position={[25, 12.5, -28]} geometry={GEO.box}
         scale={[0.3, 0.3, 0.3]} material={MAT.lantern} />
+      {/* Lighthouse glow */}
+      <mesh position={[25, 12.5, -28]} geometry={GEO.sphere8}
+        scale={[1.2, 1.2, 1.2]} material={MAT.fireGlow} />
+
+      {/* Quay paving extending the dock front */}
+      <mesh position={[0, 0.05, -25]} geometry={GEO.box}
+        scale={[44, 0.1, 6]} material={MAT.cobble} />
+
+      {/* Teal Octopus banners along the waterfront */}
+      {[[-18, -25], [18, -25], [-25, -10], [25, -10]].map(([bx, bz], i) => (
+        <group key={`tban-${i}`} position={[bx, 0, bz]}>
+          <mesh position={[0, 2.3, 0]} geometry={GEO.box}
+            scale={[0.08, 4.6, 0.08]} material={MAT.timber} />
+          <mesh position={[0.35, 3.6, 0]} geometry={GEO.box}
+            scale={[0.65, 1.0, 0.04]} material={MAT.shutter} />
+        </group>
+      ))}
+
+      {/* Quay lanterns */}
+      {[-12, 0, 12].map((lx, i) => (
+        <group key={`qlamp-${i}`} position={[lx, 0, -23]}>
+          <mesh position={[0, 1.2, 0]} geometry={GEO.box}
+            scale={[0.12, 2.4, 0.12]} material={MAT.timber} />
+          <mesh position={[0, 2.6, 0]} geometry={GEO.box}
+            scale={[0.35, 0.35, 0.35]} material={MAT.lantern} />
+        </group>
+      ))}
     </group>
   );
 }
@@ -279,6 +333,37 @@ export function MountainHold({ def }: { def: SettlementDef }) {
         <mesh key={`stair-${i}`} position={[0, i * 0.5, 27 + i * 1.5]}
           geometry={GEO.box} scale={[6, 0.4, 1.2]} material={MAT.cobble}  />
       ))}
+
+      {/* Blue Soldier banners on the gate towers */}
+      {[[-10, 12], [10, 12]].map(([bx, bz], i) => (
+        <group key={`mhban-${i}`} position={[bx, 3, bz]}>
+          <mesh position={[0, 8, 0]} geometry={GEO.box}
+            scale={[0.1, 16, 0.1]} material={MAT.timber} />
+          <mesh position={[0.5, 12, 0]} geometry={GEO.box}
+            scale={[0.9, 2.0, 0.04]} material={MAT.bannerBlue} />
+        </group>
+      ))}
+      {/* Wall battlements (stone teeth) */}
+      {[-22, -16, -10, 10, 16, 22].map((bx, i) => (
+        <mesh key={`mhcr-${i}`} position={[bx, 6.7, -25]} geometry={GEO.box}
+          scale={[1.4, 1.0, 1.6]} material={MAT.stoneDark} />
+      ))}
+      {/* Mine cart prop near the entrance */}
+      <group position={[-23, 3, -3]}>
+        <mesh position={[0, 0.5, 0]} geometry={GEO.box}
+          scale={[2, 0.9, 1.2]} material={MAT.woodDark} />
+        <mesh position={[-0.7, 0.15, -0.5]} geometry={GEO.cyl8}
+          rotation={[Math.PI / 2, 0, 0]} scale={[0.3, 0.2, 0.3]} material={MAT.iron} />
+        <mesh position={[0.7, 0.15, -0.5]} geometry={GEO.cyl8}
+          rotation={[Math.PI / 2, 0, 0]} scale={[0.3, 0.2, 0.3]} material={MAT.iron} />
+      </group>
+      {/* Brazier on great hall steps */}
+      <group position={[0, 3, 12]}>
+        <mesh position={[0, 0.5, 0]} geometry={GEO.cyl8}
+          scale={[0.6, 1, 0.6]} material={MAT.iron} />
+        <mesh position={[0, 1.4, 0]} geometry={GEO.cone8}
+          scale={[0.5, 0.7, 0.5]} material={MAT.fireGlow} />
+      </group>
     </group>
   );
 }
@@ -286,10 +371,19 @@ export function MountainHold({ def }: { def: SettlementDef }) {
 // ========== FRONTIER CAMP (Darkhollow) ==========
 export function FrontierCamp({ def }: { def: SettlementDef }) {
   const [cx, cz] = def.position;
-  const y = getTerrainHeight(cx, cz);
+  // GROUNDING FIX (Codex follow-up): sampleFootprint over the ±27 palisade
+  // ring so Darkhollow can never float over noise residue or sink into a
+  // dip. Was previously raw getTerrainHeight(cx, cz) which sampled a
+  // single noisy point and let pieces clip the ground at footprint edges.
+  const fp = sampleFootprint(cx, cz, 27, 27, 0);
+  const y = fp.minY;
 
   return (
     <group position={[cx, y, cz]}>
+      {/* Cracked dirt plaza covering the full footprint */}
+      <mesh position={[0, 0.03, 0]} geometry={GEO.box}
+        scale={[54, 0.06, 54]} material={MAT.dirt} />
+
       {/* Ruined grand wall fragments */}
       <mesh position={[-30, 3, -25]} geometry={GEO.box}
         scale={[2, 6, 20]} material={MAT.stoneRuin}  />
@@ -297,6 +391,9 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
         scale={[2, 4, 15]} material={MAT.stoneRuin}  />
       <mesh position={[0, 2.5, -30]} geometry={GEO.box}
         scale={[30, 5, 2]} material={MAT.stoneRuin}  />
+      {/* Toppled wall block */}
+      <mesh position={[-15, 0.6, -28]} rotation={[0, 0.4, 0.15]} geometry={GEO.box}
+        scale={[3, 1.2, 2]} material={MAT.stoneRuin} />
 
       {/* Houses from shared data */}
       {renderHouses(FRONTIER_CAMP_HOUSES, [MAT.stoneRuin, MAT.woodWeathered], [MAT.tentRagged, MAT.roofThatch], 'front')}
@@ -312,8 +409,20 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
       })}
       <mesh position={[0, 0.4, 0]} geometry={GEO.box}
         scale={[0.3, 0.5, 0.3]} material={MAT.fire} />
+      <mesh position={[0, 0.85, 0]} geometry={GEO.cone8}
+        scale={[0.6, 1.0, 0.6]} material={MAT.fireGlow} />
 
-      {/* Makeshift palisade */}
+      {/* Secondary campfires for survivor camp feel */}
+      {[[12, -8], [-14, 6], [-6, 14]].map(([fx, fz], i) => (
+        <group key={`fire2-${i}`} position={[fx, 0, fz]}>
+          <mesh position={[0, 0.04, 0]} geometry={GEO.box}
+            scale={[2, 0.08, 2]} material={MAT.charred} />
+          <mesh position={[0, 0.25, 0]} geometry={GEO.box}
+            scale={[0.2, 0.3, 0.2]} material={MAT.fire} />
+        </group>
+      ))}
+
+      {/* Makeshift palisade — sharpened tops */}
       {Array.from({ length: 24 }).map((_, i) => {
         const a = (i / 24) * Math.PI * 2;
         const gateAngle = 0;
@@ -322,8 +431,12 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
         const px = Math.cos(a) * 25;
         const pz = Math.sin(a) * 25;
         return (
-          <mesh key={`pal-${i}`} position={[px, 1.2, pz]} rotation={[0, -a, 0]}
-            geometry={GEO.box} scale={[0.3, 2.4, 0.7]} material={MAT.palisade}  />
+          <group key={`pal-${i}`} position={[px, 0, pz]} rotation={[0, -a, 0]}>
+            <mesh position={[0, 1.2, 0]} geometry={GEO.box}
+              scale={[0.3, 2.4, 0.7]} material={MAT.palisade}  />
+            <mesh position={[0, 2.6, 0]} geometry={GEO.cone4}
+              scale={[0.45, 0.5, 0.85]} material={MAT.palisadeSharp}  />
+          </group>
         );
       })}
 
@@ -331,11 +444,23 @@ export function FrontierCamp({ def }: { def: SettlementDef }) {
       <SimpleTower pos={[-20, 0, 18]} h={8} r={1.5} mat={MAT.woodWeathered} />
       <SimpleTower pos={[18, 0, -18]} h={8} r={1.5} mat={MAT.woodWeathered} />
 
+      {/* Crimson NemoClaw banners (faction identity) */}
+      {[[-20, 26], [20, 26]].map(([bx, bz], i) => (
+        <group key={`crim-${i}`} position={[bx, 0, bz]}>
+          <mesh position={[0, 2.5, 0]} geometry={GEO.box}
+            scale={[0.08, 5, 0.08]} material={MAT.timber} />
+          <mesh position={[0.4, 4, 0]} geometry={GEO.box}
+            scale={[0.7, 1.1, 0.04]} material={MAT.bloodStain} />
+        </group>
+      ))}
+
       {/* Supply piles */}
       <mesh position={[8, 0.25, 8]} geometry={GEO.box}
         scale={[2, 0.5, 1.5]} material={MAT.woodDark}  />
       <mesh position={[-10, 0.3, -5]} geometry={GEO.cyl8}
         scale={[0.25, 0.5, 0.25]} material={MAT.barrel}  />
+      <mesh position={[10, 0.4, -10]} geometry={GEO.cyl8}
+        scale={[0.3, 0.8, 0.3]} material={MAT.barrel}  />
 
       {/* Gate approach */}
       {[0, 1, 2].map(i => (
@@ -422,6 +547,35 @@ export function TradeCity({ def }: { def: SettlementDef }) {
           <mesh position={[0.4, 5, 0]} geometry={GEO.box}
             scale={[0.7, 1.1, 0.03]} material={MAT.bannerGold}  />
         </group>
+      ))}
+      {/* Extra gold banners on corner towers */}
+      {[[-40, -35], [40, -35], [40, 35], [-40, 35]].map(([bx, bz], i) => (
+        <group key={`tcban-${i}`} position={[bx, 0, bz]}>
+          <mesh position={[0, 12, 0]} geometry={GEO.box}
+            scale={[0.1, 5, 0.1]} material={MAT.timber} />
+          <mesh position={[0.4, 13, 0]} geometry={GEO.box}
+            scale={[0.7, 1.2, 0.03]} material={MAT.bannerGold} />
+        </group>
+      ))}
+      {/* Plaza lanterns */}
+      {[[-8, 14], [8, 14], [-8, 6], [8, 6]].map(([lx, lz], i) => (
+        <group key={`tclamp-${i}`} position={[lx, 0, lz]}>
+          <mesh position={[0, 1.4, 0]} geometry={GEO.box}
+            scale={[0.12, 2.8, 0.12]} material={MAT.timber} />
+          <mesh position={[0, 2.95, 0]} geometry={GEO.box}
+            scale={[0.35, 0.35, 0.35]} material={MAT.lantern} />
+        </group>
+      ))}
+      {/* Gold trim on gatehouse */}
+      <mesh position={[0, 7.3, 35]} geometry={GEO.box}
+        scale={[10.2, 0.2, 0.06]} material={MAT.goldTrim} />
+      {/* Trade hall doors */}
+      <mesh position={[0, 2, -4]} geometry={GEO.box}
+        scale={[3, 4, 0.3]} material={MAT.door} />
+      {/* Crops/wares around plaza for trade-city flavor */}
+      {[[-11, 14], [-11, 6], [11, 14], [11, 6]].map(([px, pz], i) => (
+        <mesh key={`crate-${i}`} position={[px, 0.4, pz]} geometry={GEO.box}
+          scale={[1.2, 0.8, 1]} material={MAT.woodLight} />
       ))}
     </group>
   );

@@ -37,6 +37,7 @@ import { LevelCrossings } from './components/LevelCrossings';
 // tree-shaken out of production bundles.
 if (import.meta.env.DEV) {
   void import('./systems/RailwayValidator');
+  void import('./systems/KingdomVisualValidator');
 }
 import { Train } from './components/Train';
 import { DebugCollision } from './components/DebugCollision';
