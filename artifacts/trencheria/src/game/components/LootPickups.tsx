@@ -1,3 +1,10 @@
+/**
+ * LootPickups — Bobbing pickups on the ground.
+ *
+ * Perf: animation drives a per-id group ref directly inside useFrame.
+ * No per-frame React state. castShadow removed — these are tiny props at
+ * floor level where shadow contribution is invisible vs cost.
+ */
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -26,23 +33,32 @@ interface Props {
 }
 
 export function LootPickups({ pickups }: Props) {
-  const timeRef = useRef(0);
+  const meshRefs = useRef<Map<string, THREE.Mesh | null>>(new Map());
 
-  useFrame((_, delta) => {
-    timeRef.current += delta;
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    for (const p of pickups) {
+      if (p.collected) continue;
+      const mesh = meshRefs.current.get(p.id);
+      if (!mesh) continue;
+      mesh.position.y = 0.2 + Math.sin(t * 3 + p.position[0]) * 0.1;
+    }
   });
-
-  const time = timeRef.current;
 
   return (
     <group>
       {pickups.map(p => {
+        // Match original behavior: collected pickups render nothing at all
+        // (both the box and the ring disappear together).
         if (p.collected) return null;
         const mat = lootMats[p.type] || defaultMat;
-        const bobY = 0.2 + Math.sin(time * 3 + p.position[0]) * 0.1;
         return (
           <group key={p.id} position={p.position}>
-            <mesh geometry={boxGeo} position={[0, bobY, 0]} material={mat} castShadow />
+            <mesh
+              ref={(node) => { meshRefs.current.set(p.id, node); }}
+              geometry={boxGeo}
+              material={mat}
+            />
             <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={ringGeo} material={ringMat} />
           </group>
         );

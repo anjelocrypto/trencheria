@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { loadWalletSession } from '../hooks/usePlayerAccount';
 import { resetSpawnIndex } from '../systems/SafeSpawn';
+import { devLog } from '../utils/devLog';
 // RealtimeChannel type — defined locally to remove @supabase/supabase-js dependency
 type RealtimeChannel = ReturnType<typeof import('@/integrations/supabase/client').supabase.channel>;
 import {
@@ -25,7 +26,7 @@ function mpAudit(label: string, data?: Record<string, unknown>) {
   if (count >= AUDIT_LOG_LIMIT) return;
   auditLogCounts[label] = count + 1;
   const suffix = data ? ' — ' + JSON.stringify(data) : '';
-  console.log(`[MP-Audit] ${label}${suffix}`);
+  devLog(`[MP-Audit] ${label}${suffix}`);
 }
 
 // ===== Startup instrumentation =====
@@ -51,7 +52,7 @@ function logTiming(label: string, timings: StartupTimings, stage: keyof StartupT
   const now = Date.now();
   (timings as any)[stage] = now;
   const elapsed = timings.enterWorldClicked > 0 ? now - timings.enterWorldClicked : 0;
-  console.log(`[MP-Startup] ${label} — ${elapsed}ms from start`);
+  devLog(`[MP-Startup] ${label} — ${elapsed}ms from start`);
 }
 
 // ===== Stable player ID per browser session =====
@@ -422,7 +423,7 @@ export function useMultiplayer() {
       }, SUBSCRIBE_TIMEOUT_MS);
 
       channel.subscribe(async (status, err) => {
-        console.log('[Multiplayer] Channel status:', status, err ? err : '');
+        devLog('[Multiplayer] Channel status:', status, err ? err : '');
         if (status === 'SUBSCRIBED') {
           if (resolved) return;
           resolved = true;
@@ -434,12 +435,12 @@ export function useMultiplayer() {
           await channel.track({ playerId, displayName: playerName, joinedAt: Date.now() });
           logTiming('Presence track sent', timings, 'presenceTrackSent');
 
-          console.log('[Multiplayer] Connected successfully, status → connected');
+          devLog('[Multiplayer] Connected successfully, status → connected');
           setConnectionStatus('connected');
 
           logTiming('Gameplay ready', timings, 'gameplayReady');
           const totalMs = timings.gameplayReady - timings.enterWorldClicked;
-          console.log(`[MP-Startup] TOTAL STARTUP: ${totalMs}ms`);
+          devLog(`[MP-Startup] TOTAL STARTUP: ${totalMs}ms`);
 
           setChatMessages(prev => [...prev, {
             id: crypto.randomUUID(), playerId: 'system', displayName: 'System',
@@ -654,7 +655,7 @@ export function useMultiplayer() {
     hasAttemptedReconnect.current = true;
     const session = loadSession();
     if (session) {
-      console.log('[Multiplayer] Found stale session — clearing (auto-reconnect disabled)');
+      devLog('[Multiplayer] Found stale session — clearing (auto-reconnect disabled)');
       clearSession();
     }
   }, []);

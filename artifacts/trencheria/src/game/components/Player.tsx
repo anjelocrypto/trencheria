@@ -13,6 +13,7 @@ import { useCharacter } from '../context/CharacterContext';
 import { getFactionByCharacter, getFactionById } from '../systems/FactionData';
 import { getTerrainHeight } from './Terrain';
 import { getBridgeHeight } from '../world/BridgeData';
+import { devLog } from '../utils/devLog';
 import { getMovementInput } from '../systems/InputSystem';
 import {
   PLAYER_SPEED, PLAYER_RUN_SPEED, PLAYER_JUMP_FORCE,
@@ -179,7 +180,7 @@ export function Player({
   useEffect(() => {
     // CRITICAL: Only spawn once. Never re-run on reconnect or remount.
     if (hasSpawnedRef.current) {
-      console.log('[Player] SPAWN SKIPPED — already spawned this session');
+      devLog('[Player] SPAWN SKIPPED — already spawned this session');
       return;
     }
 
@@ -195,7 +196,7 @@ export function Player({
       if (existingPos && (existingPos.x !== 0 || existingPos.z !== 0)) {
         // Validate existing position — if inside a building, relocate safely
         const validated = findSafeSpawn(existingPos.x, existingPos.z, PLAYER_HEIGHT);
-        console.log('[Player] SPAWN RESTORED — validated:', validated.x.toFixed(1), validated.z.toFixed(1),
+        devLog('[Player] SPAWN RESTORED — validated:', validated.x.toFixed(1), validated.z.toFixed(1),
           validated.fallbackUsed ? `(relocated from ${existingPos.x.toFixed(1)},${existingPos.z.toFixed(1)})` : '(position OK)');
         groupRef.current.position.set(validated.x, validated.y, validated.z);
         playerPositionRef.current.set(validated.x, validated.y, validated.z);
@@ -207,7 +208,7 @@ export function Player({
       const spawnSession = loadWalletSession();
       const spawnFactionId = spawnSession?.faction_id || undefined;
       const spawn = findSafeSpawn(undefined, undefined, PLAYER_HEIGHT, spawnFactionId);
-      console.log('[Player] SPAWN FRESH —', spawn.x.toFixed(1), spawn.z.toFixed(1), 'y=', spawn.y.toFixed(2),
+      devLog('[Player] SPAWN FRESH —', spawn.x.toFixed(1), spawn.z.toFixed(1), 'y=', spawn.y.toFixed(2),
         spawn.fallbackUsed ? `(fallback: ${spawn.rejectedReason})` : '(canonical)', 'faction:', spawnFactionId || 'guest');
       groupRef.current.position.set(spawn.x, spawn.y, spawn.z);
       playerPositionRef.current.set(spawn.x, spawn.y, spawn.z);
@@ -225,7 +226,7 @@ export function Player({
   useEffect(() => {
     // Only trigger respawn when transitioning TO dead state
     if (isDead && !wasDeadRef.current) {
-      console.log('[Player] RESPAWN TRIGGERED — health reached 0');
+      devLog('[Player] RESPAWN TRIGGERED — health reached 0');
       wasDeadRef.current = true;
       if (isMounted) onDismountHorse();
       const timer = setTimeout(() => {
@@ -236,7 +237,7 @@ export function Player({
           const respawnSession = loadWalletSession();
           const respawnFactionId = respawnSession?.faction_id || undefined;
           const spawn = findSafeSpawn(undefined, undefined, PLAYER_HEIGHT, respawnFactionId);
-          console.log('[Player] RESPAWN COMPLETE — teleporting to', spawn.x.toFixed(1), spawn.z.toFixed(1), 'faction:', respawnFactionId || 'guest');
+          devLog('[Player] RESPAWN COMPLETE — teleporting to', spawn.x.toFixed(1), spawn.z.toFixed(1), 'faction:', respawnFactionId || 'guest');
           groupRef.current.position.set(spawn.x, spawn.y, spawn.z);
           playerPositionRef.current.set(spawn.x, spawn.y, spawn.z);
           velocityRef.current.set(0, 0, 0);
@@ -248,7 +249,7 @@ export function Player({
     
     // Reset dead state when health restored
     if (!isDead && wasDeadRef.current) {
-      console.log('[Player] RESPAWN STATE CLEARED — player alive again');
+      devLog('[Player] RESPAWN STATE CLEARED — player alive again');
       wasDeadRef.current = false;
     }
   }, [isDead, isMounted, onDismountHorse, onRespawn, playerPositionRef]);

@@ -1,0 +1,81 @@
+Please do a full FPS/rendering performance hardening pass for Trencheria.
+
+Important constraints:
+- Do not touch SQL, Supabase, clan-war logic, wallet/auth, or railway/map geometry unless directly needed for rendering performance.
+- Do not change gameplay behavior.
+- Focus on FPS, stutter, WebGL stability, draw calls, shadows, LOD, and production logging.
+
+Audit findings to address:
+
+1. Add a dev-only FPS benchmark mode
+- Use the existing PerfBaseline tooling or expose it behind ?perf=1 / F3.
+- Measure 30 seconds in:
+  - open field
+  - Ironhold/main kingdom center
+  - forest/resources area
+  - combat with enemies
+  - multiplayer with 3+ remote players if possible
+- Log FPS average, 1% low, draw calls, triangles, heap usage, and WebGL context loss.
+
+2. Add rendering quality tiers
+- Add Low / Medium / High quality settings.
+- Cap Canvas DPR, e.g. dpr={[1, 1.5]} by default.
+- Disable or reduce antialias/shadows on Low.
+- Add adaptive quality fallback if FPS stays below target.
+
+3. Shadow budget cleanup
+- Keep shadows only for important nearby objects: player, horse, big buildings, major trees.
+- Disable castShadow on tiny props, distant resources, small railway props, far NPCs, small decorations.
+- Keep receiveShadow where visually useful.
+- Make shadow map size and shadow distance depend on quality tier.
+
+4. Remote player LOD
+- Fix RemotePlayer LOD so it uses throttled lodTier state with hysteresis, not only distanceRef read during render.
+- Full animated GLB only for nearby remotes.
+- Medium simplified model for mid-distance.
+- Hide or simplify remote player Drei <Html> nametags beyond a short distance.
+- For mounted remote players, use simplified horse/rider at distance.
+
+5. World resources optimization
+- Avoid mounting all resources on first render.
+- Initialize visible resources empty or nearby-only, then update from spatial grid.
+- Convert repeated trees/rocks/bushes/crates to InstancedMesh buckets where possible.
+- Keep selected/highlight/interactable state as a separate lightweight overlay.
+
+6. NPC and character GLB performance
+- Add LOD for civilian NPCs and villagers.
+- Full animated GLB only near the player.
+- Far NPCs should be simple mesh/billboard or hidden.
+- Pause or throttle AnimationMixer updates for far/offscreen NPCs.
+- Lazy-load NPC GLBs per visible settlement group.
+
+7. Loot and coin optimization
+- Do not use React state for per-frame animation.
+- Animate coins/loot through refs or instanced matrices.
+- Remove per-coin pointLight; use emissive material/glow instead, or only one nearest light.
+
+8. Sky/ambient performance
+- Consolidate bird/flock useFrame loops into one manager if possible.
+- Use instancing for repeated sky creatures.
+- Throttle far ambient updates.
+
+9. Production log cleanup
+- Gate debug logs behind import.meta.env.DEV or a debug flag.
+- Remove production WebGL heartbeat logs.
+- Keep only real errors in production.
+
+10. WebGL context stability
+- Audit menu Canvas → game Canvas transition.
+- Make sure the menu renderer fully releases before game Canvas mounts, or move toward one shared Canvas.
+- Verify no WebGL context loss when entering/leaving the game repeatedly.
+
+Verification required:
+- Typecheck changed files.
+- Production build must pass.
+- Run FPS baseline before and after.
+- Target:
+  - 60 FPS desktop in normal gameplay
+  - 45+ FPS in Ironhold/main kingdom and combat scenes
+  - no WebGL context loss
+  - stable memory over 5 minutes
+- Provide a short before/after performance report with the worst bottlenecks fixed.

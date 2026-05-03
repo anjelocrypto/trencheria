@@ -1,7 +1,8 @@
-import { useRef, Suspense, useMemo } from 'react';
+import { useRef, Suspense, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { InterpolatedPlayer, BROADCAST_RATE_MS, EMOTES, LOD_FULL_DISTANCE, LOD_MEDIUM_DISTANCE } from './types';
+import { devLog } from '../utils/devLog';
 import { getTerrainHeight } from '../components/Terrain';
 import { getBridgeHeight } from '../world/BridgeData';
 import { Html } from '@react-three/drei';
@@ -81,14 +82,32 @@ function mpAuditRemote(label: string, data?: Record<string, unknown>) {
   if (count >= REMOTE_AUDIT_LIMIT) return;
   remoteAuditCounts[label] = count + 1;
   const suffix = data ? ' — ' + JSON.stringify(data) : '';
-  console.log(`[MP-Audit] ${label}${suffix}`);
+  devLog(`[MP-Audit] ${label}${suffix}`);
 }
+
+// LOD hysteresis bands — going further uses outer thresholds, coming closer
+// uses inner thresholds. Prevents rapid LOD flapping at boundaries.
+const LOD_HYST = 8;
+const LOD_FULL_OUT = LOD_FULL_DISTANCE;
+const LOD_FULL_IN = LOD_FULL_DISTANCE - LOD_HYST;
+const LOD_MED_OUT = LOD_MEDIUM_DISTANCE;
+const LOD_MED_IN = LOD_MEDIUM_DISTANCE - LOD_HYST;
+// Hide nametag once we drop below medium-LOD distance (no model anyway after this)
+const NAMETAG_VISIBLE_DISTANCE = LOD_MEDIUM_DISTANCE;
+const LOD_TICK_MS = 250;
+
+type LodTier = 'full' | 'medium' | 'far';
 
 export function RemotePlayer({ player, playerPositionRef }: Props) {
   const groupRef = useRef<THREE.Group>(null);
   const currentPos = useRef(new THREE.Vector3(...player.renderPosition));
   const currentRot = useRef(player.renderRotation);
   const distanceRef = useRef(0);
+  // LOD tier in actual React state so hide/show of <Html> + GLB models
+  // re-renders. Throttled to LOD_TICK_MS in useFrame to avoid per-frame churn.
+  const [lodTier, setLodTier] = useState<LodTier>('full');
+  const lodTierRef = useRef<LodTier>('full');
+  const lastLodSampleRef = useRef(0);
 
   mpAuditRemote('RemotePlayer mounted', {
     id: player.playerId,
@@ -106,6 +125,27 @@ export function RemotePlayer({ player, playerPositionRef }: Props) {
       const dx = currentPos.current.x - localPos.x;
       const dz = currentPos.current.z - localPos.z;
       distanceRef.current = Math.sqrt(dx * dx + dz * dz);
+    }
+
+    // Throttled LOD tier update with hysteresis — runs ~4x/sec, not per frame
+    const now = performance.now();
+    if (now - lastLodSampleRef.current >= LOD_TICK_MS) {
+      lastLodSampleRef.current = now;
+      const d = distanceRef.current;
+      const cur = lodTierRef.current;
+      let next: LodTier = cur;
+      if (cur === 'full') {
+        if (d > LOD_FULL_OUT) next = 'medium';
+      } else if (cur === 'medium') {
+        if (d < LOD_FULL_IN) next = 'full';
+        else if (d > LOD_MED_OUT) next = 'far';
+      } else {
+        if (d < LOD_MED_IN) next = 'medium';
+      }
+      if (next !== cur) {
+        lodTierRef.current = next;
+        setLodTier(next);
+      }
     }
 
     const lerpSpeed = 1000 / BROADCAST_RATE_MS;
@@ -144,14 +184,17 @@ export function RemotePlayer({ player, playerPositionRef }: Props) {
     : charType === 'chillhouse' ? NAMETAG_HEIGHT_CHILLHOUSE
     : NAMETAG_HEIGHT_SOLDIER;
 
-  // LOD tier based on distance
-  const dist = distanceRef.current;
-  const isFullLOD = dist < LOD_FULL_DISTANCE;
-  const isMediumLOD = dist >= LOD_FULL_DISTANCE && dist < LOD_MEDIUM_DISTANCE;
+  // LOD tier sourced from throttled state (see useFrame above)
+  const isFullLOD = lodTier === 'full';
+  const isMediumLOD = lodTier === 'medium';
+  const showNametag = lodTier !== 'far' && distanceRef.current < NAMETAG_VISIBLE_DISTANCE;
 
   return (
     <group ref={groupRef}>
-      {/* Nametag + health + faction — always visible within render range */}
+      {/* Nametag + health + faction — gated by LOD; mounting <Html> is one of
+          the most expensive things per remote player, so don't pay for it
+          on far-LOD remotes (they have no model anyway). */}
+      {showNametag && (
       <Html position={[0, nametagY, 0]} center distanceFactor={20}
         style={{ pointerEvents: 'none', userSelect: 'none' }}>
         <div style={{
@@ -209,6 +252,7 @@ export function RemotePlayer({ player, playerPositionRef }: Props) {
           )}
         </div>
       </Html>
+      )}
 
       {/* LOD rendering */}
       {isMediumLOD ? (

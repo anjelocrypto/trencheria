@@ -1,18 +1,24 @@
 /**
  * WebGLRecovery — Detects WebGL context loss and attempts recovery.
- * 
- * Root cause: The lobby menu renders a full Canvas (Terrain, Water, Settlements).
- * When transitioning to the game, that Canvas unmounts and a new heavier one mounts.
- * This can exhaust GPU resources and cause WebGL context loss (FPS → 0, black screen).
- * 
- * This component:
- * 1. Listens for webglcontextlost / webglcontextrestored events
- * 2. Logs diagnostic heartbeats from useFrame to detect silent loop death
- * 3. Attempts context restoration when loss is detected
+ *
+ * Listens for webglcontextlost / webglcontextrestored on the actual canvas
+ * element and prevents the default so the browser re-creates the context.
+ * Increments a global counter exposed on `window.__trencheriaWebglLossCount`
+ * so PerfBaseline can surface it.
+ *
+ * No per-frame heartbeat logging in production — that fires every 5s
+ * forever and pollutes user consoles. PerfBaseline owns runtime FPS now.
  */
 
 import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
+import { devLog, isDebugLoggingEnabled } from '../utils/devLog';
+
+declare global {
+  interface Window {
+    __trencheriaWebglLossCount?: number;
+  }
+}
 
 export function WebGLRecovery() {
   const { gl } = useThree();
@@ -20,7 +26,6 @@ export function WebGLRecovery() {
   const lastHeartbeatRef = useRef(performance.now());
   const contextLostRef = useRef(false);
 
-  // Listen for WebGL context loss/restore on the actual canvas element
   useEffect(() => {
     const canvas = gl.domElement;
     if (!canvas) {
@@ -28,16 +33,22 @@ export function WebGLRecovery() {
       return;
     }
 
-    console.log('[WebGL] Recovery monitor attached to canvas');
+    devLog('[WebGL] Recovery monitor attached to canvas');
+    if (typeof window !== 'undefined' && window.__trencheriaWebglLossCount === undefined) {
+      window.__trencheriaWebglLossCount = 0;
+    }
 
     const onContextLost = (event: Event) => {
       console.error('[WebGL] ⚠️ CONTEXT LOST — preventing default to allow restore');
-      event.preventDefault(); // Critical: allows browser to attempt restore
+      event.preventDefault();
       contextLostRef.current = true;
+      if (typeof window !== 'undefined') {
+        window.__trencheriaWebglLossCount = (window.__trencheriaWebglLossCount ?? 0) + 1;
+      }
     };
 
     const onContextRestored = () => {
-      console.log('[WebGL] ✅ CONTEXT RESTORED — render loop should resume');
+      devLog('[WebGL] ✅ CONTEXT RESTORED');
       contextLostRef.current = false;
       frameCountRef.current = 0;
       lastHeartbeatRef.current = performance.now();
@@ -52,24 +63,25 @@ export function WebGLRecovery() {
     };
   }, [gl]);
 
-  // Heartbeat: log every 5 seconds to prove the render loop is alive
+  // Heartbeat only in dev/debug. In production this is silent (the prior
+  // implementation logged every 5s forever).
   useFrame(() => {
+    if (!isDebugLoggingEnabled) return;
     frameCountRef.current++;
     const now = performance.now();
     if (now - lastHeartbeatRef.current >= 5000) {
       const fps = frameCountRef.current / ((now - lastHeartbeatRef.current) / 1000);
-      console.log(`[WebGL] Heartbeat — ${Math.round(fps)} fps, ${frameCountRef.current} frames in 5s, contextLost=${contextLostRef.current}`);
+      devLog(`[WebGL] Heartbeat — ${Math.round(fps)} fps, contextLost=${contextLostRef.current}`);
       frameCountRef.current = 0;
       lastHeartbeatRef.current = now;
     }
   });
 
-  // Log first frame
   const firstFrameRef = useRef(true);
   useFrame(() => {
     if (firstFrameRef.current) {
       firstFrameRef.current = false;
-      console.log('[WebGL] ✅ First frame rendered in GameScene Canvas');
+      devLog('[WebGL] ✅ First frame rendered in GameScene Canvas');
     }
   });
 
@@ -77,19 +89,17 @@ export function WebGLRecovery() {
 }
 
 /**
- * Hook for the menu Canvas to force cleanup before unmount.
- * Call gl.forceContextLoss() is too aggressive — instead we just
- * dispose resources. R3F handles this on unmount already, but
- * we add logging to diagnose.
+ * Hook for the menu Canvas to force resource disposal before unmount,
+ * so the heavier game Canvas doesn't immediately exhaust GPU resources
+ * and trip a context-loss event.
  */
 export function MenuCanvasCleanup() {
   const { gl } = useThree();
 
   useEffect(() => {
-    console.log('[WebGL] Menu Canvas mounted');
+    devLog('[WebGL] Menu Canvas mounted');
     return () => {
-      console.log('[WebGL] Menu Canvas unmounting — R3F will dispose renderer');
-      // Force dispose render target cache to free GPU memory before game canvas mounts
+      devLog('[WebGL] Menu Canvas unmounting — disposing renderer cache');
       gl.dispose();
     };
   }, [gl]);

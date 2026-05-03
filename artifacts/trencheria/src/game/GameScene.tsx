@@ -1,7 +1,11 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { supabase } from '@/integrations/supabase/client';
+import { devLog } from './utils/devLog';
+import { useQualitySettings, tryAdaptiveDrop } from './hooks/useQualitySettings';
+import { PerfBaselineR3F, PerfBaselineHUD, isPerfModeEnabled } from './debug/PerfBaseline';
+import { FpsTracker } from './systems/FpsTracker';
 import { Terrain, getTerrainHeight } from './components/Terrain';
 import { getGroundHeight } from './systems/Grounding';
 import { Water } from './components/Water';
@@ -96,6 +100,43 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
   const { character } = useCharacter();
   const progressionPersistence = useProgressionPersistence();
   const trencheri = useTrencheriCoins();
+  const quality = useQualitySettings();
+
+  // Perf HUD: enabled via ?perf=1 URL param OR F3 hotkey toggle.
+  const [perfMode, setPerfMode] = useState<boolean>(() => isPerfModeEnabled());
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'F3') {
+        e.preventDefault();
+        setPerfMode((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Adaptive quality: if 30s rolling avg FPS stays under 35, drop one tier.
+  // One-shot per session — sets sessionStorage flag inside tryAdaptiveDrop.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let lastCheck = performance.now();
+    const id = window.setInterval(() => {
+      const now = performance.now();
+      // Only consider after 30s warm-up so loading frames don't trigger it
+      if (now - lastCheck < 30000) return;
+      lastCheck = now;
+      const w = window as unknown as { __trencheriaAvgFps30?: number };
+      const avg = w.__trencheriaAvgFps30;
+      if (typeof avg === 'number' && avg > 0 && avg < 35) {
+        const dropped = tryAdaptiveDrop();
+        if (dropped) {
+          devLog('[Quality] Adaptive fallback → tier=', dropped, 'avgFps=', avg);
+        }
+      }
+    }, 5000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const [resources, setResources] = useState<WorldResource[]>(() => generateWorldResources());
   const enemiesHandleRef = useRef<EnemiesHandle>(null);
   const [mapOpen, setMapOpen] = useState(false);
@@ -581,8 +622,8 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
       _death_z: pos.z,
     }).then(({ data, error }: any) => {
       if (error) console.warn('[PvP] War kill log failed:', error.message);
-      else if (data?.success) console.log('[PvP] War kill logged successfully');
-      else console.log('[PvP] War kill not logged (no active war or not in territory):', data?.error);
+      else if (data?.success) devLog('[PvP] War kill logged successfully');
+      else devLog('[PvP] War kill not logged (no active war or not in territory):', data?.error);
     });
   }, [survival.health, multiplayer, playerPositionRef, clanSystem.myClan]);
 
@@ -626,7 +667,8 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
 
   return (
     <div className="w-screen h-screen bg-background overflow-hidden cursor-crosshair">
-      {/* PerfBaselineHUD removed from production — use F3 for debug */}
+      <FpsTracker />
+      {perfMode && <PerfBaselineHUD quality={quality.tier} onSetQuality={quality.setTier} />}
       <SurvivalHUD
         survival={survival}
         inventory={inventory}
@@ -805,16 +847,20 @@ export function GameScene({ multiplayer, onLeaveWorld, onSceneReady }: GameScene
         isPlayingEmote={activeEmote !== null}
       />
 
-      <Canvas shadows camera={{ fov: 55, near: 0.5, far: 1500, position: [0, 10, 15] }}
+      <Canvas
+        shadows={quality.shadows}
+        dpr={quality.dpr}
+        camera={{ fov: 55, near: 0.5, far: 1500, position: [0, 10, 15] }}
         style={{ width: '100%', height: '100%' }}
-        gl={{ antialias: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
+        gl={{ antialias: quality.antialias, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
         onCreated={({ gl }) => {
-          console.log('[WebGL] GameScene Canvas created', gl.getContext()?.constructor.name);
+          gl.shadowMap.enabled = quality.shadows;
+          devLog('[WebGL] GameScene Canvas created', gl.getContext()?.constructor.name, 'tier=', quality.tier);
         }}>
 
         <WebGLRecovery />
         {onSceneReady && <StartupReadiness onReady={onSceneReady} />}
-        {/* PerfBaselineR3F disabled for production */}
+        {perfMode && <PerfBaselineR3F />}
         <InputFlusher />
         <SceneDiagnosticsBoundary>
           <BuildModeController
